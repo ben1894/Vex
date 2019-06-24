@@ -1,0 +1,13 @@
+!.gitignore
+/.vscode/*
+*.elf
+*.bin
+*.o
+*.a
+*.h
+*.c
+*.json
+*.ld
+/include/*.mk
+/include/pros/*
+/include/display/*
