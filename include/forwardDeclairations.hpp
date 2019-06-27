@@ -1,6 +1,10 @@
 #pragma once
 #include "main.h"
 #include <array>
+#include <string>
+#include <iostream>
+#include <vector>
+#include <typeinfo>
 
 class timers
 {

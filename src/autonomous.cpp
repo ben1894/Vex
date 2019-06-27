@@ -1,4 +1,5 @@
 #include "main.h"
+#include "forwardDeclairations.hpp"
 bool autonTest = false;
 
 /**
@@ -13,6 +14,42 @@ bool autonTest = false;
  * from where it left off.
  */
 
+std::vector<std::string> parameters;
+enum current;
+enum old;
+
+bool Output() 
+{
+    do the main stuff here
+}
+ 
+template<typename First, typename ... parameters> 
+void Output(First arg, const parameters&... rest)
+{
+    static type hi;
+    static type hi;
+    static currentEnum;
+    static prevEnum;
+    static int prevArrayLoc;
+    if (typeid(arg) == typeid(enum))
+    {
+        currentEnum = arg;
+    }
+    else
+    {
+        switch(currentEnum)
+        {
+        }
+    }
+    parameters.push_back(arg);
+    Output(rest...);
+}
+ 
+int main() {
+    Output("I","am","a","sentence");
+    //Output("Let's","try",1,"or",2,"digits");
+    return 0;
+}
 class pidController 
 {
     public:
@@ -56,39 +93,6 @@ class pidController
         unsigned long lastTime;
         long combinedIntegral;
         int lastError;
-}
-
-
-
-
-     currentTime = _getSystemTime();
-
-      //Calculate time since last tick() cycle.
-      long deltaTime = currentTime - lastTime;
-
-      //Calculate the integral of the feedback data since last cycle.
-      int cycleIntegral = (lastError + error / 2) * deltaTime;
-
-      //Add this cycle's integral to the integral cumulation.
-      integralCumulation += cycleIntegral;
-
-      //Calculate the slope of the line with data from the current and last cycles.
-      cycleDerivative = (error - lastError) / deltaTime;
-
-      //Save time data for next iteration.
-      lastTime = currentTime;
-
-         if(integralCumulation > maxCumulation) integralCumulation = maxCumulation;
-    if(integralCumulation < -maxCumulation) integralCumulation = -maxCumulation;
-        output = (int) ((error * _p) + (integralCumulation * _i) + (cycleDerivative * _d));
-  lastFeedback = currentFeedback;
-    lastError = error;
-      if(outputBounded)
-    {
-      if(output > outputUpperBound) output = outputUpperBound;
-      if(output < outputLowerBound) output = outputLowerBound;
-    }
-
-    _pidOutput(output);
+};
 
 void autonomous() {}
