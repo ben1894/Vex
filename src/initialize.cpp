@@ -13,14 +13,15 @@ Select count = UNDEFINED;
 pros::Controller mainController(pros::E_CONTROLLER_MASTER);
 pros::Controller secondaryController(pros::E_CONTROLLER_PARTNER);
 
-/**
+/*
  * Runs initialization code. This occurs as soon as the program is started.
  *
  * All other competition modes are blocked by initialize; it is recommended
  * to keep execution time for this mode under a few seconds.
  */
-std::array<pros::Motor, 3> rightDrive{pros::Motor(1),pros::Motor(2),pros::Motor(3)};
-std::array<pros::Motor, 3>  leftDrive{pros::Motor(4),pros::Motor(5),pros::Motor(6)};
+
+std::array<pros::Motor, 2> rightDrive{pros::Motor(1),pros::Motor(2)};
+std::array<pros::Motor, 2>  leftDrive{pros::Motor(3),pros::Motor(4)};
 
 void initialize() 
 {

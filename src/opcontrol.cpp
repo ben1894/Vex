@@ -17,11 +17,9 @@ void opcontrol()
 {
 	while (true) 
 	{
-		for(int i = 0; i < leftDrive.size(); i++)
-		{		
-			rightDrive[i].move(cVal(ANALOG_LEFT_Y));
-			leftDrive[i].move(cVal(ANALOG_RIGHT_Y));
-		}
+		motorGroupMove(cVal(ANALOG_RIGHT_Y),rightDrive);
+		motorGroupMove(cVal(ANALOG_LEFT_Y),leftDrive);
+
 		if(autonTest == true)
 		{
 			if(cVal(DIGITAL_A))

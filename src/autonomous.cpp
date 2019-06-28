@@ -14,26 +14,32 @@ bool autonTest = false;
  * from where it left off.
  */
 
-std::vector<std::string> parameters;
-enum current;
-enum old;
-
-bool Output() 
+class drive
 {
-    do the main stuff here
+    public:
+    int parameters[2] {};
+    void move()
+    {
+        for(int i, )
+    }
+};
+
+void Output() 
+{
+
 }
  
 template<typename First, typename ... parameters> 
 void Output(First arg, const parameters&... rest)
 {
-    static type hi;
-    static type hi;
-    static currentEnum;
-    static prevEnum;
+    static moveOptions currentEnum;
+    static moveOptions prevEnum;
     static int prevArrayLoc;
+
     if (typeid(arg) == typeid(enum))
     {
         currentEnum = arg;
+        prevArrayLoc = 0;
     }
     else
     {

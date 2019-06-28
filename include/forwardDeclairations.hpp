@@ -21,7 +21,7 @@ public:
 	}
 };
 
-typedef enum Select
+enum Select
 {
 	NEGATIVE = -1,
 	UNDEFINED = 0,
@@ -35,15 +35,23 @@ typedef enum Select
 	BLUEDOUBLEBACK = 9,
 	SKILLZ = 8,
 	HOLDER2 = 10
-}Select;
+};
+
+enum moveOptions
+{
+	DRIVE,
+	LIFT,
+	CLAW,
+	INNER
+};
 
 extern bool autonTest;
 extern const bool voltage;
 extern const bool gyroUpsidedown;
 extern pros::ADIGyro gyro;
 
-extern std::array<pros::Motor, 3> leftDrive;
-extern std::array<pros::Motor, 3> rightDrive;
+extern std::array<pros::Motor, 2> leftDrive;
+extern std::array<pros::Motor, 2> rightDrive;
 
 extern pros::Motor hMotor;
 extern pros::Motor descore;
@@ -75,6 +83,8 @@ extern int actualGyroPosition();
 extern int fixTarget(int oldTarget);
 extern void getDistances(Both &Val, int target);
 
+template <size_t N>
+extern void motorGroupMove(int speed, std::array<pros::Motor, N> &motorArray);
 extern float map(float value, float istart, float istop, float ostart, float ostop);
 extern int cVal(pros::controller_digital_e_t button);
 extern int cVal(pros::controller_analog_e_t button);
