@@ -37,13 +37,23 @@ enum Select
 	HOLDER2 = 10
 };
 
+enum systemStates
+{
+	WAITINGFORINSTRUCTIONS,
+	END,
+	EXECUTINGINSTRUCTIONS
+};
+
+default = end
+
 enum moveOptions
 {
-	DRIVE,
-	LIFT,
-	CLAW,
-	INNER
+	DRIVE = 999999999,
+	LIFT = 999999998,
+	CLAW = 999999997,
+	INNER = 999999996
 };
+const int minEnumValue = 999999995;
 
 extern bool autonTest;
 extern const bool voltage;
