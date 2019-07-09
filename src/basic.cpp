@@ -13,35 +13,6 @@ void driveMotorsSpeed(int speed, pros::Motor &motor, bool forceRPM)
 	}
 }
 
-template <size_t N>
-void driveMotorsSpeed(int speed, std::array<pros::Motor, N> &motorArray, bool forceRPM)
-{
-    if(voltage == true && forceRPM == false)
-    {
-        for(int i = 0; i < motorArray.size(); i++)
-        {
-            motorArray[i].move(speed);
-        }
-    }
-    else
-    { 
-        int RPMSpeed = map(speed,0,127,0,getMaxSpeed(motor[0]));
-        for(int i = 0; i < rightmotorArray.size(); i++)
-        {
-            motorArray[i].move_velocity(RPMSpeed);
-        }
-    }
-}
-
-template <size_t N>
-void motorGroupMove(int speed, std::array<pros::Motor, N> &motorArray)
-{
-    for(int i = 0; i < motorArray.size(); i++)
-    {
-        motorArray[i].move(speed);
-    }
-}
-
 int getMaxSpeed(pros::Motor &motor)
 {
 	if(motor.get_gearing() == pros::E_MOTOR_GEARSET_36)

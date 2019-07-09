@@ -1,6 +1,7 @@
 #include "main.h"
 #include "forwardDeclairations.hpp"
 bool autonTest = false;
+const bool voltage = true;
 /**
  * Runs the user autonomous code. This function will be started in its own task
  * with the default priority and stack size whenever the robot is enabled via
@@ -14,79 +15,96 @@ bool autonTest = false;
  */
 /*a = A();   
  */
-
-class drive
+class System 
 { 
-    public:
-    int parameters[1] {};
-    //Distance
-    //
-    void move()
+public: 
+    const int id;
+    bool multiple = false;
+    systemStates state = END;
+    System(int id)
+        : id(id)
     {
-    };
-};
-
-class lift
-{
-    public:
-    int parameters[1] {};
-};
-
-template <typename T>
-void initialUpdate(T system, int &i, std::vector<int> &parameters)
-{
-    if(parameters[i] == systems.id)
-    {
-        if(system.state() == END)
-        {
-            while(parameters[i+1] > minEnumValue) //double check this +1
-            {
-                int x = 0;
-                system.setMember(x,parameters[i]);
-                ++i;
-                ++x;
-            }
-            system.state = EXECUTINGINSTRUCTIONS;
-        }
-        else
-        {
-            system.multiple = true;
-        }
     }
-}
+    virtual void setMember(int number, int value){} 
 
-void checkForUpdate(T system, int &i, std::vector<int> &parameters)
-{
-    if(state != END)
+    void initialUpdate(int &i, std::vector<int> &parameters)
     {
-        if(parameters[i] == systems.id)
+        if(parameters[i] == id)
         {
-            if(system.state() == END)
+            if(state == END)
             {
+                parameters[i] = (int)NULLOPTION;
                 while(parameters[i+1] > minEnumValue)
                 {
                     int x = 0;
-                    system.setMember(x,parameters[i]);
+                    setMember(x,parameters[i]);
                     ++i;
                     ++x;
                 }
-                system.state = EXECUTINGINSTRUCTIONS;
+                state = EXECUTINGINSTRUCTIONS;
             }
             else
             {
-                system.multiple = true;
+                multiple = true;
             }
         }
     }
-}
 
+    void update(std::vector<int> &parameters)
+    {
+        if(state == WAITINGFORINSTRUCTIONS)
+        {
+            for(int i = 0; i < parameters.size(); i++)
+            {
+                if(parameters[i] == id)
+                {
+                    if(state == WAITINGFORINSTRUCTIONS)
+                    {
+                        parameters[i] = (int)NULLOPTION;
+                        while(parameters[i+1] > minEnumValue)
+                        {
+                            int x = 0;
+                            setMember(x,parameters[i]);
+                            ++i;
+                            ++x;
+                        }
+                        state = EXECUTINGINSTRUCTIONS;
+                    }
+                    else
+                    {
+                        multiple = true;
+                    }
+                }
+            }
+        }
+    }
+}; 
+
+class Drive : public System
+{ 
+    public:
+    Drive(int id)
+        : System(id)//, // call Person(std::string, int) to initialize these fields   //m_battingAverage(battingAverage), m_homeRuns(homeRuns) to initialize Drive members
+    {
+    }
+    void setMember(int number, int value){}
+    void move(){}
+};
+
+class Claw : public System
+{ 
+    public:
+    Claw(int id)
+        : System(id)//, // call Person(std::string, int) to initialize these fields   //m_battingAverage(battingAverage), m_homeRuns(homeRuns) to initialize Drive members
+    {
+    }
+    void setMember(int number, int value){}
+    void move(){}
+};
+/*
 drive::actions
 {
-    if(state = END)
-    {
-
-    }
-    else
+    if(state = EXECUTINGINSTRUCTIONS)
     {
         if(conditionsaremet)
         {
@@ -101,20 +119,23 @@ drive::actions
             }
         }
     }
+    else
+    {
+    }
 };
-
+*/
 template <typename... Ts>
 int all(Ts... all)
 {
     std::vector<int> parameters = {all...};
 
-    Drive drive;
-    Claw claw;
+    Drive drive{};
+    Claw claw{};
 
     for(int i = 0; i < parameters.size(); i++)
     {
-        initialUpdate(drive, i, parameters)
-        initialUpdate(claw, i, parameters)
+        drive.initialUpdate(i, parameters);
+        claw.initialUpdate(i, parameters);
     }
 
     while(!(claw.state == END && drive.state == END))
@@ -122,46 +143,10 @@ int all(Ts... all)
         drive.move();
         claw.move();
         pros::delay(5);
+        drive.update(parameters);
+        claw.update(parameters);
     }
-    if(obj.state == WAITINGFORINSTRUCTIONS)
-    {
-        for(int i = 0; i < parameters.size(); i++)
-        {
-            if(parameters[i] == DRIVE)
-            {
-                if(drive.recievedInstructions() == 0)
-                {
-                    while(parameters[i+1] > minEnumValue)
-                    {
-                        int x = 0;
-                        if()
-                        obj.setMember(x,parameter[i]);
-                        ++i;
-                        ++x;
-                    }
-                }
-            }
-        }
-    }
-        scroll through
-    }
-    for(int i = 0; i < parameters.size(); i++)
-    {
-        if(parameters[i] == DRIVE)
-        {
-            if(drive.recievedInstructions() == 0)
-            {
-                while(parameters[i+1] > minEnumValue)
-                {
-                    int x = 0;
-                    if()
-                    obj.setMember(x,parameter[i]);
-                    ++i;
-                    ++x;
-                }
-            }
-        }
-    }
+
 }
 
 class pidController //fix divide by 0 error;

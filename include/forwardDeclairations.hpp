@@ -44,16 +44,15 @@ enum systemStates
 	EXECUTINGINSTRUCTIONS
 };
 
-default = end
-
 enum moveOptions
 {
 	DRIVE = 999999999,
 	LIFT = 999999998,
 	CLAW = 999999997,
-	INNER = 999999996
+	INNER = 999999996,
+	NULLOPTION = 999999995
 };
-const int minEnumValue = 999999995;
+const int minEnumValue = 999999994;
 
 extern bool autonTest;
 extern const bool voltage;
@@ -93,11 +92,10 @@ extern int actualGyroPosition();
 extern int fixTarget(int oldTarget);
 extern void getDistances(Both &Val, int target);
 
-template <size_t N>
-extern void motorGroupMove(int speed, std::array<pros::Motor, N> &motorArray);
 extern float map(float value, float istart, float istop, float ostart, float ostop);
 extern int cVal(pros::controller_digital_e_t button);
 extern int cVal(pros::controller_analog_e_t button);
 extern int actualGyroPosition();
 extern int fixTarget(int oldTarget);
 
+#include "templateMotorFunctions.hpp"
