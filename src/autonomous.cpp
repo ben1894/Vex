@@ -2,6 +2,7 @@
 #include "forwardDeclairations.hpp"
 bool autonTest = false;
 const bool voltage = true;
+const bool gyroTurns = true;
 /**
  * Runs the user autonomous code. This function will be started in its own task
  * with the default priority and stack size whenever the robot is enabled via
@@ -19,13 +20,13 @@ class System
 { 
 public: 
     const int id;
-    bool multiple = false;
-    systemStates state = END;
+    char numberOfCalls = 0;
+    SystemStates state = END;
     System(int id)
         : id(id)
     {
     }
-    virtual void setMember(int number, int value){} 
+    virtual void setMember(int number, int value) = 0; 
 
     void initialUpdate(int &i, std::vector<int> &parameters)
     {
@@ -45,7 +46,7 @@ public:
             }
             else
             {
-                multiple = true;
+                ++numberOfCalls;
             }
         }
     }
@@ -54,6 +55,7 @@ public:
     {
         if(state == WAITINGFORINSTRUCTIONS)
         {
+            numberOfCalls = 0;
             for(int i = 0; i < parameters.size(); i++)
             {
                 if(parameters[i] == id)
@@ -61,7 +63,7 @@ public:
                     if(state == WAITINGFORINSTRUCTIONS)
                     {
                         parameters[i] = (int)NULLOPTION;
-                        while(parameters[i+1] > minEnumValue)
+                        while(parameters[i+1] > minEnumValue) //plus one here to it doesn't loop over the next value. 
                         {
                             int x = 0;
                             setMember(x,parameters[i]);
@@ -72,7 +74,7 @@ public:
                     }
                     else
                     {
-                        multiple = true;
+                        ++numberOfCalls;
                     }
                 }
             }
@@ -83,24 +85,97 @@ public:
 class Drive : public System
 { 
     public:
-    Drive(int id)
-        : System(id)//, // call Person(std::string, int) to initialize these fields   //m_battingAverage(battingAverage), m_homeRuns(homeRuns) to initialize Drive members
+    Drive(int id = DRIVE)
+        : System((int)id)//, // call Person(std::string, int) to initialize these fields   //m_battingAverage(battingAverage), m_homeRuns(homeRuns) to initialize Drive members
+    {
+    }
+    bool stopAcceleration = 0;
+    bool stopDeacceleration = 0;
+    Directions direction;
+    bool noPID;
+    int distanceToGo;
+    int maxSpeed;
+    int minSpeed;
+    void setMember(int number, int value);
+    void move();
+};
+
+void Drive::setMember(int number, int value)
+{
+    if(number == 0)
+    {
+        direction = (Directions)value;
+    }
+    else
+    {
+        if(direction == FORWARDS || direction == BACKWARDS)
+        {
+            switch(number)
+            {
+                case(1) :
+
+                break;
+            }
+        }
+        else
+        {
+            if(gyroTurns == true)
+            {
+                switch(number)
+                {
+                    case(1) :
+
+                    break;
+                }
+            }
+            else
+            {
+                switch(number)
+                {
+                    case(1) :
+
+                    break;
+                }    
+            }
+        }
+    }
+}
+
+class Claw : public System
+{ 
+    public:
+    Claw(int id = CLAW)
+        : System((int)id)
     {
     }
     void setMember(int number, int value){}
-    void move(){}
+    void move();
 };
 
 class Claw : public System
 { 
     public:
-    Claw(int id)
-        : System(id)//, // call Person(std::string, int) to initialize these fields   //m_battingAverage(battingAverage), m_homeRuns(homeRuns) to initialize Drive members
+    Claw(int id = CLAW)
+        : System((int)id)
     {
     }
     void setMember(int number, int value){}
-    void move(){}
+    void move();
 };
+
+
+
+//if eqal get encoder count to move. If less than dont do anything. If greater than
+
+void Drive::move()
+{
+
+}
+
+void Claw::move()
+{
+
+}
 /*
 drive::actions
 {
@@ -108,10 +183,10 @@ drive::actions
     {
         if(conditionsaremet)
         {
-            if(multiple == true)
+            if(number > 0)
             {
                 state = WAITINGFORINSTRUCTIONS;
-                multiple = false;
+                number--;
             }
             else
             {
@@ -125,12 +200,12 @@ drive::actions
 };
 */
 template <typename... Ts>
-int all(Ts... all)
+void all(Ts... all)
 {
-    std::vector<int> parameters = {all...};
+    std::vector<int> parameters = {(int)all...};
 
-    Drive drive{};
-    Claw claw{};
+    Drive drive{DRIVE};
+    Claw claw{CLAW};
 
     for(int i = 0; i < parameters.size(); i++)
     {
@@ -158,6 +233,7 @@ class pidController //fix divide by 0 error;
         double minOutput;
         double maxOutput;
 
+        pidController(){reset();pros::delay(1);} //Prevent divide by 0 error 
         void reset()
         {
             lastTime = pros::millis();
@@ -194,4 +270,7 @@ class pidController //fix divide by 0 error;
         int lastError;
 };
 
-void autonomous() {}
+void autonomous()
+{
+    all(CLAW,0,9,9,9,9,9,9);
+}
