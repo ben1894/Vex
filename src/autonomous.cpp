@@ -21,12 +21,16 @@ class System
 public: 
     const int id;
     char numberOfCalls = 0;
+    virtual int getProgress(System &obj)
+    {
+
+    };
     SystemStates state = END;
     System(int id)
         : id(id)
     {
     }
-    virtual void setMember(int number, int value) = 0; 
+    virtual void setMember(int &number, int value) = 0; //
 
     void initialUpdate(int &i, std::vector<int> &parameters)
     {
@@ -89,18 +93,41 @@ class Drive : public System
         : System((int)id)//, // call Person(std::string, int) to initialize these fields   //m_battingAverage(battingAverage), m_homeRuns(homeRuns) to initialize Drive members
     {
     }
+    void setMember(int &number, int value);
+    void move();
+    int getCurrentDistance()
+    {
+        if(direction == TURN)
+        {
+            getDistances(turnStats, target);
+            if(turnStats.Left <= turnStats.Right)
+            {
+                return turnStats.Left;
+            }
+            return turnStats.Right;
+        }
+        return getDriveEncoder();
+    }
+
+    int getDriveEncoder()
+    {
+        return;
+    }
+
+    private:
     bool stopAcceleration = 0;
     bool stopDeacceleration = 0;
-    Directions direction;
     bool noPID;
-    int distanceToGo;
+    bool turn;
+    Both turnStats;
+    Directions direction;
+    unsigned int distance;
     int maxSpeed;
     int minSpeed;
-    void setMember(int number, int value);
-    void move();
+    int target;
 };
 
-void Drive::setMember(int number, int value)
+void Drive::setMember(int &number, int value)
 {
     if(number == 0)
     {
@@ -113,7 +140,7 @@ void Drive::setMember(int number, int value)
             switch(number)
             {
                 case(1) :
-
+                    distance = value;
                 break;
             }
         }
@@ -124,7 +151,7 @@ void Drive::setMember(int number, int value)
                 switch(number)
                 {
                     case(1) :
-
+                        target = value;
                     break;
                 }
             }
@@ -133,7 +160,7 @@ void Drive::setMember(int number, int value)
                 switch(number)
                 {
                     case(1) :
-
+                        distance = value;
                     break;
                 }    
             }
@@ -141,29 +168,89 @@ void Drive::setMember(int number, int value)
     }
 }
 
-class Claw : public System
+class Lift : public System  //very quick acceleration
 { 
+    private:
+    Triggers trigger;
+    char triggerNumber;
+    int target;
+    int triggerBreak;
+    int speed;
+    System *triggerObj;
+
     public:
-    Claw(int id = CLAW)
+    Lift(int id = LIFT)
         : System((int)id)
-    {
+    { 
     }
-    void setMember(int number, int value){}
+    void setMember(int &number, int value)
+    {
+        static int subNumber = 0;
+        switch(number) //have a static sub counter that yeah.
+        {
+            case(0):
+                if(value == DRIVET || trigger == DRIVET)
+                {
+                    switch(subNumber)
+                    {
+                        case(0):
+                            trigger = (Triggers)value;
+                            ++subNumber;
+                            --number;
+                            break;
+                        case(1):
+                            triggerNumber = value;
+                            ++subNumber;
+                            --number;
+                            break;
+                        case(2):
+                            triggerBreak = value;
+                            subNumber = 0;
+                            break;
+                    }
+                }
+                else if(value == TIME || trigger == TIME)
+                {
+                    switch(subNumber)
+                    {
+                        case(0):
+                            trigger = (Triggers)value;
+                            ++subNumber;
+                            --number;
+                            break;
+                        case(1):
+                            triggerBreak = value;
+                            subNumber = 0;
+                            break;
+                    }
+                }
+                else if(value == NONE || trigger == NONE)
+                {
+                    trigger = (Triggers)value;
+                }
+                break;
+            case(1):
+                target = value;
+                break;
+            case(3):
+                
+        }
+    }
     void move();
 };
 
-class Claw : public System
+/*
+class Lift : public System  //very quick acceleration
 { 
     public:
-    Claw(int id = CLAW)
+    Lift(int id = LIFT)
         : System((int)id)
     {
     }
-    void setMember(int number, int value){}
+    void setMember(int &number, int value){}
     void move();
 };
-
-
+*/
 
 //if eqal get encoder count to move. If less than dont do anything. If greater than
 
@@ -172,7 +259,7 @@ void Drive::move()
 
 }
 
-void Claw::move()
+void Lift::move()
 {
 
 }
@@ -204,22 +291,22 @@ void all(Ts... all)
 {
     std::vector<int> parameters = {(int)all...};
 
-    Drive drive{DRIVE};
-    Claw claw{CLAW};
+    Drive drive{};
+    Lift lift{};
 
     for(int i = 0; i < parameters.size(); i++)
     {
         drive.initialUpdate(i, parameters);
-        claw.initialUpdate(i, parameters);
+        lift.initialUpdate(i, parameters);
     }
 
-    while(!(claw.state == END && drive.state == END))
+    while(lift.state != END || drive.state != END))
     {
         drive.move();
-        claw.move();
+        lift.move();
         pros::delay(5);
         drive.update(parameters);
-        claw.update(parameters);
+        lift.update(parameters);
     }
 
 }
@@ -230,8 +317,8 @@ class pidController //fix divide by 0 error;
         double P;
         double I;
         double D;
-        double minOutput;
-        double maxOutput;
+        unsigned char minOutput;
+        unsigned char maxOutput;
 
         pidController(){reset();pros::delay(1);} //Prevent divide by 0 error 
         void reset()
@@ -272,5 +359,5 @@ class pidController //fix divide by 0 error;
 
 void autonomous()
 {
-    all(CLAW,0,9,9,9,9,9,9);
+    all(LIFT,0,9,9,9,9,9,9);
 }

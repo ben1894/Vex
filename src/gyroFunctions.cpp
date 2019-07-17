@@ -5,9 +5,9 @@ int actualGyroPosition()
 {
 	int fixingGyro = gyro.get_value();
 
-  if(gyroUpsidedown == true)
-  {
-  	fixingGyro = fixingGyro * -1;
+	if(gyroUpsidedown == true)
+	{
+		fixingGyro = fixingGyro * -1;
 	}
 	return fixTarget(fixingGyro);
 }
@@ -19,7 +19,7 @@ int actualGyroPosition()
  		return ((oldTarget%3600) + 3600);
    }
    else if(oldTarget > 3600)
-   {
+   { 
    	return (oldTarget%3600);
    }
    else

@@ -44,6 +44,23 @@ enum SystemStates
 	EXECUTINGINSTRUCTIONS
 };
 
+enum SpeedControl
+{
+	CUSTOMPID,
+	NOPID,
+	REGPID,
+	MMPID,
+	PIDPACK1
+};
+
+enum Triggers
+{
+	TIME,
+	DRIVET,
+	LIFTT,
+	NONE
+};
+
 enum Directions
 {
 	BACKWARDS,
