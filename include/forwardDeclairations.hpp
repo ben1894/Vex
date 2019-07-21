@@ -21,20 +21,32 @@ public:
 	}
 };
 
+//inside wheel Speed = 2pir
+
 enum Select
 {
-	NEGATIVE = -1,
-	UNDEFINED = 0,
-	REDFLAG = 1,
-	BLUEFLAG = 2,
-	REDBACKPARK = 3,
-	BLUEBACKPARK = 4,
-	REDBACK = 5,
-	BLUEBACK = 6,
-	REDDOUBLEBACK = 7,
-	BLUEDOUBLEBACK = 9,
-	SKILLZ = 8,
-	HOLDER2 = 10
+
+};
+
+enum AutonFlags
+{
+	CUSTOMPID,
+	NOPID,
+	REGPID,
+	MMPID,
+	PIDPACK1,
+
+	TIME,
+	DRIVET,
+	LIFTT,
+	NONE,
+
+	BACKWARDS,
+	FORWARDS,
+	TURN,
+	SWEEP,
+
+	NOACCEL,
 };
 
 enum SystemStates
@@ -46,26 +58,17 @@ enum SystemStates
 
 enum SpeedControl
 {
-	CUSTOMPID,
-	NOPID,
-	REGPID,
-	MMPID,
-	PIDPACK1
+
 };
 
 enum Triggers
 {
-	TIME,
-	DRIVET,
-	LIFTT,
-	NONE
+
 };
 
 enum Directions
 {
-	BACKWARDS,
-	FORWARDS,
-	TURN
+
 };
 
 enum Ids
