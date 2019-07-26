@@ -30,6 +30,7 @@ public:
         : id(id)
     {
     }
+
     virtual void setMember(int &number, int value) = 0; //
 
     void initialUpdate(int &i, std::vector<int> &parameters)
@@ -39,9 +40,9 @@ public:
             if(state == END)
             {
                 parameters[i] = (int)NULLOPTION;
+                int x = 0;
                 while(parameters[i+1] > minEnumValue)
                 {
-                    int x = 0;
                     setMember(x,parameters[i]);
                     ++i;
                     ++x;
@@ -195,7 +196,7 @@ class Lift : public System  //very quick acceleration
         : System((int)id)
     { 
     }
-    void setMember(int &number, int value) //
+    void setMember(int &number, int value)
     {
         static int subNumber = 0;
         switch(number) //have a static sub counter that yeah.
