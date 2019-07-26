@@ -120,7 +120,7 @@ class Drive : public System
     bool noPID;
     bool turn;
     Both turnStats;
-    Directions direction;
+    AutonFlags direction;
     unsigned int distance;
     int maxSpeed;
     int minSpeed;
@@ -132,7 +132,7 @@ void Drive::setMember(int &number, int value)
 {
     if(number == 0)
     {
-        direction = (Directions)value;
+        direction = (AutonFlags)value;
     }
     else
     {
@@ -183,8 +183,8 @@ void Drive::setMember(int &number, int value)
 class Lift : public System  //very quick acceleration
 { 
     private:
-    Triggers trigger;
-    SpeedControl speedControl;
+    AutonFlags trigger;
+    AutonFlags speedControl;
     char triggerNumber;
     int target;
     int triggerBreak;
@@ -195,7 +195,7 @@ class Lift : public System  //very quick acceleration
         : System((int)id)
     { 
     }
-    void setMember(int &number, int value)
+    void setMember(int &number, int value) //
     {
         static int subNumber = 0;
         switch(number) //have a static sub counter that yeah.
@@ -206,7 +206,7 @@ class Lift : public System  //very quick acceleration
                     switch(subNumber)
                     {
                         case(0):
-                            trigger = (Triggers)value;
+                            trigger = (AutonFlags)value;
                             ++subNumber;
                             --number;
                             break;
@@ -226,7 +226,7 @@ class Lift : public System  //very quick acceleration
                     switch(subNumber)
                     {
                         case(0):
-                            trigger = (Triggers)value;
+                            trigger = (AutonFlags)value;
                             ++subNumber;
                             --number;
                             break;
@@ -238,7 +238,7 @@ class Lift : public System  //very quick acceleration
                 }
                 else if(value == NONE || trigger == NONE)
                 {
-                    trigger = (Triggers)value;
+                    trigger = (AutonFlags)value;
                 }
                 break;
             case(1):
@@ -247,14 +247,14 @@ class Lift : public System  //very quick acceleration
             case(2):
                 if(value == REGPID || speedControl == REGPID)
                 {
-                    speedControl = (SpeedControl)value;
+                    speedControl = (AutonFlags)value;
                 }
                 else if(value == NOPID || speedControl == NOPID)
                 {
                     switch(subNumber)
                     {
                         case(0):
-                            speedControl = (SpeedControl)value;
+                            speedControl = (AutonFlags)value;
                             ++subNumber;
                             --number;
                             break;

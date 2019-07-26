@@ -23,11 +23,6 @@ public:
 
 //inside wheel Speed = 2pir
 
-enum Select
-{
-
-};
-
 enum AutonFlags
 {
 	CUSTOMPID,
@@ -54,21 +49,6 @@ enum SystemStates
 	WAITINGFORINSTRUCTIONS,
 	END,
 	EXECUTINGINSTRUCTIONS
-};
-
-enum SpeedControl
-{
-
-};
-
-enum Triggers
-{
-
-};
-
-enum Directions
-{
-
 };
 
 enum Ids
