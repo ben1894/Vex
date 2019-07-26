@@ -125,7 +125,6 @@ class Drive : public System
     int maxSpeed;
     int minSpeed;
     int target;
-    int radius;
 };
 
 void Drive::setMember(int &number, int value)
@@ -140,25 +139,14 @@ void Drive::setMember(int &number, int value)
         {
             switch(number)
             {
-                case(1):
+                case(1) :
                     distance = value;
                 break;
             }
         }
-        else if(direction == SWEEP) //sweep turns
+        else
         {
-            switch(number)
-            {
-                case(1):
-                    radius = value;
-                    break;
-                case(2):
-
-            }
-        }
-        else      //regular turns
-        {        
-            if(gyroTurns == true) //with gyro
+            if(gyroTurns == true)
             {
                 switch(number)
                 {
@@ -167,7 +155,7 @@ void Drive::setMember(int &number, int value)
                     break;
                 }
             }
-            else //emergency no gyro turns
+            else
             {
                 switch(number)
                 {
@@ -184,12 +172,12 @@ class Lift : public System  //very quick acceleration
 { 
     private:
     Triggers trigger;
-    SpeedControl speedControl;
     char triggerNumber;
     int target;
     int triggerBreak;
     int speed;
-    //swint 
+    System *triggerObj;
+
     public:
     Lift(int id = LIFT)
         : System((int)id)
@@ -244,28 +232,8 @@ class Lift : public System  //very quick acceleration
             case(1):
                 target = value;
                 break;
-            case(2):
-                if(value == REGPID || speedControl == REGPID)
-                {
-                    speedControl = (SpeedControl)value;
-                }
-                else if(value == NOPID || speedControl == NOPID)
-                {
-                    switch(subNumber)
-                    {
-                        case(0):
-                            speedControl = (SpeedControl)value;
-                            ++subNumber;
-                            --number;
-                            break;
-                        case(1):
-                            triggerBreak = value;
-                            subNumber = 0;
-                            break;
-                    }
-                }
-                break;
-
+            case(3):
+                
         }
     }
     void move();
@@ -318,7 +286,6 @@ drive::actions
     }
 };
 */
-
 template <typename... Ts>
 void all(Ts... all)
 {
@@ -344,7 +311,7 @@ void all(Ts... all)
 
 }
 
-class PidController
+class pidController //fix divide by 0 error;
 {
     public:
         double P;
@@ -353,7 +320,7 @@ class PidController
         unsigned char minOutput;
         unsigned char maxOutput;
 
-        PidController(){reset();pros::delay(1);} //Prevent divide by 0 error 
+        pidController(){reset();pros::delay(1);} //Prevent divide by 0 error 
         void reset()
         {
             lastTime = pros::millis();
