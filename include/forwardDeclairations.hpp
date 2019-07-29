@@ -41,7 +41,7 @@ enum AutonFlags
 	TURN,
 	SWEEP,
 
-	NOACCEL,
+	NOACCEL
 };
 
 enum SystemStates
