@@ -256,12 +256,10 @@ class Lift : public System  //very quick acceleration
 
 void Drive::move()
 {
-
 }
 
 void Lift::move()
 {
-
 }
 /*
 drive::actions
