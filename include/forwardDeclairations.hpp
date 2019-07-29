@@ -31,10 +31,10 @@ enum AutonFlags
 	MMPID,
 	PIDPACK1,
 
-	TIME,
+	TIMET,
 	DRIVET,
 	LIFTT,
-	NONE,
+	NONET,
 
 	BACKWARDS,
 	FORWARDS,

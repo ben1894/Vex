@@ -18,21 +18,70 @@ const bool gyroTurns = true;
  */
 class System 
 { 
+protected:
+    char triggerNumber; //So it can be called on the second process of something
+    int triggerBreak;   // 
+    System *triggerSystem;
+    AutonFlags trigger; //Holds the name of the object that will trigger it                  All sub systems will have the option of starting on a trigger
+
+    AutonFlags speedControl;
+    int target;
+
 public: 
-    const int id;
+    const int id; 
     char numberOfCalls = 0;
-    virtual int getProgress(System &obj)
-    {
+    virtual int getProgress(System &obj){};
+    virtual void setMember(int &number, AutonFlags &currentFlag, int value) = 0; //
 
-    };
     SystemStates state = END;
-    System(int id)
-        : id(id)
+    System(int id) : id(id){}
+
+    bool setSystemMember(int &number, AutonFlags &currentFlag, int value)
     {
+        if(number == 0)
+        {
+            currentFlag = (AutonFlags)value;
+            switch(currentFlag) 
+            {
+                case(NONET):
+                    trigger = (AutonFlags)value;
+                    return false;
+                case(NOPID):
+                    speedControl = (AutonFlags)value;
+                    return false;
+                default:
+                    return true;
+            }
+        }
+        else
+        {
+            switch(currentFlag)
+            {
+                case(DRIVET):
+                case(LIFTT):
+                    switch(number)
+                    {
+                        case(1):
+                            trigger = currentFlag;
+                            triggerNumber = value; //distance
+                            number++;
+                            return false;
+                        case(2):
+                            number = 0;
+                            triggerBreak = value;
+                            return false;
+                    }
+                case(TIMET):
+                    trigger = currentFlag;
+                    triggerBreak = value;
+                    number = 0;
+                    return false;
+                default:
+                    return true;
+            }
+        }
+
     }
-
-    virtual void setMember(int &number, int value) = 0; //
-
     void initialUpdate(int &i, std::vector<int> &parameters)
     {
         if(parameters[i] == id)
@@ -40,13 +89,16 @@ public:
             if(state == END)
             {
                 parameters[i] = (int)NULLOPTION;
-                int x = 0;
-                while(parameters[i+1] > minEnumValue)
+                AutonFlags currentFlag;
+                int subFlag = 0;
+
+                do
                 {
-                    setMember(x,parameters[i]);
                     ++i;
-                    ++x;
-                }
+                    bool checkSecondaryFlags = setSystemMember(subFlag,currentFlag,parameters[i]);
+                    setMember(subFlag,currentFlag,parameters[i]);
+                } while(parameters[i+1] < minEnumValue);
+
                 state = EXECUTINGINSTRUCTIONS;
             }
             else
@@ -68,13 +120,16 @@ public:
                     if(state == WAITINGFORINSTRUCTIONS)
                     {
                         parameters[i] = (int)NULLOPTION;
-                        while(parameters[i+1] > minEnumValue) //plus one here to it doesn't loop over the next value. 
+                        AutonFlags currentFlag;  //DRIVE,FORWARD,1000,LIFT,FLAG
+                        int subFlag = 0;
+
+                        do //loops through the data to give to the specific system
                         {
-                            int x = 0;
-                            setMember(x,parameters[i]);
                             ++i;
-                            ++x;
-                        }
+                            bool checkSecondaryFlags = setSystemMember(subFlag,currentFlag,parameters[i]);
+                            setMember(subFlag,currentFlag,parameters[i]);
+                        } while(parameters[i+1] < minEnumValue);
+
                         state = EXECUTINGINSTRUCTIONS;
                     }
                     else
@@ -88,13 +143,23 @@ public:
 }; 
 
 class Drive : public System
-{ 
+{   
+    private:
+    bool stopAcceleration = false;
+    bool stopDeacceleration = false;
+    bool turn;
+    int maxSpeed;
+    int minSpeed;
+    int target;
+    int radius;
+    Both turnStats;
+    AutonFlags direction;
+
     public:
     Drive(int id = DRIVE)
-        : System((int)id)//, // call Person(std::string, int) to initialize these fields   //m_battingAverage(battingAverage), m_homeRuns(homeRuns) to initialize Drive members
-    {
-    }
-    void setMember(int &number, int value);
+        : System((int)id){};//, // call Person(std::string, int) to initialize these fields   //m_battingAverage(battingAverage), m_homeRuns(homeRuns) to initialize Drive members
+
+    void setMember(int &number, AutonFlags &currentFlag, int value);
     void move();
     int getCurrentDistance()
     {
@@ -114,69 +179,44 @@ class Drive : public System
     {
         return;
     }
-
-    private:
-    bool stopAcceleration = 0;
-    bool stopDeacceleration = 0;
-    bool noPID;
-    bool turn;
-    Both turnStats;
-    AutonFlags direction;
-    unsigned int distance;
-    int maxSpeed;
-    int minSpeed;
-    int target;
-    int radius;
 };
 
-void Drive::setMember(int &number, int value)
+void Drive::setMember(int &number, AutonFlags &currentFlag, int value)
 {
     if(number == 0)
     {
-        direction = (AutonFlags)value;
+        currentFlag = (AutonFlags)value;
+        switch(currentFlag) //for if
+        {
+            case(NOACCEL):
+                stopAcceleration = true;
+                break;
+            default:
+                number++;
+        }
     }
     else
     {
-        if(direction == FORWARDS || direction == BACKWARDS)
+        switch(currentFlag)
         {
-            switch(number)
-            {
-                case(1):
-                    distance = value;
+            case(FORWARDS):
+            case(BACKWARDS):
+            case(TURN):
+                target = value; //distance
+                number = 0;
                 break;
-            }
-        }
-        else if(direction == SWEEP) //sweep turns
-        {
-            switch(number)
-            {
-                case(1):
-                    radius = value;
-                    break;
-                case(2):
-
-            }
-        }
-        else      //regular turns
-        {        
-            if(gyroTurns == true) //with gyro
-            {
+            case(SWEEP):
                 switch(number)
                 {
-                    case(1) :
-                        target = value;
-                    break;
+                    case(1):
+                        target = value; //distance
+                        number++;
+                        break;
+                    case(2):
+                        number = 0;
+                        radius = value;
+                        break;
                 }
-            }
-            else //emergency no gyro turns
-            {
-                switch(number)
-                {
-                    case(1) :
-                        distance = value;
-                    break;
-                }    
-            }
         }
     }
 }
@@ -184,108 +224,22 @@ void Drive::setMember(int &number, int value)
 class Lift : public System  //very quick acceleration
 { 
     private:
-    AutonFlags trigger;
-    AutonFlags speedControl;
-    char triggerNumber;
     int target;
-    int triggerBreak;
     int speed;
-    //swint 
+    AutonFlags speedControl;
+
     public:
     Lift(int id = LIFT)
         : System((int)id)
     { 
     }
-    void setMember(int &number, int value)
+    void setMember(int &number, AutonFlags &currentFlag, int value)
     {
-        static int subNumber = 0;
-        switch(number) //have a static sub counter that yeah.
-        {
-            case(0):
-                if(value == DRIVET || trigger == DRIVET)
-                {
-                    switch(subNumber)
-                    {
-                        case(0):
-                            trigger = (AutonFlags)value;
-                            ++subNumber;
-                            --number;
-                            break;
-                        case(1):
-                            triggerNumber = value;
-                            ++subNumber;
-                            --number;
-                            break;
-                        case(2):
-                            triggerBreak = value;
-                            subNumber = 0;
-                            break;
-                    }
-                }
-                else if(value == TIME || trigger == TIME)
-                {
-                    switch(subNumber)
-                    {
-                        case(0):
-                            trigger = (AutonFlags)value;
-                            ++subNumber;
-                            --number;
-                            break;
-                        case(1):
-                            triggerBreak = value;
-                            subNumber = 0;
-                            break;
-                    }
-                }
-                else if(value == NONE || trigger == NONE)
-                {
-                    trigger = (AutonFlags)value;
-                }
-                break;
-            case(1):
-                target = value;
-                break;
-            case(2):
-                if(value == REGPID || speedControl == REGPID)
-                {
-                    speedControl = (AutonFlags)value;
-                }
-                else if(value == NOPID || speedControl == NOPID)
-                {
-                    switch(subNumber)
-                    {
-                        case(0):
-                            speedControl = (AutonFlags)value;
-                            ++subNumber;
-                            --number;
-                            break;
-                        case(1):
-                            triggerBreak = value;
-                            subNumber = 0;
-                            break;
-                    }
-                }
-                break;
-
-        }
     }
     void move();
 };
 
-/*
-class Lift : public System  //very quick acceleration
-{ 
-    public:
-    Lift(int id = LIFT)
-        : System((int)id)
-    {
-    }
-    void setMember(int &number, int value){}
-    void move();
-};
-*/
-
-//if eqal get encoder count to move. If less than dont do anything. If greater than
+//if eqal get encoder count to move. If less than dont do anything. If greater than.. first check number 
 
 void Drive::move()
 {
@@ -301,6 +255,7 @@ drive::actions
 {
     if(state = EXECUTINGINSTRUCTIONS)
     {
+        Do stuff
         if(conditionsaremet)
         {
             if(number > 0)
@@ -323,7 +278,7 @@ drive::actions
 template <typename... Ts>
 void all(Ts... all)
 {
-    std::vector<int> parameters = {(int)all...};
+    std::vector<int> parameters = {(int)all...,NULLOPTION};
 
     Drive drive{};
     Lift lift{};
@@ -342,7 +297,6 @@ void all(Ts... all)
         drive.update(parameters);
         lift.update(parameters);
     }
-
 }
 
 class PidController
