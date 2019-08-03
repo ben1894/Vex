@@ -28,14 +28,16 @@ protected:
     AutonFlags trigger; //Holds the name of the object that will trigger it                  All sub systems will have the option of starting on a trigger
 
     AutonFlags speedControl;
+    PidController pid;
     int target;
 
 public: 
     int id; 
     char numberOfCalls = 0;
     virtual int getProgress() = 0;
-    virtual void setMember(int &number, AutonFlags &currentFlag, int value) = 0; //
-    virtual void resetObj() = 0;
+    virtual void setMember(int &number, AutonFlags &currentFlag, int value) = 0; //pure virtual functions
+    virtual void resetObj() = 0;                                                 //a system object is never going to exist
+    virtual void initializePid(AutonFlags pidPack) = 0;
 
     SystemStates state = END;
     System(int id) : id(id){}
@@ -50,11 +52,8 @@ public:
                 case(NONET):
                     trigger = (AutonFlags)value;
                     return false;
-                case(NOPID):
-                    speedControl = (AutonFlags)value;
-                    return false;
                 default:
-                    return true;
+                    return true; //dont plus one yet because it will go through the other flags
             }
         }
         else
@@ -65,7 +64,7 @@ public:
                 case(LIFTT):
                     switch(number)
                     {
-                        case(1):
+                        case(1):       //its never going to be 0 because it only goes in this loops if its 0;
                             if(currentFlag == DRIVET)
                             {
                                 triggerSystem = driveObj;
@@ -88,6 +87,43 @@ public:
                     triggerBreak = value;
                     number = 0;
                     return false;
+                case(NOPID):
+                    pid.minOutput = value; //reuse these values as single speed holders
+                    pid.maxOutput = value;
+                    speedControl = currentFlag;
+                    number = 0;
+                    return false;
+                case(REGPID):
+                case(DRIVEPID):
+                case(LIFTPID):
+                    initializePid(currentFlag);
+                    speedControl = currentFlag;
+                    return false;
+                case(CUSTOMPID):
+                    switch(number)
+                    {
+                        case(1):
+                            speedControl = currentFlag;
+                            pid.minOutput = value;
+                            number++;
+                            return false;
+                        case(2):
+                            pid.maxOutput = value;
+                            number++;
+                            return false;
+                        case(3):
+                            pid.P = value;
+                            number++;
+                            return false;
+                        case(4):
+                            pid.I = value;
+                            number++;
+                            return false;
+                        case(5):
+                            pid.D = value;
+                            number++;
+                            return false;
+                    }
                 default:
                     return true;
             }
@@ -271,7 +307,7 @@ void Lift::move()
 
 }
 /*
-drive::actions
+drive::actions // or is equal to end
 {
     if(state = EXECUTINGINSTRUCTIONS)
     {
