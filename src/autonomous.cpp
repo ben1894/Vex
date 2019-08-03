@@ -3,20 +3,23 @@
 bool autonTest = false;
 const bool voltage = true;
 const bool gyroTurns = true;
+Drive *driveObj;
+Lift *liftObj;
 /**
  * Runs the user autonomous code. This function will be started in its own task
  * with the default priority and stack size whenever the robot is enabled via
  * the Field Management System or the VEX Competition Switch in the autonomous
  * mode. Alternatively, this function may be called in initialize or opcontrol
- * for non-competition testing purposes.
+ * for non-competition testing purposes. 
  *
  * If the robot is disabled or communications is lost, the autonomous task
  * will be stopped. Re-enabling the robot will restart the task, not re-start it
  * from where it left off.
  */
-/*a = A();   
+/*a = A();   //clears back to defaults
  */
-class System 
+
+class System
 { 
 protected:
     char triggerNumber; //So it can be called on the second process of something
@@ -28,15 +31,16 @@ protected:
     int target;
 
 public: 
-    const int id; 
+    int id; 
     char numberOfCalls = 0;
-    virtual int getProgress(System &obj){};
+    virtual int getProgress() = 0;
     virtual void setMember(int &number, AutonFlags &currentFlag, int value) = 0; //
+    virtual void resetObj() = 0;
 
     SystemStates state = END;
     System(int id) : id(id){}
 
-    bool setSystemMember(int &number, AutonFlags &currentFlag, int value)
+    bool setSystemMember(int &number, AutonFlags &currentFlag, int value) //returning true means to check the other flags
     {
         if(number == 0)
         {
@@ -62,6 +66,14 @@ public:
                     switch(number)
                     {
                         case(1):
+                            if(currentFlag == DRIVET)
+                            {
+                                triggerSystem = driveObj;
+                            }
+                            else if(currentFlag == LIFTT)
+                            {
+                                triggerSystem = liftObj;
+                            }
                             trigger = currentFlag;
                             triggerNumber = value; //distance
                             number++;
@@ -113,12 +125,13 @@ public:
         if(state == WAITINGFORINSTRUCTIONS)
         {
             numberOfCalls = 0;
-            for(int i = 0; i < parameters.size(); i++)
+            for(int i = 0; i < parameters.size()-1; i++)
             {
                 if(parameters[i] == id)
                 {
                     if(state == WAITINGFORINSTRUCTIONS)
                     {
+                        resetObj();
                         parameters[i] = (int)NULLOPTION;
                         AutonFlags currentFlag;  //DRIVE,FORWARD,1000,LIFT,FLAG
                         int subFlag = 0;
@@ -148,8 +161,6 @@ class Drive : public System
     bool stopAcceleration = false;
     bool stopDeacceleration = false;
     bool turn;
-    int maxSpeed;
-    int minSpeed;
     int target;
     int radius;
     Both turnStats;
@@ -157,7 +168,13 @@ class Drive : public System
 
     public:
     Drive(int id = DRIVE)
-        : System((int)id){};//, // call Person(std::string, int) to initialize these fields   //m_battingAverage(battingAverage), m_homeRuns(homeRuns) to initialize Drive members
+        : System((int)id)
+        {
+            if(driveObj == nullptr)
+            {
+                driveObj = this;
+            } 
+        };
 
     void setMember(int &number, AutonFlags &currentFlag, int value);
     void move();
@@ -231,11 +248,15 @@ class Lift : public System  //very quick acceleration
     public:
     Lift(int id = LIFT)
         : System((int)id)
-    { 
-    }
+        {
+            if(liftObj == nullptr)
+            {
+                liftObj = this;
+            } 
+        }
     void setMember(int &number, AutonFlags &currentFlag, int value)
-    {
-    }
+    {}
+
     void move();
 };
 
@@ -243,7 +264,6 @@ class Lift : public System  //very quick acceleration
 
 void Drive::move()
 {
-
 }
 
 void Lift::move()
@@ -283,7 +303,7 @@ void all(Ts... all)
     Drive drive{};
     Lift lift{};
 
-    for(int i = 0; i < parameters.size(); i++)
+    for(int i = 0; i < parameters.size()-1; i++)
     {
         drive.initialUpdate(i, parameters);
         lift.initialUpdate(i, parameters);
