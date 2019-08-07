@@ -1,5 +1,7 @@
+﻿
 #include "main.h"
 #include "forwardDeclairations.hpp"
+#include "pidPacks.hpp"
 bool autonTest = false;
 const bool voltage = true;
 const bool gyroTurns = true;
@@ -50,7 +52,19 @@ public:
             switch(currentFlag) 
             {
                 case(NONET):
-                    trigger = (AutonFlags)value;
+                    trigger = currentFlag;
+                    return false;
+                case(REGPID):
+                    speedControl = currentFlag;
+                    initializePid(currentFlag);
+                    return false;
+                case(DRIVEPID):
+                    speedControl = currentFlag;
+                    pid = PidController(regDriveP,regDriveI,regDriveD,regDriveMin,regDriveMax);
+                    return false;
+                case(LIFTPID):
+                    speedControl = currentFlag;
+                    pid = PidController(regLiftP,regLiftI,regLiftD,regLiftMin,regLiftMax);
                     return false;
                 default:
                     return true; //dont plus one yet because it will go through the other flags
@@ -93,12 +107,23 @@ public:
                     speedControl = currentFlag;
                     number = 0;
                     return false;
-                case(REGPID):
-                case(DRIVEPID):
-                case(LIFTPID):
-                    initializePid(currentFlag);
-                    speedControl = currentFlag;
-                    return false;
+                case(MMREGPID):
+                    switch(number)
+                    {
+                        case(1):
+                            speedControl = currentFlag;
+                            initializePid(currentFlag);
+                            number++;
+                            return false;
+                        case(2):
+                            pid.minOutput = value;
+                            number++;
+                            return false;
+                        case(3):
+                            pid.maxOutput = value;
+                            number = 0;
+                            return false;
+                    }
                 case(CUSTOMPID):
                     switch(number)
                     {
@@ -121,7 +146,7 @@ public:
                             return false;
                         case(5):
                             pid.D = value;
-                            number++;
+                            number = 0;
                             return false;
                     }
                 default:
@@ -206,12 +231,17 @@ class Drive : public System
     Drive(int id = DRIVE)
         : System((int)id)
         {
+            pid(regDriveP,regDriveI,regDriveD,regDriveMin,regDriveMax);
             if(driveObj == nullptr)
             {
                 driveObj = this;
             } 
         };
 
+    void initializePid(AutonFlags pidPack)
+    {
+        pid = PidController(regDriveP,regDriveI,regDriveD,regDriveMin,regDriveMax);
+    }
     void setMember(int &number, AutonFlags &currentFlag, int value);
     void move();
     int getCurrentDistance()
@@ -285,11 +315,18 @@ class Lift : public System  //very quick acceleration
     Lift(int id = LIFT)
         : System((int)id)
         {
+            pid(regLiftP,regLiftI,regLiftD,regLiftMin,regLiftMax);
             if(liftObj == nullptr)
             {
                 liftObj = this;
             } 
         }
+
+    void initializePid(AutonFlags pidPack)
+    {
+        pid = PidController(regLiftP,regLiftI,regLiftD,regLiftMin,regLiftMax);
+    }
+
     void setMember(int &number, AutonFlags &currentFlag, int value)
     {}
 
@@ -364,7 +401,16 @@ class PidController
         unsigned char minOutput;
         unsigned char maxOutput;
 
-        PidController(){reset();pros::delay(1);} //Prevent divide by 0 error 
+        PidController(double P = 0, double I = 0, double D = 0, unsigned char minOutput = 0, unsigned char maxOutput = 0)
+        {
+            this->P = P;
+            this->I = I;
+            this->D = D;
+            this->minOutput = minOutput;
+            this->maxOutput = maxOutput;
+            reset();pros::delay(1); //Prevent divide by 0 error 
+        }
+
         void reset()
         {
             lastTime = pros::millis();
@@ -403,5 +449,5 @@ class PidController
 
 void autonomous()
 {
-    all(LIFT,0,9,9,9,9,9,9);
+    all(LIFT,0,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,99,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,DRIVE);
 }
