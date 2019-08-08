@@ -62,6 +62,7 @@ enum Ids
 	INNER = 999999996,
 	NULLOPTION = 999999995
 };
+
 const int minEnumValue((int)NULLOPTION-1);
 
 extern bool autonTest;

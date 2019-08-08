@@ -5,6 +5,9 @@
 bool autonTest = false;
 const bool voltage = true;
 const bool gyroTurns = true;
+class Drive;
+class Lift;
+class PidController;
 Drive *driveObj;
 Lift *liftObj;
 /**
@@ -12,7 +15,7 @@ Lift *liftObj;
  * with the default priority and stack size whenever the robot is enabled via
  * the Field Management System or the VEX Competition Switch in the autonomous
  * mode. Alternatively, this function may be called in initialize or opcontrol
- * for non-competition testing purposes. 
+ * for non-competition testing purposes.
  *
  * If the robot is disabled or communications is lost, the autonomous task
  * will be stopped. Re-enabling the robot will restart the task, not re-start it
@@ -20,21 +23,75 @@ Lift *liftObj;
  */
 /*a = A();   //clears back to defaults
  */
+class PidController
+{
+    public:
+        double P;
+        double I;
+        double D;
+        unsigned char minOutput;
+        unsigned char maxOutput;
+
+        PidController(double P = 0, double I = 0, double D = 0, unsigned char minOutput = 0, unsigned char maxOutput = 0)
+        {
+            this->P = P;
+            this->I = I;
+            this->D = D;
+            this->minOutput = minOutput;
+            this->maxOutput = maxOutput;
+            reset();pros::delay(1); //Prevent divide by 0 error
+        }
+
+        void reset()
+        {
+            lastTime = pros::millis();
+            combinedIntegral = 0;
+            lastError = 0;
+        }
+
+        int output(int currentSensorData, int target)
+        {
+            int error = currentSensorData - target;
+            unsigned long changeInTime = lastTime - pros::millis();
+
+            long currentIntegral = error * changeInTime;
+            combinedIntegral += currentIntegral;
+            double derivative = (error - lastError) / changeInTime;
+
+            lastTime = pros::millis();
+            lastError = error;
+
+            int output = (P * error) + (I * combinedIntegral) + (D * derivative);
+            if(output > maxOutput)
+            {
+                return maxOutput;
+            }
+            if(output < minOutput)
+            {
+                return minOutput;
+            }
+            return output;
+        }
+    private:
+        unsigned long lastTime;
+        long combinedIntegral;
+        int lastError;
+};
 
 class System
-{ 
+{
 protected:
     char triggerNumber; //So it can be called on the second process of something
-    int triggerBreak;   // 
+    int triggerBreak;   //
     System *triggerSystem;
     AutonFlags trigger; //Holds the name of the object that will trigger it                  All sub systems will have the option of starting on a trigger
 
     AutonFlags speedControl;
-    PidController pid;
+    PidController pid{};
     int target;
 
-public: 
-    int id; 
+public:
+    int id;
     char numberOfCalls = 0;
     virtual int getProgress() = 0;
     virtual void setMember(int &number, AutonFlags &currentFlag, int value) = 0; //pure virtual functions
@@ -42,14 +99,14 @@ public:
     virtual void initializePid(AutonFlags pidPack) = 0;
 
     SystemStates state = END;
-    System(int id) : id(id){}
+    System(int idVal, double b, double c, double d, unsigned char e, unsigned char f): id(idVal), pid(b, c, d, e, f){}
 
     bool setSystemMember(int &number, AutonFlags &currentFlag, int value) //returning true means to check the other flags
     {
         if(number == 0)
         {
             currentFlag = (AutonFlags)value;
-            switch(currentFlag) 
+            switch(currentFlag)
             {
                 case(NONET):
                     trigger = currentFlag;
@@ -81,11 +138,11 @@ public:
                         case(1):       //its never going to be 0 because it only goes in this loops if its 0;
                             if(currentFlag == DRIVET)
                             {
-                                triggerSystem = driveObj;
+                                triggerSystem = reinterpret_cast<System *>(driveObj);
                             }
                             else if(currentFlag == LIFTT)
                             {
-                                triggerSystem = liftObj;
+                                triggerSystem = reinterpret_cast<System *>(liftObj);
                             }
                             trigger = currentFlag;
                             triggerNumber = value; //distance
@@ -214,10 +271,10 @@ public:
             }
         }
     }
-}; 
+};
 
 class Drive : public System
-{   
+{
     private:
     bool stopAcceleration = false;
     bool stopDeacceleration = false;
@@ -228,14 +285,13 @@ class Drive : public System
     AutonFlags direction;
 
     public:
-    Drive(int id = DRIVE)
-        : System((int)id)
+    Drive(int idVal = DRIVE)
+        : System((int)idVal,regDriveP,regDriveI,regDriveD,regDriveMin,regDriveMax)
         {
-            pid(regDriveP,regDriveI,regDriveD,regDriveMin,regDriveMax);
             if(driveObj == nullptr)
             {
                 driveObj = this;
-            } 
+            }
         };
 
     void initializePid(AutonFlags pidPack)
@@ -305,7 +361,7 @@ void Drive::setMember(int &number, AutonFlags &currentFlag, int value)
 }
 
 class Lift : public System  //very quick acceleration
-{ 
+{
     private:
     int target;
     int speed;
@@ -313,13 +369,12 @@ class Lift : public System  //very quick acceleration
 
     public:
     Lift(int id = LIFT)
-        : System((int)id)
+        : System((int)id,regLiftP,regLiftI,regLiftD,regLiftMin,regLiftMax)
         {
-            pid(regLiftP,regLiftI,regLiftD,regLiftMin,regLiftMax);
             if(liftObj == nullptr)
             {
                 liftObj = this;
-            } 
+            }
         }
 
     void initializePid(AutonFlags pidPack)
@@ -333,7 +388,7 @@ class Lift : public System  //very quick acceleration
     void move();
 };
 
-//if eqal get encoder count to move. If less than dont do anything. If greater than.. first check number 
+//if eqal get encoder count to move. If less than dont do anything. If greater than.. first check number
 
 void Drive::move()
 {
@@ -382,7 +437,7 @@ void all(Ts... all)
         lift.initialUpdate(i, parameters);
     }
 
-    while(lift.state != END || drive.state != END))
+    while(lift.state != END || drive.state != END)
     {
         drive.move();
         lift.move();
@@ -392,62 +447,7 @@ void all(Ts... all)
     }
 }
 
-class PidController
-{
-    public:
-        double P;
-        double I;
-        double D;
-        unsigned char minOutput;
-        unsigned char maxOutput;
-
-        PidController(double P = 0, double I = 0, double D = 0, unsigned char minOutput = 0, unsigned char maxOutput = 0)
-        {
-            this->P = P;
-            this->I = I;
-            this->D = D;
-            this->minOutput = minOutput;
-            this->maxOutput = maxOutput;
-            reset();pros::delay(1); //Prevent divide by 0 error 
-        }
-
-        void reset()
-        {
-            lastTime = pros::millis();
-            combinedIntegral = 0;
-            lastError = 0;
-        }
-
-        int output(int currentSensorData, int target)
-        {
-            int error = currentSensorData - target;
-            unsigned long changeInTime = lastTime - pros::millis();
-
-            long currentIntegral = error * changeInTime;
-            combinedIntegral += currentIntegral;
-            double derivative = (error - lastError) / changeInTime;
-
-            lastTime = pros::millis();
-            lastError = error;
-
-            int output = (P * error) + (I * combinedIntegral) + (D * derivative);
-            if(output > maxOutput)
-            {
-                return maxOutput;
-            }
-            if(output < minOutput)
-            {
-                return minOutput;
-            }
-            return output;
-        }
-    private:
-        unsigned long lastTime;
-        long combinedIntegral;
-        int lastError;
-};
-
 void autonomous()
 {
-    all(LIFT,0,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,99,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,DRIVE);
+   // all(LIFT,0,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,99,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,DRIVE);
 }
