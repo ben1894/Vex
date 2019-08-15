@@ -6,7 +6,7 @@
 #include <vector>
 #include <typeinfo>
 
-class timers
+class Timer
 {
 private:
 	int resetVal = 0;
@@ -21,20 +21,30 @@ public:
 	}
 };
 
-enum Select
+//inside wheel Speed = 2pir
+
+enum AutonFlags
 {
-	NEGATIVE = -1,
-	UNDEFINED = 0,
-	REDFLAG = 1,
-	BLUEFLAG = 2,
-	REDBACKPARK = 3,
-	BLUEBACKPARK = 4,
-	REDBACK = 5,
-	BLUEBACK = 6,
-	REDDOUBLEBACK = 7,
-	BLUEDOUBLEBACK = 9,
-	SKILLZ = 8,
-	HOLDER2 = 10
+	CUSTOMPID,
+	NOPID,
+	REGPID,
+	DRIVEPID,
+	LIFTPID,
+	MMREGPID,
+	MMDRIVEPID,
+	MMLIFTPID,
+
+	TIMET,
+	DRIVET,
+	LIFTT,
+	NONET,
+
+	BACKWARDS,
+	FORWARDS,
+	TURN,
+	SWEEP,
+
+	NOACCEL
 };
 
 enum SystemStates
@@ -42,30 +52,6 @@ enum SystemStates
 	WAITINGFORINSTRUCTIONS,
 	END,
 	EXECUTINGINSTRUCTIONS
-};
-
-enum SpeedControl
-{
-	CUSTOMPID,
-	NOPID,
-	REGPID,
-	MMPID,
-	PIDPACK1
-};
-
-enum Triggers
-{
-	TIME,
-	DRIVET,
-	LIFTT,
-	NONE
-};
-
-enum Directions
-{
-	BACKWARDS,
-	FORWARDS,
-	TURN
 };
 
 enum Ids
@@ -76,6 +62,7 @@ enum Ids
 	INNER = 999999996,
 	NULLOPTION = 999999995
 };
+
 const int minEnumValue((int)NULLOPTION-1);
 
 extern bool autonTest;

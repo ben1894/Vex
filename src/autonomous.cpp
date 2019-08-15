@@ -1,8 +1,16 @@
+﻿
 #include "main.h"
 #include "forwardDeclairations.hpp"
+#include "pidPacks.hpp"
 bool autonTest = false;
 const bool voltage = true;
 const bool gyroTurns = true;
+class Drive;
+class Lift;
+class PidController;
+Drive *driveObj;
+Lift *liftObj;
+
 /**
  * Runs the user autonomous code. This function will be started in its own task
  * with the default priority and stack size whenever the robot is enabled via
@@ -14,302 +22,9 @@ const bool gyroTurns = true;
  * will be stopped. Re-enabling the robot will restart the task, not re-start it
  * from where it left off.
  */
-/*a = A();   
- */
-class System 
-{ 
-public: 
-    const int id;
-    char numberOfCalls = 0;
-    virtual int getProgress(System &obj)
-    {
+//a = A();   //clears back to defaults
 
-    };
-    SystemStates state = END;
-    System(int id)
-        : id(id)
-    {
-    }
-    virtual void setMember(int &number, int value) = 0; //
-
-    void initialUpdate(int &i, std::vector<int> &parameters)
-    {
-        if(parameters[i] == id)
-        {
-            if(state == END)
-            {
-                parameters[i] = (int)NULLOPTION;
-                while(parameters[i+1] > minEnumValue)
-                {
-                    int x = 0;
-                    setMember(x,parameters[i]);
-                    ++i;
-                    ++x;
-                }
-                state = EXECUTINGINSTRUCTIONS;
-            }
-            else
-            {
-                ++numberOfCalls;
-            }
-        }
-    }
-
-    void update(std::vector<int> &parameters)
-    {
-        if(state == WAITINGFORINSTRUCTIONS)
-        {
-            numberOfCalls = 0;
-            for(int i = 0; i < parameters.size(); i++)
-            {
-                if(parameters[i] == id)
-                {
-                    if(state == WAITINGFORINSTRUCTIONS)
-                    {
-                        parameters[i] = (int)NULLOPTION;
-                        while(parameters[i+1] > minEnumValue) //plus one here to it doesn't loop over the next value. 
-                        {
-                            int x = 0;
-                            setMember(x,parameters[i]);
-                            ++i;
-                            ++x;
-                        }
-                        state = EXECUTINGINSTRUCTIONS;
-                    }
-                    else
-                    {
-                        ++numberOfCalls;
-                    }
-                }
-            }
-        }
-    }
-}; 
-
-class Drive : public System
-{ 
-    public:
-    Drive(int id = DRIVE)
-        : System((int)id)//, // call Person(std::string, int) to initialize these fields   //m_battingAverage(battingAverage), m_homeRuns(homeRuns) to initialize Drive members
-    {
-    }
-    void setMember(int &number, int value);
-    void move();
-    int getCurrentDistance()
-    {
-        if(direction == TURN)
-        {
-            getDistances(turnStats, target);
-            if(turnStats.Left <= turnStats.Right)
-            {
-                return turnStats.Left;
-            }
-            return turnStats.Right;
-        }
-        return getDriveEncoder();
-    }
-
-    int getDriveEncoder()
-    {
-        return;
-    }
-
-    private:
-    bool stopAcceleration = 0;
-    bool stopDeacceleration = 0;
-    bool noPID;
-    bool turn;
-    Both turnStats;
-    Directions direction;
-    unsigned int distance;
-    int maxSpeed;
-    int minSpeed;
-    int target;
-};
-
-void Drive::setMember(int &number, int value)
-{
-    if(number == 0)
-    {
-        direction = (Directions)value;
-    }
-    else
-    {
-        if(direction == FORWARDS || direction == BACKWARDS)
-        {
-            switch(number)
-            {
-                case(1) :
-                    distance = value;
-                break;
-            }
-        }
-        else
-        {
-            if(gyroTurns == true)
-            {
-                switch(number)
-                {
-                    case(1) :
-                        target = value;
-                    break;
-                }
-            }
-            else
-            {
-                switch(number)
-                {
-                    case(1) :
-                        distance = value;
-                    break;
-                }    
-            }
-        }
-    }
-}
-
-class Lift : public System  //very quick acceleration
-{ 
-    private:
-    Triggers trigger;
-    char triggerNumber;
-    int target;
-    int triggerBreak;
-    int speed;
-    System *triggerObj;
-
-    public:
-    Lift(int id = LIFT)
-        : System((int)id)
-    { 
-    }
-    void setMember(int &number, int value)
-    {
-        static int subNumber = 0;
-        switch(number) //have a static sub counter that yeah.
-        {
-            case(0):
-                if(value == DRIVET || trigger == DRIVET)
-                {
-                    switch(subNumber)
-                    {
-                        case(0):
-                            trigger = (Triggers)value;
-                            ++subNumber;
-                            --number;
-                            break;
-                        case(1):
-                            triggerNumber = value;
-                            ++subNumber;
-                            --number;
-                            break;
-                        case(2):
-                            triggerBreak = value;
-                            subNumber = 0;
-                            break;
-                    }
-                }
-                else if(value == TIME || trigger == TIME)
-                {
-                    switch(subNumber)
-                    {
-                        case(0):
-                            trigger = (Triggers)value;
-                            ++subNumber;
-                            --number;
-                            break;
-                        case(1):
-                            triggerBreak = value;
-                            subNumber = 0;
-                            break;
-                    }
-                }
-                else if(value == NONE || trigger == NONE)
-                {
-                    trigger = (Triggers)value;
-                }
-                break;
-            case(1):
-                target = value;
-                break;
-            case(3):
-                
-        }
-    }
-    void move();
-};
-
-/*
-class Lift : public System  //very quick acceleration
-{ 
-    public:
-    Lift(int id = LIFT)
-        : System((int)id)
-    {
-    }
-    void setMember(int &number, int value){}
-    void move();
-};
-*/
-
-//if eqal get encoder count to move. If less than dont do anything. If greater than
-
-void Drive::move()
-{
-}
-
-void Lift::move()
-{
-}
-/*
-drive::actions
-{
-    if(state = EXECUTINGINSTRUCTIONS)
-    {
-        if(conditionsaremet)
-        {
-            if(number > 0)
-            {
-                state = WAITINGFORINSTRUCTIONS;
-                number--;
-            }
-            else
-            {
-                state = END;
-            }
-        }
-    }
-    else
-    {
-    }
-};
-*/
-template <typename... Ts>
-void all(Ts... all)
-{
-    std::vector<int> parameters = {(int)all...};
-
-    Drive drive{};
-    Lift lift{};
-
-    for(int i = 0; i < parameters.size(); i++)
-    {
-        drive.initialUpdate(i, parameters);
-        lift.initialUpdate(i, parameters);
-    }
-
-    while(lift.state != END || drive.state != END))
-    {
-        drive.move();
-        lift.move();
-        pros::delay(5);
-        drive.update(parameters);
-        lift.update(parameters);
-    }
-
-}
-
-class pidController //fix divide by 0 error;
+class PidController
 {
     public:
         double P;
@@ -318,7 +33,16 @@ class pidController //fix divide by 0 error;
         unsigned char minOutput;
         unsigned char maxOutput;
 
-        pidController(){reset();pros::delay(1);} //Prevent divide by 0 error 
+        PidController(double P = 0, double I = 0, double D = 0, unsigned char minOutput = 0, unsigned char maxOutput = 0)
+        {
+            this->P = P;
+            this->I = I;
+            this->D = D;
+            this->minOutput = minOutput;
+            this->maxOutput = maxOutput;
+            reset();pros::delay(1); //Prevent divide by 0 error
+        }
+
         void reset()
         {
             lastTime = pros::millis();
@@ -355,7 +79,415 @@ class pidController //fix divide by 0 error;
         int lastError;
 };
 
+class System
+{
+protected:
+    char triggerNumber; //So it can be called on the second process of something
+    int triggerBreak;   //
+    System *triggerSystem;
+    AutonFlags trigger; //Holds the name of the object that will trigger it    All sub systems will have the option of starting on a trigger
+    Timer triggerTimer;
+
+    AutonFlags speedControl;
+    PidController pid{};
+    int target;
+
+    SystemStates state = END;
+
+public:
+    int id;
+    char numberOfCalls = 0;
+    char totalNumberOfCalls = 0;
+    
+    virtual int getProgress() = 0;
+    virtual void setMember(int &number, AutonFlags &currentFlag, int value) = 0; //pure virtual functions
+    virtual void resetObj() = 0;                                                 //a system object is never going to exist
+    virtual void initializePid(AutonFlags pidPack) = 0;
+    virtual bool checkSystemTrigger() = 0;
+    int getCallNumberProgress()
+    {
+        return totalNumberOfCalls - numberOfCalls;
+    }
+
+    bool checkTrigger()
+    {
+        switch(triggerBreak)
+        {
+            case(NONET):
+                return true;
+            case(TIMET):
+                if(triggerTimer.current() > triggerBreak)
+                {
+                    return true;
+                }
+                return false;
+            default:
+                if(getCallNumberProgress() > triggerSystem->getCallNumberProgress())
+                {
+                    return true;
+                }
+                else if(getCallNumberProgress() < triggerSystem->getCallNumberProgress())
+                {
+                    return false;
+                }
+                else //is equal and needs to be checked
+                {
+                    if(triggerSystem->getProgress() >= triggerBreak)
+                    {
+                        return true;
+                    }
+                    return false;
+                }
+        }
+    }
+
+    System(int idVal, double b, double c, double d, unsigned char e, unsigned char f): id(idVal), pid(b, c, d, e, f){}
+
+    bool setSystemMember(int &number, AutonFlags &currentFlag, int value) //returning true means to check the other flags
+    {
+        if(number == 0)
+        {
+            currentFlag = (AutonFlags)value;
+            switch(currentFlag)
+            {
+                case(NONET):
+                    trigger = currentFlag;
+                    return false;
+                case(REGPID):
+                    speedControl = currentFlag;
+                    initializePid(currentFlag);
+                    return false;
+                case(DRIVEPID):
+                    speedControl = currentFlag;
+                    pid = PidController(regDriveP,regDriveI,regDriveD,regDriveMin,regDriveMax);
+                    return false;
+                case(LIFTPID):
+                    speedControl = currentFlag;
+                    pid = PidController(regLiftP,regLiftI,regLiftD,regLiftMin,regLiftMax);
+                    return false;
+                default:
+                    return true; //dont plus one yet because it will go through the other flags
+            }
+        }
+        else
+        {
+            switch(currentFlag)
+            {
+                case(DRIVET):
+                case(LIFTT):
+                    switch(number)
+                    {
+                        case(1):       //its never going to be 0 because it only goes in this loops if its 0;
+                            if(currentFlag == DRIVET)
+                            {
+                                triggerSystem = reinterpret_cast<System *>(driveObj);
+                            }
+                            else if(currentFlag == LIFTT)
+                            {
+                                triggerSystem = reinterpret_cast<System *>(liftObj);
+                            }
+                            trigger = currentFlag;
+                            triggerNumber = value; //distance
+                            number++;
+                            return false;
+                        case(2):
+                            number = 0;
+                            triggerBreak = value;
+                            return false;
+                    }
+                case(TIMET):
+                    trigger = currentFlag;
+                    triggerBreak = value;
+                    number = 0;
+                    return false;
+                case(NOPID):
+                    pid.minOutput = value; //reuse these values as single speed holders
+                    pid.maxOutput = value;
+                    speedControl = currentFlag;
+                    number = 0;
+                    return false;
+                case(MMREGPID):
+                    switch(number)
+                    {
+                        case(1):
+                            speedControl = currentFlag;
+                            initializePid(currentFlag);
+                            number++;
+                            return false;
+                        case(2):
+                            pid.minOutput = value;
+                            number++;
+                            return false;
+                        case(3):
+                            pid.maxOutput = value;
+                            number = 0;
+                            return false;
+                    }
+                case(CUSTOMPID):
+                    switch(number)
+                    {
+                        case(1):
+                            speedControl = currentFlag;
+                            pid.minOutput = value;
+                            number++;
+                            return false;
+                        case(2):
+                            pid.maxOutput = value;
+                            number++;
+                            return false;
+                        case(3):
+                            pid.P = value;
+                            number++;
+                            return false;
+                        case(4):
+                            pid.I = value;
+                            number++;
+                            return false;
+                        case(5):
+                            pid.D = value;
+                            number = 0;
+                            return false;
+                    }
+                default:
+                    return true;
+            }
+        }
+
+    }
+    void initialUpdate(int &i, std::vector<int> &parameters)
+    {
+        if(parameters[i] == id)
+        {
+            if(state == END)
+            {
+                parameters[i] = (int)NULLOPTION;
+                AutonFlags currentFlag;
+                int subFlag = 0;
+
+                do
+                {
+                    ++i;
+                    bool checkSecondaryFlags = setSystemMember(subFlag,currentFlag,parameters[i]);
+                    setMember(subFlag,currentFlag,parameters[i]);
+                } while(parameters[i+1] < minEnumValue);
+
+                state = EXECUTINGINSTRUCTIONS;
+            }
+            else
+            {
+                ++totalNumberOfCalls;
+            }
+        }
+    }
+
+    void update(std::vector<int> &parameters)
+    {
+        if(state == WAITINGFORINSTRUCTIONS)
+        {
+            numberOfCalls = 0;
+            for(int i = 0; i < parameters.size()-1; i++)
+            {
+                if(parameters[i] == id)
+                {
+                    if(state == WAITINGFORINSTRUCTIONS)
+                    {
+                        resetObj();
+                        parameters[i] = (int)NULLOPTION;
+                        AutonFlags currentFlag;  //DRIVE,FORWARD,1000,LIFT,FLAG
+                        int subFlag = 0;
+
+                        do //loops through the data to give to the specific system
+                        {
+                            ++i;
+                            bool checkSecondaryFlags = setSystemMember(subFlag,currentFlag,parameters[i]);
+                            setMember(subFlag,currentFlag,parameters[i]);
+                        } while(parameters[i+1] < minEnumValue);
+
+                        state = EXECUTINGINSTRUCTIONS;
+                    }
+                    else
+                    {
+                        ++numberOfCalls;
+                    }
+                }
+            }
+        }
+    }
+};
+
+class Drive : public System
+{
+    private:
+    bool stopAcceleration = false;
+    bool stopDeacceleration = false;
+    bool turn;
+    int target;
+    int radius;
+    Both turnStats;
+    AutonFlags direction;
+
+    public:
+    Drive(int idVal = DRIVE)
+        : System((int)idVal,regDriveP,regDriveI,regDriveD,regDriveMin,regDriveMax)
+        {
+            if(driveObj == nullptr)
+            {
+                driveObj = this;
+            }
+        };
+
+    void initializePid(AutonFlags pidPack)
+    {
+        pid = PidController(regDriveP,regDriveI,regDriveD,regDriveMin,regDriveMax);
+    }
+    void setMember(int &number, AutonFlags &currentFlag, int value);
+    void move();
+    int getCurrentDistance()
+    {
+        if(direction == TURN)
+        {
+            getDistances(turnStats, target);
+            if(turnStats.Left <= turnStats.Right)
+            {
+                return turnStats.Left;
+            }
+            return turnStats.Right;
+        }
+        return getDriveEncoder();
+    }
+
+    int getDriveEncoder()
+    {
+        return;
+    }
+};
+
+void Drive::setMember(int &number, AutonFlags &currentFlag, int value)
+{
+    if(number == 0)
+    {
+        currentFlag = (AutonFlags)value;
+        switch(currentFlag) //for if
+        {
+            case(NOACCEL):
+                stopAcceleration = true;
+                break;
+            default:
+                number++;
+        }
+    }
+    else
+    {
+        switch(currentFlag)
+        {
+            case(FORWARDS):
+            case(BACKWARDS):
+            case(TURN):
+                target = value; //distance
+                number = 0;
+                break;
+            case(SWEEP):
+                switch(number)
+                {
+                    case(1):
+                        target = value; //distance
+                        number++;
+                        break;
+                    case(2):
+                        number = 0;
+                        radius = value;
+                        break;
+                }
+        }
+    }
+}
+
+class Lift : public System  //very quick acceleration
+{
+    private:
+    int target;
+    int speed;
+    AutonFlags speedControl;
+
+    public:
+    Lift(int id = LIFT)
+        : System((int)id,regLiftP,regLiftI,regLiftD,regLiftMin,regLiftMax)
+        {
+            if(liftObj == nullptr)
+            {
+                liftObj = this;
+            }
+        }
+
+    void initializePid(AutonFlags pidPack)
+    {
+        pid = PidController(regLiftP,regLiftI,regLiftD,regLiftMin,regLiftMax);
+    }
+
+    void setMember(int &number, AutonFlags &currentFlag, int value)
+    {}
+
+    void move();
+};
+
+//if eqal get encoder count to move. If less than dont do anything. If greater than.. first check number
+
+void Drive::move()
+{
+}
+
+void Lift::move()
+{
+}
+/*
+drive::actions // or is equal to end
+{
+    if(state = EXECUTINGINSTRUCTIONS)
+    {
+        Do stuff
+        if(conditionsaremet)
+        {
+            if(number > 0)
+            {
+                state = WAITINGFORINSTRUCTIONS;
+                number--;
+            }
+            else
+            {
+                state = END;
+            }
+        }
+    }
+    else
+    {
+    }
+};
+*/
+template <typename... Ts>
+void all(Ts... all)
+{
+    std::vector<int> parameters = {(int)all...,NULLOPTION};
+
+    Drive drive{};
+    Lift lift{};
+
+    for(int i = 0; i < parameters.size()-1; i++)
+    {
+        drive.initialUpdate(i, parameters);
+        lift.initialUpdate(i, parameters);
+    }
+
+    while(lift.state != END || drive.state != END)
+    {
+        drive.move();
+        lift.move();
+        pros::delay(5);
+        drive.update(parameters);
+        lift.update(parameters);
+    }
+}
+
 void autonomous()
 {
-    all(LIFT,0,9,9,9,9,9,9);
+   // all(LIFT,0,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,99,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,DRIVE);
 }
