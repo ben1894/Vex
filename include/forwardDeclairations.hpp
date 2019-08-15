@@ -6,7 +6,7 @@
 #include <vector>
 #include <typeinfo>
 
-class timers
+class Timer
 {
 private:
 	int resetVal = 0;

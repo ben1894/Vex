@@ -10,6 +10,7 @@ class Lift;
 class PidController;
 Drive *driveObj;
 Lift *liftObj;
+
 /**
  * Runs the user autonomous code. This function will be started in its own task
  * with the default priority and stack size whenever the robot is enabled via
@@ -21,8 +22,8 @@ Lift *liftObj;
  * will be stopped. Re-enabling the robot will restart the task, not re-start it
  * from where it left off.
  */
-/*a = A();   //clears back to defaults
- */
+//a = A();   //clears back to defaults
+
 class PidController
 {
     public:
@@ -84,21 +85,62 @@ protected:
     char triggerNumber; //So it can be called on the second process of something
     int triggerBreak;   //
     System *triggerSystem;
-    AutonFlags trigger; //Holds the name of the object that will trigger it                  All sub systems will have the option of starting on a trigger
+    AutonFlags trigger; //Holds the name of the object that will trigger it    All sub systems will have the option of starting on a trigger
+    Timer triggerTimer;
 
     AutonFlags speedControl;
     PidController pid{};
     int target;
 
+    SystemStates state = END;
+
 public:
     int id;
     char numberOfCalls = 0;
+    char totalNumberOfCalls = 0;
+    
     virtual int getProgress() = 0;
     virtual void setMember(int &number, AutonFlags &currentFlag, int value) = 0; //pure virtual functions
     virtual void resetObj() = 0;                                                 //a system object is never going to exist
     virtual void initializePid(AutonFlags pidPack) = 0;
+    virtual bool checkSystemTrigger() = 0;
+    int getCallNumberProgress()
+    {
+        return totalNumberOfCalls - numberOfCalls;
+    }
 
-    SystemStates state = END;
+    bool checkTrigger()
+    {
+        switch(triggerBreak)
+        {
+            case(NONET):
+                return true;
+            case(TIMET):
+                if(triggerTimer.current() > triggerBreak)
+                {
+                    return true;
+                }
+                return false;
+            default:
+                if(getCallNumberProgress() > triggerSystem->getCallNumberProgress())
+                {
+                    return true;
+                }
+                else if(getCallNumberProgress() < triggerSystem->getCallNumberProgress())
+                {
+                    return false;
+                }
+                else //is equal and needs to be checked
+                {
+                    if(triggerSystem->getProgress() >= triggerBreak)
+                    {
+                        return true;
+                    }
+                    return false;
+                }
+        }
+    }
+
     System(int idVal, double b, double c, double d, unsigned char e, unsigned char f): id(idVal), pid(b, c, d, e, f){}
 
     bool setSystemMember(int &number, AutonFlags &currentFlag, int value) //returning true means to check the other flags
@@ -233,7 +275,7 @@ public:
             }
             else
             {
-                ++numberOfCalls;
+                ++totalNumberOfCalls;
             }
         }
     }
@@ -396,7 +438,6 @@ void Drive::move()
 
 void Lift::move()
 {
-
 }
 /*
 drive::actions // or is equal to end
