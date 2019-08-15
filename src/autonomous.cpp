@@ -110,34 +110,34 @@ public:
         return totalNumberOfCalls - numberOfCalls;
     }
 
-    bool checkTrigger()
+    void updateTriggerState()
     {
         switch(triggerBreak)
         {
             case(NONET):
-                return true;
+                state = EXECUTINGINSTRUCTIONS;
             case(TIMET):
                 if(triggerTimer.current() > triggerBreak)
                 {
-                    return true;
+                    state = EXECUTINGINSTRUCTIONS;
                 }
-                return false;
+                state = WAITINGFORTRIGGER;
             default:
                 if(getCallNumberProgress() > triggerSystem->getCallNumberProgress())
                 {
-                    return true;
+                    state = EXECUTINGINSTRUCTIONS;
                 }
                 else if(getCallNumberProgress() < triggerSystem->getCallNumberProgress())
                 {
-                    return false;
+                    state = WAITINGFORTRIGGER;
                 }
                 else //is equal and needs to be checked
                 {
                     if(triggerSystem->getProgress() >= triggerBreak)
                     {
-                        return true;
+                        state = EXECUTINGINSTRUCTIONS;
                     }
-                    return false;
+                    state = WAITINGFORTRIGGER;
                 }
         }
     }
@@ -273,7 +273,7 @@ public:
                     setMember(subFlag,currentFlag,parameters[i]);
                 } while(parameters[i+1] < minEnumValue);
 
-                state = EXECUTINGINSTRUCTIONS;
+                state = WAITINGFORTRIGGER; //changed because it wouldnt ever check trigger 
             }
             else
             {
@@ -293,7 +293,7 @@ public:
                 {
                     if(state == WAITINGFORINSTRUCTIONS) //Checks again just in case there are multiple calls.
                     {
-                        resetObj();
+                        resetObj(); //have to change this 
                         parameters[i] = (int)NULLOPTION;
                         AutonFlags currentFlag;  //DRIVE,FORWARD,1000,LIFT,FLAG
                         int subFlag = 0;
@@ -305,7 +305,7 @@ public:
                             setMember(subFlag,currentFlag,parameters[i]);
                         } while(parameters[i+1] < minEnumValue);
 
-                        state = EXECUTINGINSTRUCTIONS;
+                        state = WAITINGFORTRIGGER; //trigger obj might not be in scope yet so cant check its process.
                     }
                     else
                     {
@@ -481,11 +481,35 @@ void all(Ts... all)
 
     while(lift.state != END || drive.state != END)
     {
-        drive.move();
-        lift.move();
+        switch(drive.state)
+        {
+            case(EXECUTINGINSTRUCTIONS):
+                drive.move();
+            case(WAITINGFORTRIGGER):
+                drive.updateTriggerState();
+            case(WAITINGFORINSTRUCTIONS):
+                drive.update(parameters);
+                break;
+            case(END):
+                break; //adding retain position later
+        }
+
+        switch(lift.state)
+        {
+            case(EXECUTINGINSTRUCTIONS):
+                lift.move();
+                break;
+            case(WAITINGFORTRIGGER):
+                lift.updateTriggerState();
+                break;
+            case(END):
+                break; //adding retain position later
+            case(WAITINGFORINSTRUCTIONS):
+                lift.update(parameters);
+                break;
+        }
+
         pros::delay(5);
-        drive.update(parameters);
-        lift.update(parameters);
     }
 }
 
