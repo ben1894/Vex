@@ -26,6 +26,11 @@ Lift *liftObj;
 
 class PidController
 {
+    private:
+        unsigned long lastTime;
+        long combinedIntegral;
+        int lastError;
+
     public:
         double P;
         double I;
@@ -73,10 +78,6 @@ class PidController
             }
             return output;
         }
-    private:
-        unsigned long lastTime;
-        long combinedIntegral;
-        int lastError;
 };
 
 class System
@@ -198,6 +199,7 @@ public:
                 case(TIMET):
                     trigger = currentFlag;
                     triggerBreak = value;
+                    triggerTimer.clear();
                     number = 0;
                     return false;
                 case(NOPID):
@@ -289,7 +291,7 @@ public:
             {
                 if(parameters[i] == id)
                 {
-                    if(state == WAITINGFORINSTRUCTIONS)
+                    if(state == WAITINGFORINSTRUCTIONS) //Checks again just in case there are multiple calls.
                     {
                         resetObj();
                         parameters[i] = (int)NULLOPTION;
@@ -489,5 +491,5 @@ void all(Ts... all)
 
 void autonomous()
 {
-   // all(LIFT,0,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,99,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,DRIVE);
+  // all(LIFT,0,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,99,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,DRIVE);
 }
