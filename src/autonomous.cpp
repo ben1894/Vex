@@ -86,11 +86,11 @@ protected:
     char triggerNumber; //So it can be called on the second process of something
     int triggerBreak;   //
     System *triggerSystem;
-    AutonFlags trigger; //Holds the name of the object that will trigger it    All sub systems will have the option of starting on a trigger
+    AutonFlags trigger; //Holds the type of trigger system will have    All sub systems will have the option of starting on a trigger
     Timer triggerTimer;
 
     AutonFlags speedControl;
-    PidController pid{};
+    PidController pid; //eventualy initialized to defaults later in inherited classes
     int target;
 
     SystemStates state = END;
@@ -100,15 +100,15 @@ public:
     char numberOfCalls = 0;
     char totalNumberOfCalls = 0;
     
-    virtual int getProgress() = 0;
+    virtual int getProgress() = 0; //return absolute value of difference
     virtual void setMember(int &number, AutonFlags &currentFlag, int value) = 0; //pure virtual functions
     virtual void resetObj() = 0;                                                 //a system object is never going to exist
     virtual void initializePid(AutonFlags pidPack) = 0;
-    virtual bool checkSystemTrigger() = 0;
+    virtual bool checkSystemTrigger() = 0; 
     int getCallNumberProgress()
     {
-        return totalNumberOfCalls - numberOfCalls;
-    }
+        return (totalNumberOfCalls - numberOfCalls)+1; //number of calls decreases throughout runtime. //Starts at 1 and increases
+    } //if 0 from beginning, initial update takes care of it
 
     void updateTriggerState()
     {
@@ -123,11 +123,15 @@ public:
                 }
                 state = WAITINGFORTRIGGER;
             default:
-                if(getCallNumberProgress() > triggerSystem->getCallNumberProgress())
+                if(triggerSystem->state == END)
                 {
                     state = EXECUTINGINSTRUCTIONS;
                 }
-                else if(getCallNumberProgress() < triggerSystem->getCallNumberProgress())
+                else if(triggerNumber > triggerSystem->getCallNumberProgress())
+                {
+                    state = EXECUTINGINSTRUCTIONS;
+                }
+                else if(triggerNumber < triggerSystem->getCallNumberProgress())
                 {
                     state = WAITINGFORTRIGGER;
                 }
@@ -432,10 +436,10 @@ class Lift : public System  //very quick acceleration
     void move();
 };
 
-//if eqal get encoder count to move. If less than dont do anything. If greater than.. first check number
-
 void Drive::move()
 {
+
+    state = END;
 }
 
 void Lift::move()
@@ -444,26 +448,18 @@ void Lift::move()
 /*
 drive::actions // or is equal to end
 {
-    if(state = EXECUTINGINSTRUCTIONS)
-    {
         Do stuff
         if(conditionsaremet)
         {
-            if(number > 0)
+            if(getNumberofCalls() == totalNumberOfCalls)
             {
-                state = WAITINGFORINSTRUCTIONS;
-                number--;
+                totalNumberOfCalls
+                state = END;
             }
             else
             {
-                state = END;
+                state = WAITINGFORINSTRUCTIONS
             }
-        }
-    }
-    else
-    {
-    }
-};
 */
 template <typename... Ts>
 void all(Ts... all)
