@@ -45,7 +45,8 @@ class PidController
             this->D = D;
             this->minOutput = minOutput;
             this->maxOutput = maxOutput;
-            reset();pros::delay(1); //Prevent divide by 0 error
+            reset();
+            pros::delay(1); //Prevent divide by 0 error
         }
 
         void reset()
@@ -100,15 +101,27 @@ public:
     char numberOfCalls = 0;
     char totalNumberOfCalls = 0;
     
+    System(int idVal, double b, double c, double d, unsigned char e, unsigned char f): id(idVal), pid(b, c, d, e, f){}
     virtual int getProgress() = 0; //return absolute value of difference
     virtual void setMember(int &number, AutonFlags &currentFlag, int value) = 0; //pure virtual functions
     virtual void resetObj() = 0;                                                 //a system object is never going to exist
     virtual void initializePid(AutonFlags pidPack) = 0;
     virtual bool checkSystemTrigger() = 0; 
-    int getCallNumberProgress()
+    int getTriggerNumberProgress()  
     {
         return (totalNumberOfCalls - numberOfCalls)+1; //number of calls decreases throughout runtime. //Starts at 1 and increases
     } //if 0 from beginning, initial update takes care of it
+    void updateEndingState()
+    {
+        if(getTriggerNumberProgress() == 1) //if it was on its last run
+        {
+            state = END;
+        }
+        else
+        {
+            state = WAITINGFORINSTRUCTIONS;
+        }
+    }
 
     void updateTriggerState()
     {
@@ -116,37 +129,43 @@ public:
         {
             case(NONET):
                 state = EXECUTINGINSTRUCTIONS;
+                break;
             case(TIMET):
                 if(triggerTimer.current() > triggerBreak)
                 {
                     state = EXECUTINGINSTRUCTIONS;
+                    break;
                 }
                 state = WAITINGFORTRIGGER;
+                break;
             default:
                 if(triggerSystem->state == END)
                 {
                     state = EXECUTINGINSTRUCTIONS;
+                    break;
                 }
-                else if(triggerNumber > triggerSystem->getCallNumberProgress())
+                else if(triggerNumber > triggerSystem->getTriggerNumberProgress())
                 {
                     state = EXECUTINGINSTRUCTIONS;
+                    break;
                 }
-                else if(triggerNumber < triggerSystem->getCallNumberProgress())
+                else if(triggerNumber < triggerSystem->getTriggerNumberProgress())
                 {
                     state = WAITINGFORTRIGGER;
+                    break;
                 }
                 else //is equal and needs to be checked
                 {
                     if(triggerSystem->getProgress() >= triggerBreak)
                     {
                         state = EXECUTINGINSTRUCTIONS;
+                        break;
                     }
                     state = WAITINGFORTRIGGER;
+                    break;
                 }
         }
     }
-
-    System(int idVal, double b, double c, double d, unsigned char e, unsigned char f): id(idVal), pid(b, c, d, e, f){}
 
     bool setSystemMember(int &number, AutonFlags &currentFlag, int value) //returning true means to check the other flags
     {
@@ -324,6 +343,7 @@ public:
 class Drive : public System
 {
     private:
+
     bool stopAcceleration = false;
     bool stopDeacceleration = false;
     bool turn;
@@ -340,17 +360,36 @@ class Drive : public System
             {
                 driveObj = this;
             }
+            else
+            {
+                totalNumberOfCalls = driveObj->totalNumberOfCalls;
+            }
+            
         };
+    
+    int getProgress()
+    {
+    }
+
+    bool checkSystemTrigger()
+    {
+    }
+
+    void resetObj()
+    {
+        *this = Drive();
+    }
 
     void initializePid(AutonFlags pidPack)
     {
         pid = PidController(regDriveP,regDriveI,regDriveD,regDriveMin,regDriveMax);
     }
+
     void setMember(int &number, AutonFlags &currentFlag, int value);
     void move();
     int getCurrentDistance()
     {
-        if(direction == TURN)
+        if(direction == TURN) 
         {
             getDistances(turnStats, target);
             if(turnStats.Left <= turnStats.Right)
@@ -392,7 +431,8 @@ void Drive::setMember(int &number, AutonFlags &currentFlag, int value)
                 target = value; //distance
                 number = 0;
                 break;
-            case(SWEEP):
+            case(RIGHTSWEEP):
+            case(LEFTSWEEP):
                 switch(number)
                 {
                     case(1):
@@ -419,11 +459,28 @@ class Lift : public System  //very quick acceleration
     Lift(int id = LIFT)
         : System((int)id,regLiftP,regLiftI,regLiftD,regLiftMin,regLiftMax)
         {
-            if(liftObj == nullptr)
+            if(liftObj == nullptr) //if declairing this for the first time
             {
                 liftObj = this;
             }
+            else //global is declaired meaning the object is being reset. Keep the state and total number of calls.
+            {
+                totalNumberOfCalls = liftObj->totalNumberOfCalls;
+            }
         }
+
+    int getProgress()
+    {
+    }
+
+    bool checkSystemTrigger()
+    {
+    }
+
+    void resetObj()
+    {
+        *this = Lift();
+    }
 
     void initializePid(AutonFlags pidPack)
     {
@@ -438,13 +495,35 @@ class Lift : public System  //very quick acceleration
 
 void Drive::move()
 {
+    double leftCorrection;
+    double rightCorrection;
 
-    state = END;
+    if(getProgress() <= target)
+    {
+        if(direction == TURN)
+        {
+
+        }
+        if(direction == FORWARDS)
+        {
+
+        }
+        if(speedControl == NOPID)
+        {
+            
+        }
+    }
+    else 
+    {
+        updateEndingState();
+    }
 }
 
 void Lift::move()
 {
+    
 }
+
 /*
 drive::actions // or is equal to end
 {
@@ -511,5 +590,5 @@ void all(Ts... all)
 
 void autonomous()
 {
-  // all(LIFT,0,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,99,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,DRIVE);
+    all(LIFT,0,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,DRIVE);
 }
