@@ -22,9 +22,11 @@ public:
 };
 
 //inside wheel Speed = 2pir
-
 enum AutonFlags
 {
+	CURRENTVAL = -1,
+	NOSTRAIGHT = -2,
+
 	CUSTOMPID,
 	NOPID,
 	REGPID,
@@ -43,8 +45,10 @@ enum AutonFlags
 	FORWARDS,
 	TURN,
 	ENCODERTURN,
-	LEFTSWEEP,
-	RIGHTSWEEP,
+	UPLEFTSWEEP,
+	DOWNLEFTSWEEP,
+	UPRIGHTSWEEP,
+	DOWNRIGHTSWEEP,
 
 	NOACCEL
 };
@@ -91,10 +95,11 @@ extern pros::ADIEncoder forwardRight;
 
 extern pros::ADIGyro gyro;
 
-typedef struct {
+struct GyroDistances
+{
 	int Left;
 	int Right;
-} Both;
+};
 
 extern int getMaxSpeed(pros::Motor &motor);
 extern void correctedMotorSpeed(int speed, pros::Motor &motor, bool forceRPM = false);
@@ -104,7 +109,7 @@ extern void leftSide(int speed, bool forceRPM = false);
 
 extern int actualGyroPosition();
 extern int fixTarget(int oldTarget);
-extern void getDistances(Both &Val, int target);
+extern void getDistances(GyroDistances &Val, int target);
 
 extern float map(float value, float istart, float istop, float ostart, float ostop);
 extern int cVal(pros::controller_digital_e_t button);

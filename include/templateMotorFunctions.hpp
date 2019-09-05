@@ -1,7 +1,7 @@
 #pragma once
 
 template <size_t N>
-void driveMotorsSpeed(int speed, std::array<pros::Motor, N> &motorArray, bool forceRPM)
+void driveMotorsSpeed(int speed, std::array<pros::Motor, N> &motorArray, bool forceRPM = false)
 {
     if(voltage == true && forceRPM == false)
     {

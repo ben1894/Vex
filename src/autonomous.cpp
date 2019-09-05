@@ -3,7 +3,7 @@
 #include "forwardDeclairations.hpp"
 #include "pidPacks.hpp"
 bool autonTest = false;
-const bool voltage = true;
+const bool voltage = false;
 const bool gyroTurns = true;
 class Drive;
 class Lift;
@@ -343,13 +343,14 @@ public:
 class Drive : public System
 {
     private:
-
     bool stopAcceleration = false;
     bool stopDeacceleration = false;
-    bool turn;
+    int correctTo = -1;
     int target;
     int radius;
-    Both turnStats;
+    int speed;
+    int offSet; //used for sweep Turns
+    GyroDistances turnStats;
     AutonFlags direction;
 
     public:
@@ -367,6 +368,89 @@ class Drive : public System
             
         };
     
+    void gyroCorrections(float &leftCorrect, float &rightCorrect)
+    {
+        GyroDistances off;
+        getDistances(off, correctTo);
+
+        if(off.Right < off.Left)
+        {
+            if(off.Right > 3)
+            {
+                rightCorrect = ((float).97 - ((float)off.Right/(float)70));          /////////////////////
+                leftCorrect  = 1;
+            }
+            else
+            {
+                rightCorrect  = 1;
+                leftCorrect = 1;
+            }
+        }
+        else
+        {
+            if(off.Left > 3)
+            {
+
+                leftCorrect = ((float).97 - ((float)off.Left/(float)70)); //left decrease
+                rightCorrect = 1;
+            }
+            else
+            {
+                leftCorrect  = 1;
+                rightCorrect = 1;
+            }
+        }
+    }
+
+    int getOutsideEncoder()
+    {
+        switch(direction)
+        {
+            case(UPLEFTSWEEP):
+            case(DOWNLEFTSWEEP):
+                return abs(forwardRight.get_value());
+            default:
+                return abs(forwardLeft.get_value());
+        }
+    }
+
+    int getInsideEncoder()
+    {
+        switch(direction)
+        {
+            case(UPLEFTSWEEP):
+            case(DOWNLEFTSWEEP):
+                return abs(forwardLeft.get_value());
+            default:
+                return abs(forwardRight.get_value());
+        }
+    }
+
+    int getSweepDifference()
+    {
+        (double)getOutsideEncoder() - (double)(getInsideEncoder() + offSet);
+    }
+
+    void wheelCorrections(float &leftCorrect, float &rightCorrect)
+    {
+        int difference = getSweepDifference(); //reduces call amount
+        if(difference > 4)
+        {
+            rightCorrect = ((float).97 - ((float)abs(difference)/(float)70));
+            leftCorrect  = 1;
+        }
+        else if(difference < 4)
+        {
+            rightCorrect = 1;
+            leftCorrect  = ((float).97 - ((float)abs(difference)/(float)70));
+        }
+        else
+        {
+            leftCorrect = 1;
+            rightCorrect = 1;
+        }
+    }
+
     int getProgress()
     {
     }
@@ -418,24 +502,40 @@ void Drive::setMember(int &number, AutonFlags &currentFlag, int value)
                 stopAcceleration = true;
                 break;
             default:
-                number++;
+                number++; //Just sets currentFlag, will get next values when increasead next time
         }
     }
     else
     {
         switch(currentFlag)
         {
-            case(FORWARDS):
-            case(BACKWARDS):
             case(TURN):
+                direction = currentFlag;
                 target = value; //distance
                 number = 0;
                 break;
-            case(RIGHTSWEEP):
-            case(LEFTSWEEP):
+            case(FORWARDS):
+            case(BACKWARDS):
+                switch(number) //use same straight drive for turns and straight drive
+                {
+                    case(1): 
+                        direction = currentFlag;
+                        target = value;
+                        number++;
+                        break;
+                    case(2):
+                        correctTo = value;
+                        number = 0;
+                        break;
+                }
+            case(UPRIGHTSWEEP):
+            case(UPLEFTSWEEP):
+            case(DOWNLEFTSWEEP):
+            case(DOWNRIGHTSWEEP):
                 switch(number)
                 {
                     case(1):
+                        direction = currentFlag;
                         target = value; //distance
                         number++;
                         break;
@@ -495,11 +595,18 @@ class Lift : public System  //very quick acceleration
 
 void Drive::move()
 {
-    double leftCorrection;
-    double rightCorrection;
-
+    float leftCorrection;
+    float rightCorrection;
     if(getProgress() <= target)
     {
+        if(direction == UPLEFTSWEEP || direction == UPRIGHTSWEEP)
+        {
+          
+        }
+        driveMotorsSpeed(speed, rightDrive);
+        driveMotorsSpeed(speed, leftDrive);
+        
+        switch(direction)
         if(direction == TURN)
         {
 
@@ -560,8 +667,10 @@ void all(Ts... all)
         {
             case(EXECUTINGINSTRUCTIONS):
                 drive.move();
+                break;
             case(WAITINGFORTRIGGER):
                 drive.updateTriggerState();
+                break;
             case(WAITINGFORINSTRUCTIONS):
                 drive.update(parameters);
                 break;
@@ -590,5 +699,8 @@ void all(Ts... all)
 
 void autonomous()
 {
-    all(LIFT,0,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,DRIVE);
+    all(DRIVE,BACKWARDS,1000,10);
+
+
+    all(LIFT,0,90,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,90,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,90,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,DRIVE);
 }
