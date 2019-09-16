@@ -5,6 +5,7 @@
 bool autonTest = false;
 const bool voltage = false;
 const bool gyroTurns = true;
+const double wheelDistance = 200;
 class Drive;
 class Lift;
 class PidController;
@@ -179,7 +180,7 @@ public:
                     return false;
                 case(REGPID):
                     speedControl = currentFlag;
-                    initializePid(currentFlag);
+                    initializePid(currentFlag); //virtual function
                     return false;
                 case(DRIVEPID):
                     speedControl = currentFlag;
@@ -347,7 +348,7 @@ class Drive : public System
     bool stopDeacceleration = false;
     int correctTo = -1;
     int target;
-    int radius;
+    double outerInnerRatio = 1;
     int speed;
     int offSet; //used for sweep Turns
     GyroDistances turnStats;
@@ -426,7 +427,7 @@ class Drive : public System
         }
     }
 
-    int getSweepDifference()
+    int getSweepDifference() //positive, outside is faster. negative, inside is faster
     {
         (double)getOutsideEncoder() - (double)(getInsideEncoder() + offSet);
     }
@@ -436,13 +437,13 @@ class Drive : public System
         int difference = getSweepDifference(); //reduces call amount
         if(difference > 4)
         {
-            rightCorrect = ((float).97 - ((float)abs(difference)/(float)70));
+            rightCorrect = ((float).97 - ((float)abs(difference)/(float)100));
             leftCorrect  = 1;
         }
         else if(difference < 4)
         {
             rightCorrect = 1;
-            leftCorrect  = ((float).97 - ((float)abs(difference)/(float)70));
+            leftCorrect  = ((float).97 - ((float)abs(difference)/(float)100));
         }
         else
         {
@@ -540,8 +541,8 @@ void Drive::setMember(int &number, AutonFlags &currentFlag, int value)
                         number++;
                         break;
                     case(2):
-                        number = 0;
-                        radius = value;
+                        number = 0; //radius
+                        outerInnerRatio = (value - wheelDistance) / value;
                         break;
                 }
         }
@@ -599,22 +600,25 @@ void Drive::move()
     float rightCorrection;
     if(getProgress() <= target)
     {
-        if(direction == UPLEFTSWEEP || direction == UPRIGHTSWEEP)
+        switch(speedControl)
         {
-          
+            case(NOPID):
+                driveMotorsSpeed(pid.maxOutput, leftDrive);
+                driveMotorsSpeed(pid.maxOutput, rightDrive);
+        }
+        pid.output(getDriveEncoder(), target);
+        switch(direction)
+        {
+            case(UPLEFTSWEEP):
+            case(UPRIGHTSWEEP):
+            case(DOWNLEFTSWEEP):
+            case(DOWNRIGHTSWEEP):
+                wheelCorrections(leftCorrection, rightCorrection);
+            default:
+                gyroCorrections(leftCorrection, rightCorrection);
         }
         driveMotorsSpeed(speed, rightDrive);
         driveMotorsSpeed(speed, leftDrive);
-        
-        switch(direction)
-        if(direction == TURN)
-        {
-
-        }
-        if(direction == FORWARDS)
-        {
-
-        }
         if(speedControl == NOPID)
         {
             
@@ -660,7 +664,7 @@ void all(Ts... all)
         drive.initialUpdate(i, parameters);
         lift.initialUpdate(i, parameters);
     }
-
+    drive.pid.minOutput /= drive.outerInnerRatio;
     while(lift.state != END || drive.state != END)
     {
         switch(drive.state)
@@ -673,6 +677,7 @@ void all(Ts... all)
                 break;
             case(WAITINGFORINSTRUCTIONS):
                 drive.update(parameters);
+                drive.pid.minOutput /= drive.outerInnerRatio; //has to be put here so it doesn't get overwritten by the pid initialization
                 break;
             case(END):
                 break; //adding retain position later
@@ -700,7 +705,4 @@ void all(Ts... all)
 void autonomous()
 {
     all(DRIVE,BACKWARDS,1000,10);
-
-
-    all(LIFT,0,90,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,90,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,90,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,DRIVE);
 }

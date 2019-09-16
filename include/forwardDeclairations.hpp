@@ -24,8 +24,9 @@ public:
 //inside wheel Speed = 2pir
 enum AutonFlags
 {
-	CURRENTVAL = -1,
+	WHEELCORRECTION = -3,
 	NOSTRAIGHT = -2,
+	CURRENTVAL = -1,
 
 	CUSTOMPID,
 	NOPID,
@@ -75,6 +76,7 @@ const int minEnumValue((int)NULLOPTION-1);
 extern bool autonTest;
 extern const bool voltage;
 extern const bool gyroUpsidedown;
+extern const double wheelDistance;
 extern pros::ADIGyro gyro;
 
 extern std::array<pros::Motor, 2> leftDrive;
@@ -103,9 +105,6 @@ struct GyroDistances
 
 extern int getMaxSpeed(pros::Motor &motor);
 extern void correctedMotorSpeed(int speed, pros::Motor &motor, bool forceRPM = false);
-
-extern void rightSide(int speed, bool forceRPM = false);
-extern void leftSide(int speed, bool forceRPM = false);
 
 extern int actualGyroPosition();
 extern int fixTarget(int oldTarget);
