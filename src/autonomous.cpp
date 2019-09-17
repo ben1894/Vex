@@ -409,9 +409,9 @@ class Drive : public System
         {
             case(UPLEFTSWEEP):
             case(DOWNLEFTSWEEP):
-                return abs(forwardRight.get_value());
+                return abs(rigthEncoder.get_value());
             default:
-                return abs(forwardLeft.get_value());
+                return abs(leftEncoder.get_value());
         }
     }
 
@@ -421,9 +421,9 @@ class Drive : public System
         {
             case(UPLEFTSWEEP):
             case(DOWNLEFTSWEEP):
-                return abs(forwardLeft.get_value());
+                return abs(leftEncoder.get_value());
             default:
-                return abs(forwardRight.get_value());
+                return abs(rigthEncoder.get_value());
         }
     }
 
@@ -454,6 +454,7 @@ class Drive : public System
 
     int getProgress()
     {
+        return abs(getDriveEncoder() - target);
     }
 
     bool checkSystemTrigger()
@@ -488,7 +489,16 @@ class Drive : public System
 
     int getDriveEncoder()
     {
-        return;
+        switch(direction)
+        {
+            case(UPRIGHTSWEEP):
+            case(UPLEFTSWEEP):
+            case(DOWNLEFTSWEEP):
+            case(DOWNRIGHTSWEEP):
+                return getOutsideEncoder();
+            default:
+                return leftEncoder.get_value();
+        }
     }
 };
 
@@ -596,33 +606,56 @@ class Lift : public System  //very quick acceleration
 
 void Drive::move()
 {
-    float leftCorrection;
-    float rightCorrection;
+    float leftCorrection = 1;
+    float rightCorrection = 1;
     if(getProgress() <= target)
     {
-        switch(speedControl)
+        switch(speedControl) //pid or nah
         {
             case(NOPID):
-                driveMotorsSpeed(pid.maxOutput, leftDrive);
-                driveMotorsSpeed(pid.maxOutput, rightDrive);
+                speed = pid.maxOutput;
+                break;
+            default:
+                speed = pid.output(getDriveEncoder(), target);
+                break;
         }
-        pid.output(getDriveEncoder(), target);
-        switch(direction)
+        
+        switch(direction) //drive straight
         {
             case(UPLEFTSWEEP):
             case(UPRIGHTSWEEP):
             case(DOWNLEFTSWEEP):
             case(DOWNRIGHTSWEEP):
                 wheelCorrections(leftCorrection, rightCorrection);
+                switch(direction) //sweep turn stuffz
+                {
+                    case(UPLEFTSWEEP):
+                    case(DOWNLEFTSWEEP):
+                        leftCorrection *= outerInnerRatio;
+                        break;
+                    default:
+                        rightCorrection *= outerInnerRatio;
+                        break;
+                }
+                break;
             default:
                 gyroCorrections(leftCorrection, rightCorrection);
+                break;
         }
-        driveMotorsSpeed(speed, rightDrive);
-        driveMotorsSpeed(speed, leftDrive);
-        if(speedControl == NOPID)
+
+        switch(direction)
         {
-            
+            case(DOWNLEFTSWEEP):
+            case(DOWNRIGHTSWEEP):
+            case(BACKWARDS):
+                leftCorrection *= -1;
+                rightCorrection *= -1;
+                break;
         }
+
+
+        driveMotorsSpeed(speed*rightCorrection, rightDrive);
+        driveMotorsSpeed(speed*leftCorrection, leftDrive);
     }
     else 
     {

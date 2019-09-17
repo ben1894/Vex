@@ -91,10 +91,9 @@ extern pros::Motor parkM;
 
 extern pros::Controller secondaryController;
 extern pros::Controller mainController;
-extern pros::ADIEncoder forwardMiddle;
-extern pros::ADIEncoder forwardLeft;
-extern pros::ADIEncoder forwardRight;
 
+extern pros::ADIEncoder leftEncoder;
+extern pros::ADIEncoder rigthEncoder;
 extern pros::ADIGyro gyro;
 
 struct GyroDistances
