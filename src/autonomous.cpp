@@ -374,31 +374,18 @@ class Drive : public System
         GyroDistances off;
         getDistances(off, correctTo);
 
-        if(off.Right < off.Left)
+        if(off.Right < off.Left) //keep!!
         {
             if(off.Right > 3)
             {
-                rightCorrect = ((float).97 - ((float)off.Right/(float)70));          /////////////////////
-                leftCorrect  = 1;
-            }
-            else
-            {
-                rightCorrect  = 1;
-                leftCorrect = 1;
+                rightCorrect *= ((float).97 - ((float)off.Right/(float)70));          /////////////////////
             }
         }
         else
         {
             if(off.Left > 3)
             {
-
-                leftCorrect = ((float).97 - ((float)off.Left/(float)70)); //left decrease
-                rightCorrect = 1;
-            }
-            else
-            {
-                leftCorrect  = 1;
-                rightCorrect = 1;
+                leftCorrect *= ((float).97 - ((float)off.Left/(float)70)); //left decrease
             }
         }
     }
@@ -434,26 +421,42 @@ class Drive : public System
 
     void wheelCorrections(float &leftCorrect, float &rightCorrect)
     {
-        int difference = getSweepDifference(); //reduces call amount
+        int difference;
+        if(direction == TURN)
+        {
+            difference = abs(rigthEncoder.get_value()) - abs(leftEncoder.get_value());
+        }
+        else 
+        {
+            difference = getSweepDifference(); //reduces call amount
+        }
+
         if(difference > 4)
         {
-            rightCorrect = ((float).97 - ((float)abs(difference)/(float)100));
-            leftCorrect  = 1;
+            rightCorrect *= ((float).97 - ((float)abs(difference)/(float)100));
         }
-        else if(difference < 4)
+        else if(difference < -4)
         {
-            rightCorrect = 1;
-            leftCorrect  = ((float).97 - ((float)abs(difference)/(float)100));
-        }
-        else
-        {
-            leftCorrect = 1;
-            rightCorrect = 1;
+            leftCorrect  *= ((float).97 - ((float)abs(difference)/(float)100));
         }
     }
 
     int getProgress()
     {
+        if(direction == TURN)
+        {
+            target = fixTarget(target); //so you can put in negative values
+            GyroDistances Dist;
+            getDistances(Dist, target);
+            if(Dist.Right < Dist.Left)
+            {
+                return Dist.Right;
+            }
+            else 
+            {
+                return Dist.Left;
+            }
+        }
         return abs(getDriveEncoder() - target);
     }
 
@@ -606,56 +609,80 @@ class Lift : public System  //very quick acceleration
 
 void Drive::move()
 {
-    float leftCorrection = 1;
+    float leftCorrection = 1; //reset every call
     float rightCorrection = 1;
     if(getProgress() <= target)
     {
-        switch(speedControl) //pid or nah
+        if(direction != TURN)
         {
-            case(NOPID):
-                speed = pid.maxOutput;
-                break;
-            default:
-                speed = pid.output(getDriveEncoder(), target);
-                break;
-        }
-        
-        switch(direction) //drive straight
-        {
-            case(UPLEFTSWEEP):
-            case(UPRIGHTSWEEP):
-            case(DOWNLEFTSWEEP):
-            case(DOWNRIGHTSWEEP):
-                wheelCorrections(leftCorrection, rightCorrection);
-                switch(direction) //sweep turn stuffz
-                {
-                    case(UPLEFTSWEEP):
-                    case(DOWNLEFTSWEEP):
-                        leftCorrection *= outerInnerRatio;
-                        break;
-                    default:
-                        rightCorrection *= outerInnerRatio;
-                        break;
-                }
-                break;
-            default:
-                gyroCorrections(leftCorrection, rightCorrection);
-                break;
-        }
+            switch(speedControl) //pid or nah
+            {
+                case(NOPID):
+                    speed = pid.maxOutput;
+                    break;
+                default:
+                    speed = pid.output(getDriveEncoder(), target);
+                    break;
+            }
+            
+            switch(direction) //drive straight
+            {
+                case(UPLEFTSWEEP):
+                case(UPRIGHTSWEEP):
+                case(DOWNLEFTSWEEP):
+                case(DOWNRIGHTSWEEP):
+                    wheelCorrections(leftCorrection, rightCorrection);
+                    switch(direction) //sweep turn stuffz
+                    {
+                        case(UPLEFTSWEEP):
+                        case(DOWNLEFTSWEEP):
+                            leftCorrection *= outerInnerRatio;
+                            break;
+                        default:
+                            rightCorrection *= outerInnerRatio;
+                            break;
+                    }
+                    break;
+                default:
+                    gyroCorrections(leftCorrection, rightCorrection);
+                    break;
+            }
 
-        switch(direction)
+            switch(direction)
+            {
+                case(DOWNLEFTSWEEP):
+                case(DOWNRIGHTSWEEP):
+                case(BACKWARDS):
+                    leftCorrection *= -1;
+                    rightCorrection *= -1;
+                    break;
+            }
+
+            driveMotorsSpeed(speed*rightCorrection, rightDrive);
+            driveMotorsSpeed(speed*leftCorrection, leftDrive);
+        }
+        else 
         {
-            case(DOWNLEFTSWEEP):
-            case(DOWNRIGHTSWEEP):
-            case(BACKWARDS):
-                leftCorrection *= -1;
+            target = fixTarget(target); //so you can put in negative values
+            GyroDistances Dist;
+            getDistances(Dist, target);
+
+            if(Dist.Right<Dist.Left)
+            {
                 rightCorrection *= -1;
-                break;
+                speed = pid.output(Dist.Left, target);
+            }
+            else 
+            {
+                leftCorrection *= -1;
+                speed = pid.output(Dist.Right, target);
+            }
+            
+            wheelCorrections(leftCorrection, rightCorrection);
+            
+            driveMotorsSpeed(speed*leftCorrection,leftDrive);
+            driveMotorsSpeed(speed*rightCorrection,rightDrive);
         }
-
-
-        driveMotorsSpeed(speed*rightCorrection, rightDrive);
-        driveMotorsSpeed(speed*leftCorrection, leftDrive);
     }
     else 
     {
