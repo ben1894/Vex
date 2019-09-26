@@ -1,5 +1,4 @@
-﻿
-#include "main.h"
+﻿#include "main.h"
 #include "forwardDeclairations.hpp"
 #include "pidPacks.hpp"
 bool autonTest = false;
@@ -441,7 +440,7 @@ class Drive : public System
         }
     }
 
-    int getProgress()
+    int getProgress(int triggerTarget)
     {
         if(direction == TURN)
         {
@@ -619,7 +618,7 @@ void Drive::move()
             {
                 case(NOPID):
                     speed = pid.maxOutput;
-                    break;
+                    break; //reset integral at 0
                 default:
                     speed = pid.output(getDriveEncoder(), target);
                     break;
