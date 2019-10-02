@@ -80,7 +80,7 @@ class PidController
             return output;
         }
 };
-
+ 
 class System
 {
 protected:
@@ -626,7 +626,7 @@ void Drive::move()
             
             switch(direction) //drive straight
             {
-                case(UPLEFTSWEEP):
+                case(UPLEFTSWEEP): 
                 case(UPRIGHTSWEEP):
                 case(DOWNLEFTSWEEP):
                 case(DOWNRIGHTSWEEP):
@@ -711,9 +711,9 @@ drive::actions // or is equal to end
             }
 */
 template <typename... Ts>
-void all(Ts... all)
+void all(Ts... input)
 {
-    std::vector<int> parameters = {(int)all...,NULLOPTION};
+    std::vector<int> parameters = {(int)input...,NULLOPTION};
 
     Drive drive{};
     Lift lift{};
@@ -763,5 +763,7 @@ void all(Ts... all)
 
 void autonomous()
 {
-    all(DRIVE,BACKWARDS,1000,10);
+    all(1,1,1,1,1);
+    all(1,1,1,1);
+
 }

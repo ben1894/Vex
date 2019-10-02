@@ -13,13 +13,54 @@
  * operator control task will be stopped. Re-enabling the robot will restart the
  * task, not resume it from where it left off.
  */
-void opcontrol() 
+void opcontrol()
 {
-	while (true) 
+	while (true)
 	{
-		motorGroupMove(cVal(ANALOG_RIGHT_Y),rightDrive);
-		motorGroupMove(cVal(ANALOG_LEFT_Y),leftDrive);
+		driveMotorsSpeed(cVal(ANALOG_RIGHT_Y),rightDrive);
+		driveMotorsSpeed(cVal(ANALOG_LEFT_Y),leftDrive);
+				if(master.get_digital(DIGITAL_R1))
+		{
+			intakeL.move(127);
+			intakeR.move(-127);
+		}
+		else if(master.get_digital(DIGITAL_R2))
+		{
+			intakeL.move(-127);
+			intakeR.move(127);
+		}
+		else
+		{
+			intakeL.move(0);
+			intakeR.move(0);
+		}
 
+		if(master.get_digital(DIGITAL_DOWN))
+		{
+			tilt.move(127);
+		}
+		else if(master.get_digital(DIGITAL_B))
+		{
+			tilt.move(-127);
+		}
+		else
+		{
+			tilt.move(0);
+		}
+
+		if(master.get_digital(DIGITAL_L1))
+		{
+			lift.move(127);
+		}
+		else if(master.get_digital(DIGITAL_L2))
+		{
+			lift.move(-60);
+		}
+		else
+		{
+			lift.move(0);
+		}
+		
 		if(autonTest == true)
 		{
 			if(cVal(DIGITAL_A))
