@@ -19,12 +19,12 @@ void opcontrol()
 	{
 		driveMotorsSpeed(cVal(ANALOG_RIGHT_Y),rightDrive);
 		driveMotorsSpeed(cVal(ANALOG_LEFT_Y),leftDrive);
-				if(master.get_digital(DIGITAL_R1))
+		if(cVal(DIGITAL_R1))
 		{
 			intakeL.move(127);
 			intakeR.move(-127);
 		}
-		else if(master.get_digital(DIGITAL_R2))
+		else if(cVal(DIGITAL_R2))
 		{
 			intakeL.move(-127);
 			intakeR.move(127);
@@ -35,11 +35,11 @@ void opcontrol()
 			intakeR.move(0);
 		}
 
-		if(master.get_digital(DIGITAL_DOWN))
+		if(cVal(DIGITAL_DOWN))
 		{
 			tilt.move(127);
 		}
-		else if(master.get_digital(DIGITAL_B))
+		else if(cVal(DIGITAL_B))
 		{
 			tilt.move(-127);
 		}
@@ -48,11 +48,11 @@ void opcontrol()
 			tilt.move(0);
 		}
 
-		if(master.get_digital(DIGITAL_L1))
+		if(cVal(DIGITAL_L1))
 		{
 			lift.move(127);
 		}
-		else if(master.get_digital(DIGITAL_L2))
+		else if(cVal(DIGITAL_L2))
 		{
 			lift.move(-60);
 		}

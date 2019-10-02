@@ -91,22 +91,20 @@ protected:
     Timer triggerTimer;
 
     AutonFlags speedControl;
-    PidController pid; //eventualy initialized to defaults later in inherited classes
     int target;
 
-    SystemStates state = END;
-
 public:
+    SystemStates state = END;
+    PidController pid; //eventualy initialized to defaults later in inherited classes
     int id;
     char numberOfCalls = 0;
     char totalNumberOfCalls = 0;
     
     System(int idVal, double b, double c, double d, unsigned char e, unsigned char f): id(idVal), pid(b, c, d, e, f){}
-    virtual int getProgress() = 0; //return absolute value of difference
+    virtual bool checkIfDone(int breakValue) = 0; //return absolute value of difference
     virtual void setMember(int &number, AutonFlags &currentFlag, int value) = 0; //pure virtual functions
     virtual void resetObj() = 0;                                                 //a system object is never going to exist
     virtual void initializePid(AutonFlags pidPack) = 0;
-    virtual bool checkSystemTrigger() = 0; 
     int getTriggerNumberProgress()  
     {
         return (totalNumberOfCalls - numberOfCalls)+1; //number of calls decreases throughout runtime. //Starts at 1 and increases
@@ -156,7 +154,7 @@ public:
                 }
                 else //is equal and needs to be checked
                 {
-                    if(triggerSystem->getProgress() >= triggerBreak)
+                    if(triggerSystem->checkIfDone(triggerBreak))
                     {
                         state = EXECUTINGINSTRUCTIONS;
                         break;
@@ -197,7 +195,7 @@ public:
         {
             switch(currentFlag)
             {
-                case(DRIVET):
+                case(DRIVET): //(int = target) or otherwise specified by ther break when testing for trigger
                 case(LIFTT):
                     switch(number)
                     {
@@ -440,6 +438,7 @@ class Drive : public System
         }
     }
 
+    /*
     int getProgress(int triggerTarget)
     {
         if(direction == TURN)
@@ -458,6 +457,7 @@ class Drive : public System
         }
         return abs(getDriveEncoder() - target);
     }
+    */
 
     bool checkSystemTrigger()
     {
@@ -582,13 +582,7 @@ class Lift : public System  //very quick acceleration
             }
         }
 
-    int getProgress()
-    {
-    }
-
-    bool checkSystemTrigger()
-    {
-    }
+    bool checkIfDone(int breakVal )
 
     void resetObj()
     {
@@ -610,7 +604,7 @@ void Drive::move()
 {
     float leftCorrection = 1; //reset every call
     float rightCorrection = 1;
-    if(getProgress() <= target)
+    if(checkIfDone())
     {
         if(direction != TURN)
         {
@@ -765,5 +759,4 @@ void autonomous()
 {
     all(1,1,1,1,1);
     all(1,1,1,1);
-
 }
