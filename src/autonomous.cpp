@@ -344,7 +344,6 @@ class Drive : public System
     bool stopAcceleration = false;
     bool stopDeacceleration = false;
     int correctTo = -1;
-    int target;
     double outerInnerRatio = 1;
     int speed;
     int offSet; //used for sweep Turns
@@ -365,7 +364,38 @@ class Drive : public System
             }
             
         };
-    
+
+    bool checkIfDone(int breakVal = driveObj->target)
+    {
+        if(direction != TURN)
+        {
+            if(getDriveEncoder() > breakVal)
+            {
+                return true;
+            }
+            return false;
+        }
+
+        GyroDistances gyroVals;
+        getDistances(gyroVals, breakVal);
+        if(gyroVals.Left < gyroVals.Right)
+        {
+            if(gyroVals.Left < 5)
+            {
+                return true;
+            }
+            return false;
+        }
+        else
+        {
+            if(gyroVals.Left < 5)
+            {
+                return true;
+            }
+            return false;
+        }
+    }
+
     void gyroCorrections(float &leftCorrect, float &rightCorrect)
     {
         GyroDistances off;
@@ -564,7 +594,6 @@ void Drive::setMember(int &number, AutonFlags &currentFlag, int value)
 class Lift : public System  //very quick acceleration
 {
     private:
-    int target;
     int speed;
     AutonFlags speedControl;
 
@@ -582,8 +611,23 @@ class Lift : public System  //very quick acceleration
             }
         }
 
-    bool checkIfDone(int breakVal )
+    bool checkIfDone(int breakVal = liftObj->target)
+    {
+        if(target > breakVal) 
+        {
+            //if(getPosition() > breakVal)
+            {
 
+            }
+        }
+        else
+        {
+            //if(getPosition() < breakVal)
+            {
+                
+            }    
+        }
+    }
     void resetObj()
     {
         *this = Lift();
