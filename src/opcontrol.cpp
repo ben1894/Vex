@@ -19,33 +19,31 @@ void opcontrol()
 	{
 		driveMotorsSpeed(cVal(ANALOG_RIGHT_Y),rightDrive);
 		driveMotorsSpeed(cVal(ANALOG_LEFT_Y),leftDrive);
+
 		if(cVal(DIGITAL_R1))
 		{
-			intakeL.move(127);
-			intakeR.move(-127);
+			motorGroupMove(127, intake);
 		}
 		else if(cVal(DIGITAL_R2))
 		{
-			intakeL.move(-127);
-			intakeR.move(127);
+			motorGroupMove(-127, intake);
 		}
 		else
 		{
-			intakeL.move(0);
-			intakeR.move(0);
+			motorGroupMove(127, intake);
 		}
 
 		if(cVal(DIGITAL_DOWN))
 		{
-			tilt.move(127);
+			tilter.move(127);
 		}
 		else if(cVal(DIGITAL_B))
 		{
-			tilt.move(-127);
+			tilter.move(-127);
 		}
 		else
 		{
-			tilt.move(0);
+			tilter.move(0);
 		}
 
 		if(cVal(DIGITAL_L1))
@@ -68,5 +66,6 @@ void opcontrol()
 				autonomous();
 			}
 		}
+		pros::delay(3);
 	}
 }

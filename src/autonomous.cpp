@@ -4,6 +4,7 @@
 bool autonTest = false;
 const bool voltage = false;
 const bool gyroTurns = true;
+const bool gyroUpsidedown = false;
 const double wheelDistance = 200;
 class Drive;
 class Lift;
@@ -344,13 +345,13 @@ class Drive : public System
     bool stopAcceleration = false;
     bool stopDeacceleration = false;
     int correctTo = -1;
-    double outerInnerRatio = 1;
     int speed;
     int offSet; //used for sweep Turns
     GyroDistances turnStats;
     AutonFlags direction;
 
     public:
+    double outerInnerRatio = 1;
     Drive(int idVal = DRIVE)
         : System((int)idVal,regDriveP,regDriveI,regDriveD,regDriveMin,regDriveMax)
         {
@@ -423,7 +424,7 @@ class Drive : public System
         {
             case(UPLEFTSWEEP):
             case(DOWNLEFTSWEEP):
-                return abs(rigthEncoder.get_value());
+                return abs(rightEncoder.get_value());
             default:
                 return abs(leftEncoder.get_value());
         }
@@ -437,7 +438,7 @@ class Drive : public System
             case(DOWNLEFTSWEEP):
                 return abs(leftEncoder.get_value());
             default:
-                return abs(rigthEncoder.get_value());
+                return abs(rightEncoder.get_value());
         }
     }
 
@@ -451,7 +452,7 @@ class Drive : public System
         int difference;
         if(direction == TURN)
         {
-            difference = abs(rigthEncoder.get_value()) - abs(leftEncoder.get_value());
+            difference = abs(rightEncoder.get_value()) - abs(leftEncoder.get_value());
         }
         else 
         {
@@ -466,31 +467,6 @@ class Drive : public System
         {
             leftCorrect  *= ((float).97 - ((float)abs(difference)/(float)100));
         }
-    }
-
-    /*
-    int getProgress(int triggerTarget)
-    {
-        if(direction == TURN)
-        {
-            target = fixTarget(target); //so you can put in negative values
-            GyroDistances Dist;
-            getDistances(Dist, target);
-            if(Dist.Right < Dist.Left)
-            {
-                return Dist.Right;
-            }
-            else 
-            {
-                return Dist.Left;
-            }
-        }
-        return abs(getDriveEncoder() - target);
-    }
-    */
-
-    bool checkSystemTrigger()
-    {
     }
 
     void resetObj()

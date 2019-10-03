@@ -8,10 +8,9 @@ const short centerButton = 2;
 const short rightButton = 4;
 
 Select count = UNDEFINED;
+/////////////////flipper.set_brake_mode(pros::E_MOTOR_BRAKE_BRAKE);
 
 
-pros::Controller mainController(pros::E_CONTROLLER_MASTER);
-pros::Controller secondaryController(pros::E_CONTROLLER_PARTNER);
 
 /*
  * Runs initialization code. This occurs as soon as the program is started.
@@ -19,9 +18,19 @@ pros::Controller secondaryController(pros::E_CONTROLLER_PARTNER);
  * All other competition modes are blocked by initialize; it is recommended
  * to keep execution time for this mode under a few seconds.
  */
+pros::Controller mainController(pros::E_CONTROLLER_MASTER);
+pros::Controller secondaryController(pros::E_CONTROLLER_PARTNER);
+
+pros::Motor tilter(7,pros::E_MOTOR_GEARSET_36,false,pros::E_MOTOR_ENCODER_COUNTS);
+pros::Motor lift(8,pros::E_MOTOR_GEARSET_36,false,pros::E_MOTOR_ENCODER_COUNTS);
 
 std::array<pros::Motor, 2> rightDrive{pros::Motor(1),pros::Motor(2)};
 std::array<pros::Motor, 2>  leftDrive{pros::Motor(3),pros::Motor(4)};
+std::array<pros::Motor, 2>     intake{pros::Motor(5),pros::Motor(6)};
+
+pros::ADIGyro gyro(2);
+pros::ADIEncoder leftEncoder(3, 4, true);
+pros::ADIEncoder rightEncoder(7, 8, true);
 
 void initialize() 
 {
@@ -41,6 +50,9 @@ void initialize()
 		rightDrive[i].set_encoder_units(pros::E_MOTOR_ENCODER_COUNTS);
 		rightDrive[i].set_gearing(pros::E_MOTOR_GEARSET_18);
 	}
+    
+	leftEncoder.reset();
+	rightEncoder.reset();
 
 	if(autonTest == true)
 	{
@@ -76,7 +88,7 @@ void waitForRelease()
 
 void competition_initialize()
 {
-	Select oldCount = REDBACK;
+	Select oldCount = UNDER;
 	bool onceAcception = false;
 	int oldLCD = 0;
 	int oldRight = 0;
@@ -116,11 +128,11 @@ void competition_initialize()
 					pros::lcd::print(2,  "Center to Select");
 					mainController.print(0,0,"Down To Select");
 					break;
-				case NEGATIVE:
-					count = BLUEDOUBLEBACK;
+				case UNDER:
+					count = (Select)((int)OVER - 1);
 					onceAcception = true;
 					break;
-				default:
+				default: //OVER
 					onceAcception = true;
 					count = UNDEFINED;
 					break;
@@ -130,18 +142,18 @@ void competition_initialize()
 		if(onceAcception == true)
 		{
 			onceAcception = false;
-			if(count == BLUEDOUBLEBACK)
+			if(count == UNDEFINED)
 			{
-				oldCount = NEGATIVE;
+				oldCount = OVER;
 			}
 			else
 			{
-				oldCount = HOLDER2;
+				oldCount = UNDER;
 			}
 		}
 		else
 		{
-			oldCount = count;
+			oldCount = count; //always updates at end, needs to have bool to not do this
 		}
 
 		oldLCD = pros::lcd::read_buttons();

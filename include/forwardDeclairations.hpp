@@ -65,6 +65,15 @@ enum SystemStates
 	EXECUTINGINSTRUCTIONS
 };
 
+enum Select
+{
+	UNDER,
+	UNDEFINED,
+	AUTON1,
+	AUTON2,
+	OVER
+};
+
 enum Ids
 {
 	DRIVE = 999999990,
@@ -84,19 +93,16 @@ extern pros::ADIGyro gyro;
 
 extern std::array<pros::Motor, 2> leftDrive;
 extern std::array<pros::Motor, 2> rightDrive;
+extern std::array<pros::Motor, 2> intake;
 
-extern pros::Motor hMotor;
-extern pros::Motor descore;
-extern pros::Motor intake;
-extern pros::Motor catapult;
-extern pros::Motor flipper;
-extern pros::Motor parkM;
+extern pros::Motor tilter;
+extern pros::Motor lift;
 
 extern pros::Controller secondaryController;
 extern pros::Controller mainController;
 
 extern pros::ADIEncoder leftEncoder;
-extern pros::ADIEncoder rigthEncoder;
+extern pros::ADIEncoder rightEncoder;
 extern pros::ADIGyro gyro;
 
 struct GyroDistances
