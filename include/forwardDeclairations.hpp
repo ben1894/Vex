@@ -89,6 +89,9 @@ extern bool autonTest;
 extern const bool voltage;
 extern const bool gyroUpsidedown;
 extern const double wheelDistance;
+extern const int driveBaseSpeed;
+extern const int gyroTurnBaseSpeed;
+extern const int encoderTurnBaseSpeed;
 extern pros::ADIGyro gyro;
 
 extern std::array<pros::Motor, 2> leftDrive;

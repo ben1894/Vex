@@ -21,12 +21,11 @@ Select count = UNDEFINED;
 pros::Controller mainController(pros::E_CONTROLLER_MASTER);
 pros::Controller secondaryController(pros::E_CONTROLLER_PARTNER);
 
+std::array<pros::Motor, 2> rightDrive{pros::Motor(3),pros::Motor(4)};
+std::array<pros::Motor, 2>  leftDrive{pros::Motor(1),pros::Motor(2)};
+std::array<pros::Motor, 2>     intake{pros::Motor(5),pros::Motor(6)};
 pros::Motor tilter(7,pros::E_MOTOR_GEARSET_36,false,pros::E_MOTOR_ENCODER_COUNTS);
 pros::Motor lift(8,pros::E_MOTOR_GEARSET_36,false,pros::E_MOTOR_ENCODER_COUNTS);
-
-std::array<pros::Motor, 2> rightDrive{pros::Motor(1),pros::Motor(2)};
-std::array<pros::Motor, 2>  leftDrive{pros::Motor(3),pros::Motor(4)};
-std::array<pros::Motor, 2>     intake{pros::Motor(5),pros::Motor(6)};
 
 pros::ADIGyro gyro(2);
 pros::ADIEncoder leftEncoder(3, 4, true);
@@ -35,7 +34,6 @@ pros::ADIEncoder rightEncoder(7, 8, true);
 void initialize() 
 {
 	pros::lcd::initialize();
-
 	pros::ADIGyro gyro(2);
 	pros::Task::delay(2000);
 	for(int i = 0; i < leftDrive.size(); i++)
@@ -44,12 +42,14 @@ void initialize()
 		leftDrive[i].set_encoder_units(pros::E_MOTOR_ENCODER_COUNTS);
 		leftDrive[i].set_gearing(pros::E_MOTOR_GEARSET_18);
 	}
-		for(int i = 0; i < leftDrive.size(); i++)
+		for(int i = 0; i < rightDrive.size(); i++)
 	{
+		rightDrive[i].set_reversed(true);
 		rightDrive[i].set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
 		rightDrive[i].set_encoder_units(pros::E_MOTOR_ENCODER_COUNTS);
 		rightDrive[i].set_gearing(pros::E_MOTOR_GEARSET_18);
 	}
+	intake[0].set_reversed(true);
     
 	leftEncoder.reset();
 	rightEncoder.reset();

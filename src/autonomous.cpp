@@ -6,6 +6,11 @@ const bool voltage = false;
 const bool gyroTurns = true;
 const bool gyroUpsidedown = false;
 const double wheelDistance = 200;
+
+const int driveBaseSpeed = 10;
+const int gyroTurnBaseSpeed = 10;
+const int encoderTurnBaseSpeed = 10;
+
 class Drive;
 class Lift;
 class PidController;
@@ -178,7 +183,7 @@ public:
                     return false;
                 case(REGPID):
                     speedControl = currentFlag;
-                    initializePid(currentFlag); //virtual function
+                    initializePid(currentFlag); //pure virtual function
                     return false;
                 case(DRIVEPID):
                     speedControl = currentFlag;
@@ -543,10 +548,18 @@ void Drive::setMember(int &number, AutonFlags &currentFlag, int value)
                         number++;
                         break;
                     case(2):
-                        correctTo = value;
+                        if(value == CURRENTVAL)
+                        {
+                            correctTo = fixTarget(gyro.get_value());
+                        }
+                        else
+                        {
+                            correctTo = value;
+                        }
                         number = 0;
                         break;
                 }
+                break;
             case(UPRIGHTSWEEP):
             case(UPLEFTSWEEP):
             case(DOWNLEFTSWEEP):
@@ -563,6 +576,7 @@ void Drive::setMember(int &number, AutonFlags &currentFlag, int value)
                         outerInnerRatio = (value - wheelDistance) / value;
                         break;
                 }
+                break;
         }
     }
 }
@@ -571,7 +585,6 @@ class Lift : public System  //very quick acceleration
 {
     private:
     int speed;
-    AutonFlags speedControl;
 
     public:
     Lift(int id = LIFT)
@@ -657,7 +670,10 @@ void Drive::move()
                     }
                     break;
                 default:
-                    gyroCorrections(leftCorrection, rightCorrection);
+                    if(correctTo != NOSTRAIGHT)
+                    {
+                        gyroCorrections(leftCorrection, rightCorrection);
+                    }
                     break;
             }
 
@@ -753,6 +769,8 @@ void all(Ts... input)
                 drive.pid.minOutput /= drive.outerInnerRatio; //has to be put here so it doesn't get overwritten by the pid initialization
                 break;
             case(END):
+                driveMotorsSpeed(0,rightDrive);
+                driveMotorsSpeed(0,leftDrive)
                 break; //adding retain position later
         }
 
@@ -775,8 +793,8 @@ void all(Ts... input)
     }
 }
 
+//DRIVE, distance, correctTo(value,CURRENTVAL,NOSTRAIGHT,WHEELCORRECTION)
 void autonomous()
 {
-    all(1,1,1,1,1);
-    all(1,1,1,1);
+    all(FORWARDS, 1000);
 }

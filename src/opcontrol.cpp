@@ -15,6 +15,14 @@
  */
 void opcontrol()
 {
+	for(int i = 0; i < leftDrive.size(); i++)
+	{
+		leftDrive[i].set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
+	}
+	for(int i = 0; i < rightDrive.size(); i++)
+	{
+		rightDrive[i].set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
+	}
 	while (true)
 	{
 		driveMotorsSpeed(cVal(ANALOG_RIGHT_Y),rightDrive);
@@ -30,33 +38,33 @@ void opcontrol()
 		}
 		else
 		{
-			motorGroupMove(127, intake);
+			motorGroupMove(0, intake);
 		}
 
 		if(cVal(DIGITAL_DOWN))
 		{
-			tilter.move(127);
+			lift.move(127);
 		}
 		else if(cVal(DIGITAL_B))
 		{
-			tilter.move(-127);
-		}
-		else
-		{
-			tilter.move(0);
-		}
-
-		if(cVal(DIGITAL_L1))
-		{
-			lift.move(127);
-		}
-		else if(cVal(DIGITAL_L2))
-		{
-			lift.move(-60);
+			lift.move(-127);
 		}
 		else
 		{
 			lift.move(0);
+		}
+
+		if(cVal(DIGITAL_L1))
+		{
+			tilter.move(127);
+		}
+		else if(cVal(DIGITAL_L2))
+		{
+			tilter.move(-60);
+		}
+		else
+		{
+			tilter.move(0);
 		}
 		
 		if(autonTest == true)
