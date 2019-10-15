@@ -93,16 +93,15 @@ protected:
     char triggerNumber; //So it can be called on the second process of something
     int triggerBreak;   //
     System *triggerSystem;
-    AutonFlags trigger; //Holds the type of trigger system will have    All sub systems will have the option of starting on a trigger
+    AutonFlags trigger = NONET; //Holds the type of trigger system will have    All sub systems will have the option of starting on a trigger
     Timer triggerTimer;
 
-    AutonFlags speedControl;
-    int target;
-
 public:
+    AutonFlags speedControl = BLANK;
     SystemStates state = END;
     PidController pid; //eventualy initialized to defaults later in inherited classes
     int id;
+    int target;
     char numberOfCalls = 0;
     char totalNumberOfCalls = 0;
     
@@ -767,10 +766,14 @@ void all(Ts... input)
             case(WAITINGFORINSTRUCTIONS):
                 drive.update(parameters);
                 drive.pid.minOutput /= drive.outerInnerRatio; //has to be put here so it doesn't get overwritten by the pid initialization
+                if(drive.speedControl == BLANK)
+                {
+                    drive.initializePid(REGPID); //if left default
+                }
                 break;
             case(END):
                 driveMotorsSpeed(0,rightDrive);
-                driveMotorsSpeed(0,leftDrive)
+                driveMotorsSpeed(0,leftDrive);
                 break; //adding retain position later
         }
 
@@ -793,8 +796,9 @@ void all(Ts... input)
     }
 }
 
-//DRIVE, distance, correctTo(value,CURRENTVAL,NOSTRAIGHT,WHEELCORRECTION)
+//DRIVE, distance, correctTo(value,CURRENTVAL,NOSTRAIGHT,WHEELCORRECTION), {speedControl - REGPID(NOPID, MMPID)}
+
 void autonomous()
 {
-    all(FORWARDS, 1000);
+    all(DRIVE,FORWARDS,1000,NOSTRAIGHT);
 }

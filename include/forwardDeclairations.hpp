@@ -54,7 +54,8 @@ enum AutonFlags
 	UPRIGHTSWEEP,
 	DOWNRIGHTSWEEP,
 
-	NOACCEL
+	NOACCEL,
+	BLANK
 };
 
 enum SystemStates

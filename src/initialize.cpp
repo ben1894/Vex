@@ -29,7 +29,7 @@ pros::Motor lift(8,pros::E_MOTOR_GEARSET_36,false,pros::E_MOTOR_ENCODER_COUNTS);
 
 pros::ADIGyro gyro(2);
 pros::ADIEncoder leftEncoder(3, 4, true);
-pros::ADIEncoder rightEncoder(7, 8, true);
+pros::ADIEncoder rightEncoder(5, 6, true);
 
 void initialize() 
 {
@@ -38,14 +38,14 @@ void initialize()
 	pros::Task::delay(2000);
 	for(int i = 0; i < leftDrive.size(); i++)
 	{
-		leftDrive[i].set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
+		leftDrive[i].set_brake_mode(pros::E_MOTOR_BRAKE_BRAKE);
 		leftDrive[i].set_encoder_units(pros::E_MOTOR_ENCODER_COUNTS);
 		leftDrive[i].set_gearing(pros::E_MOTOR_GEARSET_18);
 	}
 		for(int i = 0; i < rightDrive.size(); i++)
 	{
 		rightDrive[i].set_reversed(true);
-		rightDrive[i].set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
+		rightDrive[i].set_brake_mode(pros::E_MOTOR_BRAKE_BRAKE);
 		rightDrive[i].set_encoder_units(pros::E_MOTOR_ENCODER_COUNTS);
 		rightDrive[i].set_gearing(pros::E_MOTOR_GEARSET_18);
 	}
@@ -125,6 +125,16 @@ void competition_initialize()
 			{
 				case UNDEFINED:
 					pros::lcd::print(0, "< Auto Select >");
+					pros::lcd::print(2,  "Center to Select");
+					mainController.print(0,0,"Down To Select");
+					break;
+				case AUTON1:
+					pros::lcd::print(0, "Auton1");
+					pros::lcd::print(2,  "Center to Select");
+					mainController.print(0,0,"Down To Select");
+					break;
+				case AUTON2:
+					pros::lcd::print(0, "Auton2");
 					pros::lcd::print(2,  "Center to Select");
 					mainController.print(0,0,"Down To Select");
 					break;
