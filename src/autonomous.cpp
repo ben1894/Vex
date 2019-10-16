@@ -110,7 +110,7 @@ public:
     virtual void setMember(int &number, AutonFlags &currentFlag, int value) = 0; //pure virtual functions
     virtual void resetObj() = 0;                                                 //a system object is never going to exist
     virtual void initializePid(AutonFlags pidPack) = 0;
-    int getTriggerNumberProgress()  
+    int getTriggerNumberProgress()
     {
         return (totalNumberOfCalls - numberOfCalls)+1; //number of calls decreases throughout runtime. //Starts at 1 and increases
     } //if 0 from beginning, initial update takes care of it
@@ -128,7 +128,7 @@ public:
 
     void updateTriggerState()
     {
-        switch(triggerBreak)
+        switch(trigger)
         {
             case(NONET):
                 state = EXECUTINGINSTRUCTIONS;
@@ -367,7 +367,6 @@ class Drive : public System
             {
                 totalNumberOfCalls = driveObj->totalNumberOfCalls;
             }
-            
         };
 
     bool checkIfDone(int breakVal = driveObj->target)
@@ -385,7 +384,7 @@ class Drive : public System
         getDistances(gyroVals, breakVal);
         if(gyroVals.Left < gyroVals.Right)
         {
-            if(gyroVals.Left < 5)
+            if(gyroVals.Left < 4)
             {
                 return true;
             }
@@ -393,7 +392,7 @@ class Drive : public System
         }
         else
         {
-            if(gyroVals.Left < 5)
+            if(gyroVals.Left < 4)
             {
                 return true;
             }
@@ -410,7 +409,7 @@ class Drive : public System
         {
             if(off.Right > 3)
             {
-                rightCorrect *= ((float).97 - ((float)off.Right/(float)70));          /////////////////////
+                rightCorrect *= ((float).97 - ((float)off.Right/(float)70));
             }
         }
         else

@@ -17,11 +17,11 @@ void opcontrol()
 {
 	for(int i = 0; i < leftDrive.size(); i++)
 	{
-		leftDrive[i].set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
+		leftDrive[i].set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
 	}
 	for(int i = 0; i < rightDrive.size(); i++)
 	{
-		rightDrive[i].set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
+		rightDrive[i].set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
 	}
 	while (true)
 	{
