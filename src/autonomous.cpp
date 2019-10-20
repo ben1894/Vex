@@ -296,7 +296,10 @@ public:
                 {
                     ++i;
                     bool checkSecondaryFlags = setSystemMember(subFlag,currentFlag,parameters[i]);
-                    setMember(subFlag,currentFlag,parameters[i]);
+                    if(checkSecondaryFlags == true)
+                    {
+                        setMember(subFlag,currentFlag,parameters[i]);
+                    }
                 } while(parameters[i+1] < minEnumValue);
 
                 state = WAITINGFORTRIGGER; //changed because it wouldnt ever check trigger 
@@ -328,7 +331,10 @@ public:
                         {
                             ++i;
                             bool checkSecondaryFlags = setSystemMember(subFlag,currentFlag,parameters[i]);
-                            setMember(subFlag,currentFlag,parameters[i]);
+                            if(checkSecondaryFlags == true)
+                            {
+                                setMember(subFlag,currentFlag,parameters[i]);
+                            }
                         } while(parameters[i+1] < minEnumValue);
 
                         state = WAITINGFORTRIGGER; //trigger obj might not be in scope yet so cant check its process.
@@ -359,6 +365,8 @@ class Drive : public System
     Drive(int idVal = DRIVE)
         : System((int)idVal,regDriveP,regDriveI,regDriveD,regDriveMin,regDriveMax)
         {
+            leftEncoder.reset(); ///////////
+	        rightEncoder.reset();
             if(driveObj == nullptr)
             {
                 driveObj = this;
@@ -508,7 +516,7 @@ class Drive : public System
             case(DOWNRIGHTSWEEP):
                 return getOutsideEncoder();
             default:
-                return leftEncoder.get_value();
+                return abs(leftEncoder.get_value()); //////////////////abs
         }
     }
 };
@@ -635,7 +643,7 @@ void Drive::move()
 {
     float leftCorrection = 1; //reset every call
     float rightCorrection = 1;
-    if(checkIfDone())
+    if(checkIfDone() == false)
     {
         if(direction != TURN)
         {

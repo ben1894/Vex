@@ -50,7 +50,8 @@ void initialize()
 		rightDrive[i].set_gearing(pros::E_MOTOR_GEARSET_18);
 	}
 	intake[0].set_reversed(true);
-    
+	tilter.set_brake_mode(pros::E_MOTOR_BRAKE_BRAKE);
+
 	leftEncoder.reset();
 	rightEncoder.reset();
 

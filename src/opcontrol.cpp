@@ -67,6 +67,8 @@ void opcontrol()
 			tilter.move(0);
 		}
 		
+		pros::lcd::print(3,"%f", fabs(leftEncoder.get_value()));
+
 		if(autonTest == true)
 		{
 			if(cVal(DIGITAL_A))
