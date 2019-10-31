@@ -2,7 +2,7 @@
 #include "forwardDeclairations.hpp"
 #include "pidPacks.hpp"
 bool autonTest = false;
-const bool voltage = false;
+const bool voltage = true;
 const bool gyroTurns = true;
 const bool gyroUpsidedown = false;
 const double wheelDistance = 200;
@@ -159,7 +159,7 @@ public:
                 }
                 else //is equal and needs to be checked
                 {
-                    if(triggerSystem->checkIfDone(triggerBreak))
+                    if(triggerSystem->checkIfDone(triggerBreak) == false)
                     {
                         state = EXECUTINGINSTRUCTIONS;
                         break;

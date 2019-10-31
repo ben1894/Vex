@@ -27,10 +27,6 @@ std::array<pros::Motor, 2>     intake{pros::Motor(5),pros::Motor(6)};
 pros::Motor tilter(7,pros::E_MOTOR_GEARSET_36,false,pros::E_MOTOR_ENCODER_COUNTS);
 pros::Motor lift(8,pros::E_MOTOR_GEARSET_36,false,pros::E_MOTOR_ENCODER_COUNTS);
 
-pros::ADIGyro gyro(2);
-pros::ADIEncoder leftEncoder(3, 4, true);
-pros::ADIEncoder rightEncoder(5, 6, true);
-
 void initialize() 
 {
 	pros::lcd::initialize();
@@ -132,12 +128,12 @@ void competition_initialize()
 				case AUTON1:
 					pros::lcd::print(0, "Auton1");
 					pros::lcd::print(2,  "Center to Select");
-					mainController.print(0,0,"Down To Select");
+					mainController.print(0,0,"Auton1");
 					break;
 				case AUTON2:
 					pros::lcd::print(0, "Auton2");
 					pros::lcd::print(2,  "Center to Select");
-					mainController.print(0,0,"Down To Select");
+					mainController.print(0,0,"Auton1");
 					break;
 				case UNDER:
 					count = (Select)((int)OVER - 1);
