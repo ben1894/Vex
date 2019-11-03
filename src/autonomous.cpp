@@ -12,10 +12,10 @@ const int gyroTurnBaseSpeed = 10;
 const int encoderTurnBaseSpeed = 10;
 
 class Drive;
-class Lift;
+class Tilter;
 class PidController;
 Drive *driveObj;
-Lift *liftObj;
+Tilter *tilterObj;
 
 /**
  * Runs the user autonomous code. This function will be started in its own task
@@ -28,7 +28,6 @@ Lift *liftObj;
  * will be stopped. Re-enabling the robot will restart the task, not re-start it
  * from where it left off.
  */
-//a = A();   //clears back to defaults
 
 class PidController
 {
@@ -44,9 +43,9 @@ class PidController
         unsigned char minOutput;
         unsigned char maxOutput;
 
-        PidController(double P = 0, double I = 0, double D = 0, unsigned char minOutput = 0, unsigned char maxOutput = 0)
-        {
-            this->P = P;
+        PidController(double P = 0, double I = 0, double D = 0, unsigned char minOutput = 0, unsigned char maxOutput = 0) 
+        { //Initializes the object with default values. Also allows values to be put in on creation
+            this->P = P; //Differentiates between the member P and the parameter P. this->P is the member
             this->I = I;
             this->D = D;
             this->minOutput = minOutput;
@@ -57,8 +56,8 @@ class PidController
 
         void reset()
         {
-            lastTime = pros::millis();
-            combinedIntegral = 0;
+            lastTime = pros::millis(); //clears the time
+            combinedIntegral = 0; //resets other variables
             lastError = 0;
         }
 
@@ -67,11 +66,11 @@ class PidController
             int error = currentSensorData - target;
             unsigned long changeInTime = lastTime - pros::millis();
 
-            long currentIntegral = error * changeInTime;
-            combinedIntegral += currentIntegral;
-            double derivative = (error - lastError) / changeInTime;
-
-            lastTime = pros::millis();
+            long currentIntegral = error * changeInTime; //calculation for the area under the curve for the latest movement. The faster this updates the more accurate
+            combinedIntegral += currentIntegral;         //adds latest to the total integral
+            double derivative = (error - lastError) / changeInTime; //formula to calculate the (almost) instantaneous rate of change. 
+                                                                    //affected by how quickly the rate is changing (maybe reduce rate)
+            lastTime = pros::millis(); 
             lastError = error;
 
             int output = (P * error) + (I * combinedIntegral) + (D * derivative);
@@ -90,8 +89,8 @@ class PidController
 class System
 {
 protected:
-    char triggerNumber; //So it can be called on the second process of something
-    int triggerBreak;   //
+    char triggerNumber; 
+    int triggerBreak;
     System *triggerSystem;
     AutonFlags trigger = NONET; //Holds the type of trigger system will have    All sub systems will have the option of starting on a trigger
     Timer triggerTimer;
@@ -106,9 +105,9 @@ public:
     char totalNumberOfCalls = 0;
     
     System(int idVal, double b, double c, double d, unsigned char e, unsigned char f): id(idVal), pid(b, c, d, e, f){}
-    virtual bool checkIfDone(int breakValue) = 0; //return absolute value of difference
-    virtual void setMember(int &number, AutonFlags &currentFlag, int value) = 0; //pure virtual functions
-    virtual void resetObj() = 0;                                                 //a system object is never going to exist
+    virtual bool checkIfDone(int breakValue) = 0;
+    virtual void setMember(int &number, AutonFlags &currentFlag, int value) = 0; 
+    virtual void resetObj() = 0;                                                
     virtual void initializePid(AutonFlags pidPack) = 0;
     int getTriggerNumberProgress()
     {
@@ -188,9 +187,9 @@ public:
                     speedControl = currentFlag;
                     pid = PidController(regDriveP,regDriveI,regDriveD,regDriveMin,regDriveMax);
                     return false;
-                case(LIFTPID):
+                case(TILTERPID):
                     speedControl = currentFlag;
-                    pid = PidController(regLiftP,regLiftI,regLiftD,regLiftMin,regLiftMax);
+                    pid = PidController(regTilterP,regTilterI,regTilterD,regTilterMin,regTilterMax);
                     return false;
                 default:
                     return true; //dont plus one yet because it will go through the other flags
@@ -201,7 +200,7 @@ public:
             switch(currentFlag)
             {
                 case(DRIVET): //(int = target) or otherwise specified by ther break when testing for trigger
-                case(LIFTT):
+                case(TILTERT):
                     switch(number)
                     {
                         case(1):       //its never going to be 0 because it only goes in this loops if its 0;
@@ -209,9 +208,9 @@ public:
                             {
                                 triggerSystem = reinterpret_cast<System *>(driveObj);
                             }
-                            else if(currentFlag == LIFTT)
+                            else if(currentFlag == TILTERT)
                             {
-                                triggerSystem = reinterpret_cast<System *>(liftObj);
+                                triggerSystem = reinterpret_cast<System *>(tilterObj);
                             }
                             trigger = currentFlag;
                             triggerNumber = value; //distance
@@ -324,7 +323,7 @@ public:
                     {
                         resetObj(); //have to change this 
                         parameters[i] = (int)NULLOPTION;
-                        AutonFlags currentFlag;  //DRIVE,FORWARD,1000,LIFT,FLAG
+                        AutonFlags currentFlag;  //DRIVE,FORWARD,1000,TILTER,FLAG
                         int subFlag = 0;
 
                         do //loops through the data to give to the specific system
@@ -587,26 +586,26 @@ void Drive::setMember(int &number, AutonFlags &currentFlag, int value)
     }
 }
 
-class Lift : public System  //very quick acceleration
+class Tilter : public System  //very quick acceleration
 {
     private:
     int speed;
 
     public:
-    Lift(int id = LIFT)
-        : System((int)id,regLiftP,regLiftI,regLiftD,regLiftMin,regLiftMax)
+    Tilter(int id = TILTER)
+        : System((int)id,regTilterP,regTilterI,regTilterD,regTilterMin,regTilterMax)
         {
-            if(liftObj == nullptr) //if declairing this for the first time
+            if(tilterObj == nullptr) //if declairing this for the first time
             {
-                liftObj = this;
+                tilterObj = this;
             }
             else //global is declaired meaning the object is being reset. Keep the state and total number of calls.
             {
-                totalNumberOfCalls = liftObj->totalNumberOfCalls;
+                totalNumberOfCalls = tilterObj->totalNumberOfCalls;
             }
         }
 
-    bool checkIfDone(int breakVal = liftObj->target)
+    bool checkIfDone(int breakVal = tilterObj->target)
     {
         if(target > breakVal) 
         {
@@ -623,14 +622,15 @@ class Lift : public System  //very quick acceleration
             }    
         }
     }
+
     void resetObj()
     {
-        *this = Lift();
+        *this = Tilter();
     }
 
     void initializePid(AutonFlags pidPack)
     {
-        pid = PidController(regLiftP,regLiftI,regLiftD,regLiftMin,regLiftMax);
+        pid = PidController(regTilterP,regTilterI,regTilterD,regTilterMin,regTilterMax);
     }
 
     void setMember(int &number, AutonFlags &currentFlag, int value)
@@ -725,42 +725,27 @@ void Drive::move()
     }
 }
 
-void Lift::move()
+void Tilter::move()
 {
     
 }
 
-/*
-drive::actions // or is equal to end
-{
-        Do stuff
-        if(conditionsaremet)
-        {
-            if(getNumberofCalls() == totalNumberOfCalls)
-            {
-                totalNumberOfCalls
-                state = END;
-            }
-            else
-            {
-                state = WAITINGFORINSTRUCTIONS
-            }
-*/
 template <typename... Ts>
 void all(Ts... input)
 {
     std::vector<int> parameters = {(int)input...,NULLOPTION};
 
     Drive drive{};
-    Lift lift{};
+    Tilter tilter{};
 
     for(int i = 0; i < parameters.size()-1; i++)
     {
         drive.initialUpdate(i, parameters);
-        lift.initialUpdate(i, parameters);
+        tilter.initialUpdate(i, parameters);
     }
     drive.pid.minOutput /= drive.outerInnerRatio;
-    while(lift.state != END || drive.state != END)
+
+    while(tilter.state != END || drive.state != END)
     {
         switch(drive.state)
         {
@@ -784,18 +769,18 @@ void all(Ts... input)
                 break; //adding retain position later
         }
 
-        switch(lift.state)
+        switch(tilter.state)
         {
             case(EXECUTINGINSTRUCTIONS):
-                lift.move();
+                tilter.move();
                 break;
             case(WAITINGFORTRIGGER):
-                lift.updateTriggerState();
+                tilter.updateTriggerState();
                 break;
             case(END):
                 break; //adding retain position later
             case(WAITINGFORINSTRUCTIONS):
-                lift.update(parameters);
+                tilter.update(parameters);
                 break;
         }
 
@@ -807,5 +792,6 @@ void all(Ts... input)
 
 void autonomous()
 {
+
     all(DRIVE,FORWARDS,1000,NOSTRAIGHT);
 }

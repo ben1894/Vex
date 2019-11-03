@@ -6,8 +6,8 @@
 #define regDriveMin 20
 #define regDriveMax 127
 
-#define regLiftP 0
-#define regLiftI 0
-#define regLiftD 0
-#define regLiftMin 0
-#define regLiftMax 0//
+#define regTilterP 0
+#define regTilterI 0
+#define regTilterD 0
+#define regTilterMin 0
+#define regTilterMax 0//
