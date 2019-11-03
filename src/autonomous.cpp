@@ -66,11 +66,14 @@ class PidController
             int error = currentSensorData - target;
             unsigned long changeInTime = lastTime - pros::millis();
 
-            long currentIntegral = error * changeInTime; //calculation for the area under the curve for the latest movement. The faster this updates the more accurate
-            combinedIntegral += currentIntegral;         //adds latest to the total integral
-            double derivative = (error - lastError) / changeInTime; //formula to calculate the (almost) instantaneous rate of change. 
-                                                                    //affected by how quickly the rate is changing (maybe reduce rate)
-            lastTime = pros::millis(); 
+            if((P*error) < maxOutput) //to prevent windup
+            {
+                long currentIntegral = error * changeInTime; //calculation for the area under the curve for the latest movement. The faster this updates the more accurate
+                combinedIntegral += currentIntegral;         //adds latest to the total integral
+            }
+            
+            double derivative = (error - lastError) / changeInTime; //formula to calculate the (almost) instantaneous rate of change.                                                 //affected by how quickly the rate is changing (maybe reduce rate)
+            lastTime = pros::millis(); //put here before the returns
             lastError = error;
 
             int output = (P * error) + (I * combinedIntegral) + (D * derivative);
@@ -104,7 +107,7 @@ public:
     char numberOfCalls = 0;
     char totalNumberOfCalls = 0;
     
-    System(int idVal, double b, double c, double d, unsigned char e, unsigned char f): id(idVal), pid(b, c, d, e, f){}
+    System(int idVal): id(idVal){}
     virtual bool checkIfDone(int breakValue) = 0;
     virtual void setMember(int &number, AutonFlags &currentFlag, int value) = 0; 
     virtual void resetObj() = 0;                                                
@@ -362,8 +365,9 @@ class Drive : public System
     public:
     double outerInnerRatio = 1;
     Drive(int idVal = DRIVE)
-        : System((int)idVal,regDriveP,regDriveI,regDriveD,regDriveMin,regDriveMax)
+        : System((int)idVal)
         {
+            pid = {regDriveP,regDriveI,regDriveD,regDriveMin,regDriveMax};
             leftEncoder.reset(); ///////////
 	        rightEncoder.reset();
             if(driveObj == nullptr)
@@ -592,9 +596,11 @@ class Tilter : public System  //very quick acceleration
     int speed;
 
     public:
+    bool underTarget;
     Tilter(int id = TILTER)
-        : System((int)id,regTilterP,regTilterI,regTilterD,regTilterMin,regTilterMax)
+        : System((int)id)
         {
+            pid = {regTilterP,regTilterI,regTilterD,regTilterMin,regTilterMax};
             if(tilterObj == nullptr) //if declairing this for the first time
             {
                 tilterObj = this;
@@ -605,21 +611,28 @@ class Tilter : public System  //very quick acceleration
             }
         }
 
+    int getPosition()
+    {
+        return tilter.get_position();
+    }
+
     bool checkIfDone(int breakVal = tilterObj->target)
     {
-        if(target > breakVal) 
+        if(underTarget == true) //i
         {
-            //if(getPosition() > breakVal)
+            if(target < breakVal)
             {
-
+                return true;
             }
+            return false;
         }
         else
         {
-            //if(getPosition() < breakVal)
+            if(target > breakVal)
             {
-                
-            }    
+                return true;
+            }
+            return false;
         }
     }
 
@@ -727,7 +740,22 @@ void Drive::move()
 
 void Tilter::move()
 {
-    
+    if(checkIfDone == false)
+    {
+        if(getPosition() > target)
+        {
+            tilter.move(127);
+        }
+        else
+        {
+            tilter.move(-100);
+        }
+        
+    }
+    else 
+    {
+        updateEndingState();
+    }
 }
 
 template <typename... Ts>
@@ -781,6 +809,18 @@ void all(Ts... input)
                 break; //adding retain position later
             case(WAITINGFORINSTRUCTIONS):
                 tilter.update(parameters);
+                if(tilter.speedControl == BLANK)
+                {
+                    tilter.initializePid(REGPID); //if left default
+                }
+                if(tilter.getPosition() > tilter.target)
+                {
+                    tilter.underTarget = false;
+                }
+                else
+                {
+                    tilter.underTarget = true;
+                }
                 break;
         }
 
