@@ -13,9 +13,12 @@ const int encoderTurnBaseSpeed = 10;
 
 class Drive;
 class Tilter;
+class Intake;
 class PidController;
 Drive *driveObj;
 Tilter *tilterObj;
+Intake *intakeObj;
+
 
 /**
  * Runs the user autonomous code. This function will be started in its own task
@@ -652,6 +655,69 @@ class Tilter : public System  //very quick acceleration
     void move();
 };
 
+class Intake : public System  //very quick acceleration
+{
+    private:
+    int speed;
+    char endNumber;  //have end process continual, modify checkIfDone for other
+    int endBreak;    //variables that control how long the intake runs til or what value another system is at that will stop it
+    System *endSystem;
+    AutonFlags end = NONET; //Holds the type of trigger system will have    All sub systems will have the option of starting on a trigger
+    Timer endTimer;
+    public:
+
+    bool underTarget;
+    Intake(int id = INTAKE)
+        : System((int)id)
+        {
+            pid = {regIntakeP,regIntakeI,regIntakeD,regIntakeMin,regIntakeMax};
+            if(intakeObj == nullptr) //if declairing this for the first time
+            {
+                intakeObj = this;
+            }
+            else //global is declaired meaning the object is being reset. Keep the state and total number of calls.
+            {
+                totalNumberOfCalls = intakeObj->totalNumberOfCalls;
+            }
+        }
+
+    bool checkIfDone(int breakVal = intakeObj->target)
+    {
+        if(underTarget == true) //i
+        {
+            if(target < breakVal)
+            {
+                return true;
+            }
+            return false;
+        }
+        else
+        {
+            if(target > breakVal)
+            {
+                return true;
+            }
+            return false;
+        }
+    }
+
+    void resetObj()
+    {
+        *this = Intake();
+    }
+
+    void initializePid(AutonFlags pidPack)
+    {
+        pid = PidController(regIntakeP,regIntakeI,regIntakeD,regIntakeMin,regIntakeMax);
+    }
+
+    void setMember(int &number, AutonFlags &currentFlag, int value)
+    {}
+
+    void move();
+};
+
+
 void Drive::move()
 {
     float leftCorrection = 1; //reset every call
@@ -750,7 +816,6 @@ void Tilter::move()
         {
             tilter.move(-100);
         }
-        
     }
     else 
     {
