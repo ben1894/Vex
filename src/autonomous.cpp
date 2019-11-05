@@ -659,14 +659,9 @@ class Intake : public System  //very quick acceleration
 {
     private:
     int speed;
-    char endNumber;  //have end process continual, modify checkIfDone for other
-    int endBreak;    //variables that control how long the intake runs til or what value another system is at that will stop it
-    System *endSystem;
-    AutonFlags end = NONET; //Holds the type of trigger system will have    All sub systems will have the option of starting on a trigger
-    Timer endTimer;
-    public:
 
-    bool underTarget;
+    public:
+    AutonFlags direction;
     Intake(int id = INTAKE)
         : System((int)id)
         {
@@ -683,22 +678,7 @@ class Intake : public System  //very quick acceleration
 
     bool checkIfDone(int breakVal = intakeObj->target)
     {
-        if(underTarget == true) //i
-        {
-            if(target < breakVal)
-            {
-                return true;
-            }
-            return false;
-        }
-        else
-        {
-            if(target > breakVal)
-            {
-                return true;
-            }
-            return false;
-        }
+        return true;
     }
 
     void resetObj()
@@ -712,11 +692,32 @@ class Intake : public System  //very quick acceleration
     }
 
     void setMember(int &number, AutonFlags &currentFlag, int value)
-    {}
+    {
+        if(number == 0)
+        {
+            currentFlag = (AutonFlags)value;
+            ++number;
+        }
+        else
+        {
+            switch(currentFlag)
+            {
+                case(IN):
+                case(OUT):
+                    direction = currentFlag;
+                    speed = value;
+                    number = 0;
+                    break;
+            }
+        }
+    }
 
-    void move();
+    void move()
+    {
+        motorGroupMove(speed, intake);
+        updateEndingState();
+    }
 };
-
 
 void Drive::move()
 {

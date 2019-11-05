@@ -38,6 +38,9 @@ enum AutonFlags
 	MMDRIVEPID,
 	MMTILTERPID,
 
+	IN,
+	OUT,
+
 	LEFTTURN,
 	RIGHTTURN,
 
