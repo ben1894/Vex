@@ -133,7 +133,7 @@ public:
 
     void updateTriggerState()
     {
-        switch(trigger)
+        switch(trigger)  //have it set at something until everything ends or its set to end
         {
             case(NONET):
                 state = EXECUTINGINSTRUCTIONS;
@@ -806,7 +806,7 @@ void Drive::move()
 
 void Tilter::move()
 {
-    if(checkIfDone == false)
+    if(checkIfDone() == false)
     {
         if(getPosition() > target)
         {
