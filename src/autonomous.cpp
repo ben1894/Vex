@@ -218,6 +218,10 @@ public:
                             {
                                 triggerSystem = reinterpret_cast<System *>(tilterObj);
                             }
+                            else if(currentFlag == INTAKET)
+                            {
+                                triggerSystem = reinterpret_cast<System *>(intakeObj);
+                            }
                             trigger = currentFlag;
                             triggerNumber = value; //distance
                             number++;
@@ -650,9 +654,51 @@ class Tilter : public System  //very quick acceleration
     }
 
     void setMember(int &number, AutonFlags &currentFlag, int value)
-    {}
+    {
+        if(number == 0)
+        {
+            currentFlag = (AutonFlags)value;
+            number++;
+        }
+        else
+        {
+            switch(currentFlag)
+            {
+                case(POSITION):
+                    switch(number) //use same straight drive for turns and straight drive
+                    {
+                        case(1): 
+                            target = value;
+                            number++;
+                            break;
+                        case(2):
+                            speed = value;
+                            number = 0;
+                            break;
+                    }
+                    break;
+            }
+        }
+    }
 
-    void move();
+    void move()
+    {
+        if(checkIfDone() == false)
+        {
+            if(getPosition() > target)
+            {
+                tilter.move(127);
+            }
+            else
+            {
+                tilter.move(-100);
+            }
+        }
+        else 
+        {
+            updateEndingState();
+        }
+    }
 };
 
 class Intake : public System  //very quick acceleration
@@ -797,25 +843,6 @@ void Drive::move()
             
             driveMotorsSpeed(speed*leftCorrection,leftDrive);
             driveMotorsSpeed(speed*rightCorrection,rightDrive);
-        }
-    }
-    else 
-    {
-        updateEndingState();
-    }
-}
-
-void Tilter::move()
-{
-    if(checkIfDone() == false)
-    {
-        if(getPosition() > target)
-        {
-            tilter.move(127);
-        }
-        else
-        {
-            tilter.move(-100);
         }
     }
     else 

@@ -41,6 +41,8 @@ enum AutonFlags
 	IN,
 	OUT,
 
+	POSITION,
+
 	LEFTTURN,
 	RIGHTTURN,
 
