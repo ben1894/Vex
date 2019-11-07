@@ -67,19 +67,19 @@ class PidController
         int output(int currentSensorData, int target)
         {
             int error = target - currentSensorData;
-            unsigned long changeInTime = lastTime - pros::millis();
-
+            unsigned long changeInTime = pros::millis() - lastTime;
+            /*
             if((P*error) < maxOutput) //to prevent windup
             {
                 long currentIntegral = error * changeInTime; //calculation for the area under the curve for the latest movement. The faster this updates the more accurate
                 combinedIntegral += currentIntegral;         //adds latest to the total integral
             }
             
-            double derivative = (error - lastError) / changeInTime; //formula to calculate the (almost) instantaneous rate of change.                                                 //affected by how quickly the rate is changing (maybe reduce rate)
+            double derivative = (error - lastError) / changeInTime; //formula to calculate the (almost) instantaneous rate of change.     */                                            //affected by how quickly the rate is changing (maybe reduce rate)
             lastTime = pros::millis(); //put here before the returns
             lastError = error;
 
-            int output = (P * (double)error) + (I * combinedIntegral) + (D * derivative);
+            int output = (P * (double)error) + (I * combinedIntegral) + (D * 0);
             if(output > maxOutput)
             {
                 return maxOutput;
@@ -115,6 +115,7 @@ public:
     virtual void setMember(int &number, AutonFlags &currentFlag, int value) = 0; 
     virtual void resetObj() = 0;                                                
     virtual void initializePid(AutonFlags pidPack) = 0;
+
     int getTriggerNumberProgress()
     {
         return (totalNumberOfCalls - numberOfCalls)+1; //number of calls decreases throughout runtime. //Starts at 1 and increases
@@ -296,7 +297,7 @@ public:
                 parameters[i] = (int)NULLOPTION;
                 AutonFlags currentFlag;
                 int subFlag = 0;
-
+                state = WAITINGFORTRIGGER;
                 do
                 {
                     ++i;
@@ -306,8 +307,6 @@ public:
                         setMember(subFlag,currentFlag,parameters[i]);
                     }
                 } while(parameters[i+1] < minEnumValue);
-
-                state = WAITINGFORTRIGGER; //changed because it wouldnt ever check trigger 
             }
             else
             {
@@ -522,7 +521,7 @@ class Drive : public System
             case(DOWNRIGHTSWEEP):
                 return getOutsideEncoder();
             default:
-                return abs(leftDrive[1].get_position()); //////////////////abs
+                return (int)abs(leftDrive[1].get_position()); //////////////////abs
         }
     }
 };
@@ -853,39 +852,41 @@ void Drive::move()
     }
 }
 
-template <typename... Ts>
+template <class... Ts>
 void all(Ts... input)
 {
     std::vector<int> parameters = {(int)input...,NULLOPTION};
 
-    Drive drive{};
-    Tilter tilter{};
-    Intake intake{};
+    Drive *drive = new Drive{};
+    Tilter *tilter = new Tilter{};
+    Intake *intake = new Intake{};
 
     for(int i = 0; i < parameters.size()-1; i++)
     {
-        drive.initialUpdate(i, parameters);
-        tilter.initialUpdate(i, parameters);
+        drive->initialUpdate(i, parameters);
+        tilter->initialUpdate(i, parameters);
+        intake->initialUpdate(i, parameters);
     }
-    drive.pid.minOutput /= drive.outerInnerRatio;
+    drive->pid.minOutput /= drive->outerInnerRatio;
 
-    while(tilter.state != END || drive.state != END)
+    while((tilter->state != END) || (drive->state != END) || (intake->state != END))
     {
-        switch(drive.state)
+        switch(drive->state)
         {
             case(WAITINGFORINSTRUCTIONS):
-                drive.update(parameters);
-                drive.pid.minOutput /= drive.outerInnerRatio; //has to be put here so it doesn't get overwritten by the pid initialization
-                if(drive.speedControl == BLANK)
+                drive->update(parameters);
+                drive->pid.minOutput /= drive->outerInnerRatio; //has to be put here so it doesn't get overwritten by the pid initialization
+                if(drive->speedControl == BLANK)
                 {
-                    drive.initializePid(REGPID); //if left default
+                    drive->initializePid(REGPID); //if left default //MOVE NO NO NON O
                 }
                 break;
             case(WAITINGFORTRIGGER):
-                drive.updateTriggerState();
+                drive->updateTriggerState();
                 break;
             case(EXECUTINGINSTRUCTIONS):
-                drive.move();
+                drive->move();
+                pros::lcd::print(3,"%f", drive->getDriveEncoder());
                 break;
             case(END):
                 driveMotorsSpeed(0,rightDrive);
@@ -893,58 +894,65 @@ void all(Ts... input)
                 break; //adding retain position later
         }
 
-        switch(tilter.state)
+        switch(tilter->state)
         {
             case(WAITINGFORINSTRUCTIONS):
-                tilter.update(parameters);
-                if(tilter.speedControl == BLANK)
+                tilter->update(parameters);
+                if(tilter->speedControl == BLANK)
                 {
-                    tilter.initializePid(REGPID); //if left default
+                    tilter->initializePid(REGPID); //if left default
                 }
-                if(tilter.getPosition() > tilter.target)
+                if(tilter->getPosition() > tilter->target)
                 {
-                    tilter.underTarget = false;
+                    tilter->underTarget = false;
                 }
                 else
                 {
-                    tilter.underTarget = true;
+                    tilter->underTarget = true;
                 }
                 break;
             case(WAITINGFORTRIGGER):
-                tilter.updateTriggerState();
+                tilter->updateTriggerState();
                 break;
             case(EXECUTINGINSTRUCTIONS):
-                tilter.move();
+                tilter->move();
                 break;
             case(END):
                 break; //adding retain position later
         }
 
-        switch(intake.state)
+        switch(intake->state)
         {
             case(WAITINGFORINSTRUCTIONS):
-                intake.update(parameters);
+                intake->update(parameters);
                 break;
             case(WAITINGFORTRIGGER):
-                intake.updateTriggerState();
+                intake->updateTriggerState();
                 break;
             case(EXECUTINGINSTRUCTIONS):
-                intake.move();
+                intake->move();
                 break;
             case(END):
                 break; //adding retain position later
         }
 
-        pros::delay(5);
+        pros::delay(4);
     }
+    driveMotorsSpeed(0,rightDrive);
+    driveMotorsSpeed(0,leftDrive);
+    delete drive;
+    delete intake;
+    delete tilter;
 }
 
 //DRIVE, distance, correctTo(value,CURRENTVAL,NOSTRAIGHT,WHEELCORRECTION), {speedControl - REGPID(NOPID, MMPID)}
 
 void autonomous()
 {
-    leftDrive[1].tare_position();
-    all(DRIVE,FORWARDS,1000,NOSTRAIGHT);
-    all(INTAKE, IN, 127);
-    pros::delay(10000000);
+    all(INTAKE,IN,90,DRIVE,FORWARDS,1000,NOSTRAIGHT,BACKWARDS,1000,NOSTRAIGHT,FORWARDS,2000,NOSTRAIGHT);
+    pros::delay(1000);
+    //leftDrive[1].tare_position();
+    //all(DRIVE,FORWARDS,1000,NOSTRAIGHT);
+    //all(INTAKE, IN, 127);
+    //pros::delay(10000000);
 }

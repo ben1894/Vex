@@ -42,7 +42,7 @@ void opcontrol()
 		}
 		else
 		{
-			motorGroupMove(20, intakeM);
+			motorGroupMove(0, intakeM);
 		}
 
 		if(cVal(DIGITAL_DOWN))
@@ -64,14 +64,14 @@ void opcontrol()
 		}
 		else if(cVal(DIGITAL_L2))
 		{
-			tilter.move(-127);
+			tilter.move(-80);
 		}
 		else
 		{
 			tilter.move(0);
 		}
 		
-		pros::lcd::print(3,"%f", fabs(leftEncoder.get_value()));
+		pros::lcd::print(3,"%f", leftDrive[1].get_position());
 
 		if(autonTest == true)
 		{

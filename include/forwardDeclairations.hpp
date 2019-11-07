@@ -92,7 +92,7 @@ enum Ids
 	NULLOPTION = 999999994
 };
 
-const int minEnumValue((int)NULLOPTION-1);
+const int minEnumValue((int)NULLOPTION-2);
 
 extern bool autonTest;
 extern const bool voltage;
@@ -130,6 +130,7 @@ extern int actualGyroPosition();
 extern int fixTarget(int oldTarget);
 extern void getDistances(GyroDistances &Val, int target);
 
+extern int getDriveEncoder();
 extern float map(float value, float istart, float istop, float ostart, float ostop);
 extern int cVal(pros::controller_digital_e_t button);
 extern int cVal(pros::controller_analog_e_t button);
