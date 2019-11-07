@@ -34,15 +34,15 @@ void opcontrol()
 
 		if(cVal(DIGITAL_R1))
 		{
-			motorGroupMove(127, intake);
+			motorGroupMove(127, intakeM);
 		}
 		else if(cVal(DIGITAL_R2))
 		{
-			motorGroupMove(-127, intake);
+			motorGroupMove(-127, intakeM);
 		}
 		else
 		{
-			motorGroupMove(0, intake);
+			motorGroupMove(20, intakeM);
 		}
 
 		if(cVal(DIGITAL_DOWN))

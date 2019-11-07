@@ -105,7 +105,7 @@ extern pros::ADIGyro gyro;
 
 extern std::array<pros::Motor, 2> leftDrive;
 extern std::array<pros::Motor, 2> rightDrive;
-extern std::array<pros::Motor, 2> intake;
+extern std::array<pros::Motor, 2> intakeM;
 
 extern pros::Motor tilter;
 extern pros::Motor lift;

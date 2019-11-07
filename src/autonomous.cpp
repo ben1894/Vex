@@ -66,7 +66,7 @@ class PidController
 
         int output(int currentSensorData, int target)
         {
-            int error = currentSensorData - target;
+            int error = target - currentSensorData;
             unsigned long changeInTime = lastTime - pros::millis();
 
             if((P*error) < maxOutput) //to prevent windup
@@ -79,7 +79,7 @@ class PidController
             lastTime = pros::millis(); //put here before the returns
             lastError = error;
 
-            int output = (P * error) + (I * combinedIntegral) + (D * derivative);
+            int output = (P * (double)error) + (I * combinedIntegral) + (D * derivative);
             if(output > maxOutput)
             {
                 return maxOutput;
@@ -522,7 +522,7 @@ class Drive : public System
             case(DOWNRIGHTSWEEP):
                 return getOutsideEncoder();
             default:
-                return abs(leftEncoder.get_value()); //////////////////abs
+                return abs(leftDrive[1].get_position()); //////////////////abs
         }
     }
 };
@@ -756,7 +756,11 @@ class Intake : public System  //very quick acceleration
 
     void move()
     {
-        motorGroupMove(speed, intake);
+        if(direction == OUT)
+        {
+            speed *= -1;
+        }
+        motorGroupMove(speed, intakeM);
         updateEndingState();
     }
 };
@@ -834,9 +838,11 @@ void Drive::move()
                 leftCorrection *= -1;
                 speed = pid.output(Dist.Right, target);
             }
-            
-            wheelCorrections(leftCorrection, rightCorrection);
-            
+            if(correctTo != NOSTRAIGHT)
+            {
+                wheelCorrections(leftCorrection, rightCorrection);
+            }
+
             driveMotorsSpeed(speed*leftCorrection,leftDrive);
             driveMotorsSpeed(speed*rightCorrection,rightDrive);
         }
@@ -854,6 +860,7 @@ void all(Ts... input)
 
     Drive drive{};
     Tilter tilter{};
+    Intake intake{};
 
     for(int i = 0; i < parameters.size()-1; i++)
     {
@@ -936,6 +943,8 @@ void all(Ts... input)
 
 void autonomous()
 {
-
+    leftDrive[1].tare_position();
     all(DRIVE,FORWARDS,1000,NOSTRAIGHT);
+    all(INTAKE, IN, 127);
+    pros::delay(10000000);
 }
