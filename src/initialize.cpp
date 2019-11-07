@@ -22,7 +22,7 @@ pros::Controller mainController(pros::E_CONTROLLER_MASTER);
 pros::Controller secondaryController(pros::E_CONTROLLER_PARTNER);
 
 std::array<pros::Motor, 2> rightDrive{pros::Motor(3),pros::Motor(4)};
-std::array<pros::Motor, 2>  leftDrive{pros::Motor(1),pros::Motor(2)};
+std::array<pros::Motor, 2>  leftDrive{pros::Motor(9),pros::Motor(2)};
 std::array<pros::Motor, 2>     intake{pros::Motor(5),pros::Motor(6)};
 pros::Motor tilter(7,pros::E_MOTOR_GEARSET_36,false,pros::E_MOTOR_ENCODER_COUNTS);
 pros::Motor lift(8,pros::E_MOTOR_GEARSET_36,false,pros::E_MOTOR_ENCODER_COUNTS);
@@ -45,6 +45,12 @@ void initialize()
 		rightDrive[i].set_encoder_units(pros::E_MOTOR_ENCODER_COUNTS);
 		rightDrive[i].set_gearing(pros::E_MOTOR_GEARSET_18);
 	}
+
+	for(int i = 0; i < intake.size(); i++)
+	{
+		intake[i].set_gearing(pros::E_MOTOR_GEARSET_18);
+	}
+
 	intake[0].set_reversed(true);
 	tilter.set_brake_mode(pros::E_MOTOR_BRAKE_BRAKE);
 

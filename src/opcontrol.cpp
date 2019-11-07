@@ -64,7 +64,7 @@ void opcontrol()
 		}
 		else if(cVal(DIGITAL_L2))
 		{
-			tilter.move(-60);
+			tilter.move(-127);
 		}
 		else
 		{

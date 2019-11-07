@@ -206,10 +206,10 @@ public:
             switch(currentFlag)
             {
                 case(DRIVET): //(int = target) or otherwise specified by ther break when testing for trigger
-                case(TILTERT):
+                case(TILTERT): //cant have a trigger based off the intake... yet (maybe idk I don't think there will be a use)
                     switch(number)
                     {
-                        case(1):       //its never going to be 0 because it only goes in this loops if its 0;
+                        case(1):       //its never going to be 0 because it only goes in this loops if its not 0;
                             if(currentFlag == DRIVET)
                             {
                                 triggerSystem = reinterpret_cast<System *>(driveObj);
@@ -217,10 +217,6 @@ public:
                             else if(currentFlag == TILTERT)
                             {
                                 triggerSystem = reinterpret_cast<System *>(tilterObj);
-                            }
-                            else if(currentFlag == INTAKET)
-                            {
-                                triggerSystem = reinterpret_cast<System *>(intakeObj);
                             }
                             trigger = currentFlag;
                             triggerNumber = value; //distance
@@ -687,11 +683,11 @@ class Tilter : public System  //very quick acceleration
         {
             if(getPosition() > target)
             {
-                tilter.move(127);
+                tilter.move(speed);
             }
             else
             {
-                tilter.move(-100);
+                tilter.move(-speed);
             }
         }
         else 
@@ -870,12 +866,6 @@ void all(Ts... input)
     {
         switch(drive.state)
         {
-            case(EXECUTINGINSTRUCTIONS):
-                drive.move();
-                break;
-            case(WAITINGFORTRIGGER):
-                drive.updateTriggerState();
-                break;
             case(WAITINGFORINSTRUCTIONS):
                 drive.update(parameters);
                 drive.pid.minOutput /= drive.outerInnerRatio; //has to be put here so it doesn't get overwritten by the pid initialization
@@ -883,6 +873,12 @@ void all(Ts... input)
                 {
                     drive.initializePid(REGPID); //if left default
                 }
+                break;
+            case(WAITINGFORTRIGGER):
+                drive.updateTriggerState();
+                break;
+            case(EXECUTINGINSTRUCTIONS):
+                drive.move();
                 break;
             case(END):
                 driveMotorsSpeed(0,rightDrive);
@@ -892,14 +888,6 @@ void all(Ts... input)
 
         switch(tilter.state)
         {
-            case(EXECUTINGINSTRUCTIONS):
-                tilter.move();
-                break;
-            case(WAITINGFORTRIGGER):
-                tilter.updateTriggerState();
-                break;
-            case(END):
-                break; //adding retain position later
             case(WAITINGFORINSTRUCTIONS):
                 tilter.update(parameters);
                 if(tilter.speedControl == BLANK)
@@ -915,6 +903,29 @@ void all(Ts... input)
                     tilter.underTarget = true;
                 }
                 break;
+            case(WAITINGFORTRIGGER):
+                tilter.updateTriggerState();
+                break;
+            case(EXECUTINGINSTRUCTIONS):
+                tilter.move();
+                break;
+            case(END):
+                break; //adding retain position later
+        }
+
+        switch(intake.state)
+        {
+            case(WAITINGFORINSTRUCTIONS):
+                intake.update(parameters);
+                break;
+            case(WAITINGFORTRIGGER):
+                intake.updateTriggerState();
+                break;
+            case(EXECUTINGINSTRUCTIONS):
+                intake.move();
+                break;
+            case(END):
+                break; //adding retain position later
         }
 
         pros::delay(5);
