@@ -122,7 +122,7 @@ public:
     } //if 0 from beginning, initial update takes care of it
     void updateEndingState()
     {
-        if(getTriggerNumberProgress() == 1) //if it was on its last run
+        if(numberOfCalls == 0) //if it was on its last run
         {
             state = END;
         }
@@ -344,7 +344,7 @@ public:
                         state = WAITINGFORTRIGGER; //trigger obj might not be in scope yet so cant check its process.
                     }
                     else
-                    {
+                    {  //=0
                         ++numberOfCalls;
                     }
                 }
@@ -372,6 +372,7 @@ class Drive : public System
             pid = {regDriveP,regDriveI,regDriveD,regDriveMin,regDriveMax};
             leftEncoder.reset(); ///////////
 	        rightEncoder.reset();
+            clearEncoders();
             if(driveObj == nullptr)
             {
                 driveObj = this;
@@ -382,6 +383,11 @@ class Drive : public System
             }
         };
 
+    void clearEncoders()
+    {
+        rightEncoder.reset();
+    }
+    
     bool checkIfDone(int breakVal = driveObj->target)
     {
         if(direction != TURN)
@@ -521,7 +527,7 @@ class Drive : public System
             case(DOWNRIGHTSWEEP):
                 return getOutsideEncoder();
             default:
-                return (int)abs(leftDrive[1].get_position()); //////////////////abs
+                return abs(rightEncoder.get_value()); //////////////////abs
         }
     }
 };
@@ -848,18 +854,20 @@ void Drive::move()
     }
     else 
     {
+        driveMotorsSpeed(0,rightDrive);
+        driveMotorsSpeed(0,leftDrive);
         updateEndingState();
     }
 }
 
-template <class... Ts>
+template <typename... Ts>
 void all(Ts... input)
 {
     std::vector<int> parameters = {(int)input...,NULLOPTION};
 
-    Drive *drive = new Drive{};
-    Tilter *tilter = new Tilter{};
-    Intake *intake = new Intake{};
+    Drive *drive = new Drive;
+    Tilter *tilter = new Tilter;
+    Intake *intake = new Intake;
 
     for(int i = 0; i < parameters.size()-1; i++)
     {
@@ -886,7 +894,7 @@ void all(Ts... input)
                 break;
             case(EXECUTINGINSTRUCTIONS):
                 drive->move();
-                pros::lcd::print(3,"%f", drive->getDriveEncoder());
+                pros::lcd::print(3,"%d", drive->getDriveEncoder());
                 break;
             case(END):
                 driveMotorsSpeed(0,rightDrive);
@@ -937,22 +945,31 @@ void all(Ts... input)
         }
 
         pros::delay(4);
+        pros::lcd::print(4,"%d", (int)drive->state);
+        pros::lcd::print(5,"%d", (int)intake->state);
+        pros::lcd::print(6,"%d", (int)tilter->state);
+
     }
-    driveMotorsSpeed(0,rightDrive);
-    driveMotorsSpeed(0,leftDrive);
+
     delete drive;
     delete intake;
     delete tilter;
+        pros::lcd::print(4,"%d", (int)drive->state);
+        pros::lcd::print(5,"%d", (int)intake->state);
+        pros::lcd::print(6,"%d", (int)tilter->state);
 }
 
 //DRIVE, distance, correctTo(value,CURRENTVAL,NOSTRAIGHT,WHEELCORRECTION), {speedControl - REGPID(NOPID, MMPID)}
 
 void autonomous()
 {
-    all(INTAKE,IN,90,DRIVE,FORWARDS,1000,NOSTRAIGHT,BACKWARDS,1000,NOSTRAIGHT,FORWARDS,2000,NOSTRAIGHT);
-    pros::delay(1000);
+    /*
+    all(DRIVE,FORWARDS,1000,NOSTRAIGHT, DRIVE,BACKWARDS,1000,NOSTRAIGHT, DRIVE,FORWARDS,2000,NOSTRAIGHT);
+    pros::lcd::print(4,"BROKE");
+    all(INTAKE,IN,-90,DRIVE,FORWARDS,1000,NOSTRAIGHT, DRIVE,BACKWARDS,1000,NOSTRAIGHT, DRIVE,FORWARDS,2000,NOSTRAIGHT);
+    //pros::delay(1000);
     //leftDrive[1].tare_position();
     //all(DRIVE,FORWARDS,1000,NOSTRAIGHT);
     //all(INTAKE, IN, 127);
-    //pros::delay(10000000);
+    //pros::delay(10000000); */
 }

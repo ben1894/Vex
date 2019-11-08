@@ -71,7 +71,12 @@ void opcontrol()
 			tilter.move(0);
 		}
 		
-		pros::lcd::print(3,"%f", leftDrive[1].get_position());
+		pros::lcd::print(3,"%f", rightEncoder.get_value());
+
+		if(cVal(DIGITAL_X))
+		{
+			rightDrive[1].tare_position();
+		}
 
 		if(autonTest == true)
 		{
