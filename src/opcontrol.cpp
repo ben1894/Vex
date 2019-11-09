@@ -17,7 +17,7 @@ pros::ADIGyro gyro(2);
 pros::ADIEncoder leftEncoder(3, 4, true);
 pros::ADIEncoder rightEncoder(5, 6, true);
 
-void opcontrol()
+void opcontrol() //0.0078740157480315 = quadradic value
 {
 	for(int i = 0; i < leftDrive.size(); i++)
 	{

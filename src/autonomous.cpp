@@ -101,6 +101,12 @@ protected:
     AutonFlags trigger = NONET; //Holds the type of trigger system will have    All sub systems will have the option of starting on a trigger
     Timer triggerTimer;
 
+    char triggerNumberE; 
+    int triggerBreakE;
+    System *triggerSystemE;
+    AutonFlags triggerE = NONETE; //Holds the type of trigger system will have    All sub systems will have the option of starting on a trigger
+    Timer triggerTimerE;
+
 public:
     AutonFlags speedControl = BLANK;
     SystemStates state = END;
@@ -193,6 +199,7 @@ public:
                     initializePid(currentFlag); //pure virtual function
                     return false;
                 case(TURNPID):
+                    speedControl = currentFlag;
                     pid = PidController(regTurnP,regTurnI,regTurnD,regTurnMin,regTurnMax);
                     return false;
                 case(DRIVEPID):
@@ -364,12 +371,12 @@ class Drive : public System
     bool stopAcceleration = false;
     bool stopDeacceleration = false;
     int correctTo = -1;
-    int speed;
     int offSet; //used for sweep Turns
     GyroDistances turnStats;
     AutonFlags direction;
 
     public:
+    int speed;
     double outerInnerRatio = 1;
     Drive(int idVal = DRIVE)
         : System((int)idVal)
@@ -396,22 +403,26 @@ class Drive : public System
     
     bool checkIfDone(int breakVal = driveObj->target)
     {
-        if(direction != TURN)
+        if(triggerE == NONETE)
         {
-            if(getDriveEncoder() > breakVal)
+            if(direction != TURN)
+            {
+                if(getDriveEncoder() > breakVal)
+                {
+                    return true;
+                }
+                return false;
+            }
+
+            GyroDistances gyroVals;
+            getDistances(gyroVals, breakVal);
+            if((gyroVals.Left < 6) || (gyroVals.Right < 6))
             {
                 return true;
             }
             return false;
         }
-
-        GyroDistances gyroVals;
-        getDistances(gyroVals, breakVal);
-        if((gyroVals.Left < 10) || (gyroVals.Right < 10))
-        {
-            return true;
-        }
-        return false;
+        //if(triggerTimerE.current() > breakValE)
         /*
         if(gyroVals.Left < gyroVals.Right)
         {
@@ -565,7 +576,7 @@ void Drive::setMember(int &number, AutonFlags &currentFlag, int value)
         {
             case(TURN):
                 direction = currentFlag;
-                target = value; //distance
+                target = value; //distance      ///////////////NODRIVESTRAIGHT
                 number = 0;
                 break;
             case(FORWARDS):
@@ -918,7 +929,8 @@ void all(Ts... input)
                 break;
             case(EXECUTINGINSTRUCTIONS):
                 drive->move();
-                pros::lcd::print(3,"%d", drive->getDriveEncoder());
+                pros::lcd::print(2,"%d", drive->speed);
+                pros::lcd::print(3,"%d", drive->pid.maxOutput);
                 pros::lcd::print(4,"%f", gyro.get_value());
                 break;
             case(END):
@@ -981,55 +993,91 @@ void all(Ts... input)
 
 void autonomous()
 {
-    /*
-all(DRIVE,FORWARDS,1000,NOSTRAIGHT, 
-    DRIVE,BACKWARDS,1000,NOSTRAIGHT, 
-    DRIVE,FORWARDS,2000,NOSTRAIGHT, 
-    INTAKE,IN,50,DRIVET,2,500, 
-    DRIVE,TURN,1000,NOSTRAIGHT,TURNPID, 
-    TILTER,POSITION,5000,100, 
-    TILTER,POSITION,500,100); */
-    gyro.reset();
-    tilter.tare_position();
-all(DRIVE,FORWARDS,3100,NOSTRAIGHT,NOPID,35,
+
+/*
+all(
+    DRIVE,FORWARDS,3000,NOSTRAIGHT,NOPID,60,TIMET,400,
+    DRIVE,TURN,2100,NOSTRAIGHT,TURNPID,
+    DRIVE,FORWARDS,3900,NOSTRAIGHT,
     INTAKE,OUT,127,
-    INTAKE,IN,127,DRIVET,1,230,
-    DRIVE,BACKWARDS,1930,NOSTRAIGHT,
-    DRIVE,TURN,2320,NOSTRAIGHT,TURNPID);
+    INTAKE,IN,127,DRIVET,1,2
+    );
+
     driveMotorsSpeed(110,leftDrive);
     driveMotorsSpeed(110,rightDrive);
-    pros::delay(500);
+    pros::delay(520);
     driveMotorsSpeed(0,leftDrive);
     driveMotorsSpeed(0,rightDrive);
-    motorGroupMove(-30,intakeM);
     pros::delay(500);
-        motorGroupMove(0,intakeM);
-    tilter.move(90);
-    pros::delay(2200);
-    tilter.move(0);
-        pros::delay(2000);
+    motorGroupMove(-100,intakeM);
+    pros::delay(550);               //red big
+    motorGroupMove(0,intakeM);
+    all(TILTER,POSITION,7100,100); 
+    pros::delay(2000);
+    driveMotorsSpeed(-50,leftDrive);
+    driveMotorsSpeed(-50,rightDrive);
+    pros::delay(1500);
+    driveMotorsSpeed(0,leftDrive);
+    driveMotorsSpeed(0,rightDrive);
+    */
+    gyro.reset();
+    tilter.tare_position();
+all(DRIVE,FORWARDS,1300,NOSTRAIGHT,NOPID,60,
+    DRIVE,FORWARDS,450,NOSTRAIGHT,NOPID,60,TIMET,600,
+    DRIVE,FORWARDS,450,NOSTRAIGHT,NOPID,60,TIMET,600,
+    DRIVE,FORWARDS,450,NOSTRAIGHT,NOPID,60,TIMET,600,
+    DRIVE,FORWARDS,580,NOSTRAIGHT,NOPID,60,TIMET,600,
+    DRIVE,BACKWARDS,1860,NOSTRAIGHT,TIMET,100,
+    DRIVE,TURN,2390,NOSTRAIGHT,TURNPID,
+    INTAKE,OUT,127,
+    INTAKE,IN,127,DRIVET,1,230);
+
+    driveMotorsSpeed(110,leftDrive);
+    driveMotorsSpeed(110,rightDrive);
+    pros::delay(520);
+    driveMotorsSpeed(0,leftDrive);
+    driveMotorsSpeed(0,rightDrive);
+    pros::delay(500);
+    motorGroupMove(-100,intakeM);
+    pros::delay(550);               ////////////////////blue small
+    motorGroupMove(0,intakeM);
+    all(TILTER,POSITION,7100,100); 
+    pros::delay(2000);
     driveMotorsSpeed(-50,leftDrive);
     driveMotorsSpeed(-50,rightDrive);
     pros::delay(1500);
     driveMotorsSpeed(0,leftDrive);
     driveMotorsSpeed(0,rightDrive);
 
+/*
+    gyro.reset();
+    tilter.tare_position();
+all(DRIVE,FORWARDS,1300,NOSTRAIGHT,NOPID,60,
+    DRIVE,FORWARDS,450,NOSTRAIGHT,NOPID,60,TIMET,600,
+    DRIVE,FORWARDS,450,NOSTRAIGHT,NOPID,60,TIMET,600,
+    DRIVE,FORWARDS,450,NOSTRAIGHT,NOPID,60,TIMET,600,
+    DRIVE,FORWARDS,580,NOSTRAIGHT,NOPID,60,TIMET,600,
+    DRIVE,BACKWARDS,1860,NOSTRAIGHT,TIMET,100,
+    DRIVE,TURN,1210,NOSTRAIGHT,TURNPID,
+    INTAKE,OUT,127,
+    INTAKE,IN,127,DRIVET,1,230);
 
+    driveMotorsSpeed(110,leftDrive);
+    driveMotorsSpeed(110,rightDrive);
+    pros::delay(520);
+    driveMotorsSpeed(0,leftDrive);   /////////////////////red small
+    driveMotorsSpeed(0,rightDrive);
+    pros::delay(500);
+    motorGroupMove(-100,intakeM);
+    pros::delay(550);
+    motorGroupMove(0,intakeM);
+    all(TILTER,POSITION,7100,100); 
+    pros::delay(2000);
+    driveMotorsSpeed(-50,leftDrive);
+    driveMotorsSpeed(-50,rightDrive);
+    pros::delay(1500);
+    driveMotorsSpeed(0,leftDrive);
+    driveMotorsSpeed(0,rightDrive);
+*/
 
-    /*DRIVE,FORWARDS,50,NOSTRAIGHT,
-    TILTER,POSITION,7000,100,DRIVET,4,25,
-    DRIVE,BACKWARDS,500,NOSTRAIGHT,TILTERT,1,25);*/
-//all(DRIVE,FORWARDS,100,NOSTRAIGHT,TILTER,POSITION,5000,100);
-    //DRIVE,FORWARDS,100,NOSTRAIGHT,TILTERT,POSITION,1,2000);
-
-
-
-    
-    //all(INTAKE,IN,-90,DRIVE,FORWARDS,1000,NOSTRAIGHT, DRIVE,BACKWARDS,1000,NOSTRAIGHT, DRIVE,FORWARDS,2000,NOSTRAIGHT);
-    //all(TURN,2000,NOSTRAIGHT);
-    //pros::delay(1000);
-    //leftDrive[1].tare_position();
-    //all(DRIVE,FORWARDS,1000,NOSTRAIGHT);
-    //all(INTAKE, IN, 127);
-    //pros::delay(10000000); 
 }
