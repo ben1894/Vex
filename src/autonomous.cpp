@@ -378,6 +378,7 @@ class Drive : public System
             leftEncoder.reset(); ///////////
 	        rightEncoder.reset();
             clearEncoders();
+            triggerTimer.clear();
             if(driveObj == nullptr)
             {
                 driveObj = this;
@@ -390,7 +391,7 @@ class Drive : public System
 
     void clearEncoders()
     {
-        rightEncoder.reset();
+        rightDrive[1].tare_position();
     }
     
     bool checkIfDone(int breakVal = driveObj->target)
@@ -406,9 +407,15 @@ class Drive : public System
 
         GyroDistances gyroVals;
         getDistances(gyroVals, breakVal);
+        if((gyroVals.Left < 10) || (gyroVals.Right < 10))
+        {
+            return true;
+        }
+        return false;
+        /*
         if(gyroVals.Left < gyroVals.Right)
         {
-            if(gyroVals.Left < 4)
+            if(gyroVals.Left < 10)
             {
                 return true;
             }
@@ -416,12 +423,12 @@ class Drive : public System
         }
         else
         {
-            if(gyroVals.Left < 4)
+            if(gyroVals.Right < 10)
             {
                 return true;
             }
             return false;
-        }
+        } */
     }
 
     void gyroCorrections(float &leftCorrect, float &rightCorrect)
@@ -532,7 +539,7 @@ class Drive : public System
             case(DOWNRIGHTSWEEP):
                 return getOutsideEncoder();
             default:
-                return abs(rightEncoder.get_value()); //////////////////abs
+                return (int)abs(rightDrive[1].get_position()); //////////////////abs
         }
     }
 };
@@ -549,6 +556,7 @@ void Drive::setMember(int &number, AutonFlags &currentFlag, int value)
                 break;
             default:
                 number++; //Just sets currentFlag, will get next values when increasead next time
+                break;
         }
     }
     else
@@ -626,14 +634,14 @@ class Tilter : public System  //very quick acceleration
 
     int getPosition()
     {
-        return tilter.get_position();
+        return (int)abs(tilter.get_position());
     }
 
     bool checkIfDone(int breakVal = tilterObj->target)
     {
-        if(underTarget == true) //i
+        if(underTarget == true)
         {
-            if(target < breakVal)
+            if(getPosition() > breakVal)
             {
                 return true;
             }
@@ -641,7 +649,7 @@ class Tilter : public System  //very quick acceleration
         }
         else
         {
-            if(target > breakVal)
+            if(getPosition() < breakVal)
             {
                 return true;
             }
@@ -665,6 +673,7 @@ class Tilter : public System  //very quick acceleration
         {
             currentFlag = (AutonFlags)value;
             number++;
+            return;
         }
         else
         {
@@ -691,7 +700,7 @@ class Tilter : public System  //very quick acceleration
     {
         if(checkIfDone() == false)
         {
-            if(getPosition() > target)
+            if(getPosition() < target)
             {
                 tilter.move(speed);
             }
@@ -702,6 +711,7 @@ class Tilter : public System  //very quick acceleration
         }
         else 
         {
+            tilter.move(0);
             updateEndingState();
         }
     }
@@ -841,12 +851,12 @@ void Drive::move()
             if(Dist.Right<Dist.Left)
             {
                 rightCorrection *= -1;
-                speed = pid.output((target-Dist.Right), target);
+                speed = pid.output(-Dist.Right, 0);
             }
             else 
             {
                 leftCorrection *= -1;
-                speed = pid.output((target-Dist.Left), target);
+                speed = pid.output(-Dist.Left, 0);
             }
             if(correctTo != NOSTRAIGHT)
             {
@@ -880,6 +890,15 @@ void all(Ts... input)
         tilter->initialUpdate(i, parameters);
         intake->initialUpdate(i, parameters);
     }
+
+    if(tilter->getPosition() > tilter->target)
+    {
+        tilter->underTarget = false;
+    }
+    else
+    {
+        tilter->underTarget = true;
+    }
     //drive->pid.minOutput /= drive->outerInnerRatio;
 
     while((tilter->state != END) || (drive->state != END) || (intake->state != END))
@@ -888,11 +907,11 @@ void all(Ts... input)
         {
             case(WAITINGFORINSTRUCTIONS):
                 drive->update(parameters);
-                drive->pid.minOutput /= drive->outerInnerRatio; //has to be put here so it doesn't get overwritten by the pid initialization
-                if(drive->speedControl == BLANK)
-                {
-                    drive->initializePid(REGPID); //if left default //MOVE NO NO NON O
-                }
+                //drive->pid.minOutput /= drive->outerInnerRatio; //has to be put here so it doesn't get overwritten by the pid initialization
+                //if(drive->speedControl == BLANK)
+                //{
+                //    drive->initializePid(REGPID); //if left default //MOVE NO NO NON O
+                //}
                 break;
             case(WAITINGFORTRIGGER):
                 drive->updateTriggerState();
@@ -912,10 +931,6 @@ void all(Ts... input)
         {
             case(WAITINGFORINSTRUCTIONS):
                 tilter->update(parameters);
-                if(tilter->speedControl == BLANK)
-                {
-                    tilter->initializePid(REGPID); //if left default
-                }
                 if(tilter->getPosition() > tilter->target)
                 {
                     tilter->underTarget = false;
@@ -950,19 +965,66 @@ void all(Ts... input)
                 break; //adding retain position later
         }
 
-        pros::delay(4);
+        pros::delay(2);
     }
 
     delete drive;
     delete intake;
     delete tilter;
+
+    driveObj = nullptr;
+    intakeObj = nullptr;
+    tilterObj = nullptr;
 }
 
-//DRIVE, distance, correctTo(value,CURRENTVAL,NOSTRAIGHT,WHEELCORRECTION), {speedControl - REGPID(NOPID, MMPID)}
+//DRIVE, distance, correctTo(value,CURRENTVAL,NOSTRAIGHT,WHEELCORRECTION), {speedControl - REGPID(NOPID, MMPID)} //7280 max for tilter
 
 void autonomous()
 {
-    all(DRIVE,FORWARDS,1000,NOSTRAIGHT, DRIVE,BACKWARDS,1000,NOSTRAIGHT, DRIVE,FORWARDS,2000,NOSTRAIGHT, INTAKE,IN,50,DRIVET,2,500, DRIVE,TURN,1000,NOSTRAIGHT,TURNPID);
+    /*
+all(DRIVE,FORWARDS,1000,NOSTRAIGHT, 
+    DRIVE,BACKWARDS,1000,NOSTRAIGHT, 
+    DRIVE,FORWARDS,2000,NOSTRAIGHT, 
+    INTAKE,IN,50,DRIVET,2,500, 
+    DRIVE,TURN,1000,NOSTRAIGHT,TURNPID, 
+    TILTER,POSITION,5000,100, 
+    TILTER,POSITION,500,100); */
+    gyro.reset();
+    tilter.tare_position();
+all(DRIVE,FORWARDS,3100,NOSTRAIGHT,NOPID,35,
+    INTAKE,OUT,127,
+    INTAKE,IN,127,DRIVET,1,230,
+    DRIVE,BACKWARDS,1930,NOSTRAIGHT,
+    DRIVE,TURN,2320,NOSTRAIGHT,TURNPID);
+    driveMotorsSpeed(110,leftDrive);
+    driveMotorsSpeed(110,rightDrive);
+    pros::delay(500);
+    driveMotorsSpeed(0,leftDrive);
+    driveMotorsSpeed(0,rightDrive);
+    motorGroupMove(-30,intakeM);
+    pros::delay(500);
+        motorGroupMove(0,intakeM);
+    tilter.move(90);
+    pros::delay(2200);
+    tilter.move(0);
+        pros::delay(2000);
+    driveMotorsSpeed(-50,leftDrive);
+    driveMotorsSpeed(-50,rightDrive);
+    pros::delay(1500);
+    driveMotorsSpeed(0,leftDrive);
+    driveMotorsSpeed(0,rightDrive);
+
+
+
+    /*DRIVE,FORWARDS,50,NOSTRAIGHT,
+    TILTER,POSITION,7000,100,DRIVET,4,25,
+    DRIVE,BACKWARDS,500,NOSTRAIGHT,TILTERT,1,25);*/
+//all(DRIVE,FORWARDS,100,NOSTRAIGHT,TILTER,POSITION,5000,100);
+    //DRIVE,FORWARDS,100,NOSTRAIGHT,TILTERT,POSITION,1,2000);
+
+
+
+    
     //all(INTAKE,IN,-90,DRIVE,FORWARDS,1000,NOSTRAIGHT, DRIVE,BACKWARDS,1000,NOSTRAIGHT, DRIVE,FORWARDS,2000,NOSTRAIGHT);
     //all(TURN,2000,NOSTRAIGHT);
     //pros::delay(1000);

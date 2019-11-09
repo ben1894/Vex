@@ -60,19 +60,20 @@ void opcontrol()
 
 		if(cVal(DIGITAL_L1))
 		{
-			tilter.move(127);
+			tilter.move(80);
 		}
 		else if(cVal(DIGITAL_L2))
 		{
-			tilter.move(-80);
+			tilter.move(-120);
 		}
 		else
 		{
 			tilter.move(0);
 		}
 		
-		pros::lcd::print(3,"%d", rightEncoder.get_value());
+		pros::lcd::print(3,"%f", rightDrive[1].get_position());
 		pros::lcd::print(4,"%f", gyro.get_value());
+		pros::lcd::print(2,"%f", tilter.get_position());
 
 		if(cVal(DIGITAL_X))
 		{
