@@ -106,6 +106,7 @@ public:
     SystemStates state = END;
     PidController pid; //eventualy initialized to defaults later in inherited classes
     int id;
+    bool hi = false;
     int target;
     char numberOfCalls = 0;
     char totalNumberOfCalls = 0;
@@ -120,6 +121,7 @@ public:
     {
         return (totalNumberOfCalls - numberOfCalls)+1; //number of calls decreases throughout runtime. //Starts at 1 and increases
     } //if 0 from beginning, initial update takes care of it
+
     void updateEndingState()
     {
         if(numberOfCalls == 0) //if it was on its last run
@@ -153,19 +155,19 @@ public:
                     state = EXECUTINGINSTRUCTIONS;
                     break;
                 }
-                else if(triggerNumber > triggerSystem->getTriggerNumberProgress())
+                else if(triggerNumber < triggerSystem->getTriggerNumberProgress())
                 {
                     state = EXECUTINGINSTRUCTIONS;
                     break;
                 }
-                else if(triggerNumber < triggerSystem->getTriggerNumberProgress())
+                else if(triggerNumber > triggerSystem->getTriggerNumberProgress())
                 {
                     state = WAITINGFORTRIGGER;
                     break;
                 }
                 else //is equal and needs to be checked
                 {
-                    if(triggerSystem->checkIfDone(triggerBreak) == false)
+                    if(triggerSystem->checkIfDone(triggerBreak) == true)
                     {
                         state = EXECUTINGINSTRUCTIONS;
                         break;
@@ -189,6 +191,9 @@ public:
                 case(REGPID):
                     speedControl = currentFlag;
                     initializePid(currentFlag); //pure virtual function
+                    return false;
+                case(TURNPID):
+                    pid = PidController(regTurnP,regTurnI,regTurnD,regTurnMin,regTurnMax);
                     return false;
                 case(DRIVEPID):
                     speedControl = currentFlag;
@@ -311,6 +316,7 @@ public:
             else
             {
                 ++totalNumberOfCalls;
+                ++numberOfCalls;
             }
         }
     }
@@ -319,7 +325,6 @@ public:
     {
         if(state == WAITINGFORINSTRUCTIONS)
         {
-            numberOfCalls = 0;
             for(int i = 0; i < parameters.size()-1; i++)
             {
                 if(parameters[i] == id)
@@ -836,12 +841,12 @@ void Drive::move()
             if(Dist.Right<Dist.Left)
             {
                 rightCorrection *= -1;
-                speed = pid.output(Dist.Left, target);
+                speed = pid.output((target-Dist.Right), target);
             }
             else 
             {
                 leftCorrection *= -1;
-                speed = pid.output(Dist.Right, target);
+                speed = pid.output((target-Dist.Left), target);
             }
             if(correctTo != NOSTRAIGHT)
             {
@@ -875,7 +880,7 @@ void all(Ts... input)
         tilter->initialUpdate(i, parameters);
         intake->initialUpdate(i, parameters);
     }
-    drive->pid.minOutput /= drive->outerInnerRatio;
+    //drive->pid.minOutput /= drive->outerInnerRatio;
 
     while((tilter->state != END) || (drive->state != END) || (intake->state != END))
     {
@@ -895,6 +900,7 @@ void all(Ts... input)
             case(EXECUTINGINSTRUCTIONS):
                 drive->move();
                 pros::lcd::print(3,"%d", drive->getDriveEncoder());
+                pros::lcd::print(4,"%f", gyro.get_value());
                 break;
             case(END):
                 driveMotorsSpeed(0,rightDrive);
@@ -945,31 +951,23 @@ void all(Ts... input)
         }
 
         pros::delay(4);
-        pros::lcd::print(4,"%d", (int)drive->state);
-        pros::lcd::print(5,"%d", (int)intake->state);
-        pros::lcd::print(6,"%d", (int)tilter->state);
-
     }
 
     delete drive;
     delete intake;
     delete tilter;
-        pros::lcd::print(4,"%d", (int)drive->state);
-        pros::lcd::print(5,"%d", (int)intake->state);
-        pros::lcd::print(6,"%d", (int)tilter->state);
 }
 
 //DRIVE, distance, correctTo(value,CURRENTVAL,NOSTRAIGHT,WHEELCORRECTION), {speedControl - REGPID(NOPID, MMPID)}
 
 void autonomous()
 {
-    /*
-    all(DRIVE,FORWARDS,1000,NOSTRAIGHT, DRIVE,BACKWARDS,1000,NOSTRAIGHT, DRIVE,FORWARDS,2000,NOSTRAIGHT);
-    pros::lcd::print(4,"BROKE");
-    all(INTAKE,IN,-90,DRIVE,FORWARDS,1000,NOSTRAIGHT, DRIVE,BACKWARDS,1000,NOSTRAIGHT, DRIVE,FORWARDS,2000,NOSTRAIGHT);
+    all(DRIVE,FORWARDS,1000,NOSTRAIGHT, DRIVE,BACKWARDS,1000,NOSTRAIGHT, DRIVE,FORWARDS,2000,NOSTRAIGHT, INTAKE,IN,50,DRIVET,2,500, DRIVE,TURN,1000,NOSTRAIGHT,TURNPID);
+    //all(INTAKE,IN,-90,DRIVE,FORWARDS,1000,NOSTRAIGHT, DRIVE,BACKWARDS,1000,NOSTRAIGHT, DRIVE,FORWARDS,2000,NOSTRAIGHT);
+    //all(TURN,2000,NOSTRAIGHT);
     //pros::delay(1000);
     //leftDrive[1].tare_position();
     //all(DRIVE,FORWARDS,1000,NOSTRAIGHT);
     //all(INTAKE, IN, 127);
-    //pros::delay(10000000); */
+    //pros::delay(10000000); 
 }

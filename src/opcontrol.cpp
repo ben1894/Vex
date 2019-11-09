@@ -71,7 +71,8 @@ void opcontrol()
 			tilter.move(0);
 		}
 		
-		pros::lcd::print(3,"%f", rightEncoder.get_value());
+		pros::lcd::print(3,"%d", rightEncoder.get_value());
+		pros::lcd::print(4,"%f", gyro.get_value());
 
 		if(cVal(DIGITAL_X))
 		{

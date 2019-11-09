@@ -30,6 +30,7 @@ enum AutonFlags
 
 	CUSTOMPID,
 	NOPID,
+	TURNPID,
 	REGPID,
 	DRIVEPID,
 	TILTERPID,
