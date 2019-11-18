@@ -124,26 +124,33 @@ void competition_initialize()
 
 		if(count != oldCount)
 		{
-			mainController.clear_line(0);
 			pros::Task::delay(70);
-			switch (count)
+			switch(count)
 			{
-				case UNDEFINED:
+				case(UNDEFINED):
 					pros::lcd::print(0, "< Auto Select >");
 					pros::lcd::print(2,  "Center to Select");
 					mainController.print(0,0,"Down To Select");
 					break;
-				case AUTON1:
-					pros::lcd::print(0, "Auton1");
+				case(SMALLRED):
+					pros::lcd::print(0, "Small Red");
 					pros::lcd::print(2,  "Center to Select");
-					mainController.print(0,0,"Auton1");
+					mainController.print(0,0,"Small Red");
 					break;
-				case AUTON2:
-					pros::lcd::print(0, "Auton2");
+				case(SMALLBLUE):
+					pros::lcd::print(0, "Small Blue");
 					pros::lcd::print(2,  "Center to Select");
-					mainController.print(0,0,"Auton1");
+					mainController.print(0,0,"Small Blue");
 					break;
-				case UNDER:
+				case(THICCRED):
+					pros::lcd::print(0, "Thicc Red");
+					pros::lcd::print(2,  "Center to Select");
+					mainController.print(0,0,"Thicc Red");
+				case(THICCBLUE):
+					pros::lcd::print(0, "Thicc Blue");
+					pros::lcd::print(2,  "Center to Select");
+					mainController.print(0,0,"Thicc Blue");
+				case(UNDER):
 					count = (Select)((int)OVER - 1);
 					onceAcception = true;
 					break;

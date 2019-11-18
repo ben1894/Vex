@@ -84,8 +84,10 @@ enum Select
 {
 	UNDER,
 	UNDEFINED,
-	AUTON1,
-	AUTON2,
+	SMALLRED,
+	SMALLBLUE,
+	THICCRED,
+	THICCBLUE,
 	OVER
 };
 
@@ -119,6 +121,7 @@ extern pros::Motor lift;
 
 extern pros::Controller secondaryController;
 extern pros::Controller mainController;
+extern Select count;
 
 extern pros::ADIEncoder leftEncoder;
 extern pros::ADIEncoder rightEncoder;
