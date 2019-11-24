@@ -1,6 +1,7 @@
 ﻿#include "main.h"
 #include "forwardDeclairations.hpp"
 #include "pidPacks.hpp"
+
 bool autonTest = false;
 const bool voltage = true;
 const bool gyroTurns = true;
@@ -46,7 +47,7 @@ class PidController
         unsigned char minOutput;
         unsigned char maxOutput;
 
-        PidController(double P = 0, double I = 0, double D = 0, unsigned char minOutput = 0, unsigned char maxOutput = 0) 
+        PidController(double P = 0, double I = 0, double D = 0, unsigned char minOutput = 0, unsigned char maxOutput = 0)
         { //Initializes the object with default values. Also allows values to be put in on creation
             this->P = P; //Differentiates between the member P and the parameter P. this->P is the member
             this->I = I;
@@ -74,7 +75,7 @@ class PidController
                 long currentIntegral = error * changeInTime; //calculation for the area under the curve for the latest movement. The faster this updates the more accurate
                 combinedIntegral += currentIntegral;         //adds latest to the total integral
             }
-            
+
             double derivative = (error - lastError) / changeInTime; //formula to calculate the (almost) instantaneous rate of change.     */                                            //affected by how quickly the rate is changing (maybe reduce rate)
             lastTime = pros::millis(); //put here before the returns
             lastError = error;
@@ -91,17 +92,17 @@ class PidController
             return output;
         }
 };
- 
+
 class System
 {
 protected:
-    char triggerNumber; 
+    char triggerNumber;
     int triggerBreak;
     System *triggerSystem;
     AutonFlags trigger = NONET; //Holds the type of trigger system will have    All sub systems will have the option of starting on a trigger
     Timer triggerTimer;
 
-    char triggerNumberE; 
+    char triggerNumberE;
     int triggerBreakE;
     System *triggerSystemE;
     AutonFlags triggerE = NONETE; //Holds the type of trigger system will have    All sub systems will have the option of starting on a trigger
@@ -116,11 +117,11 @@ public:
     int target;
     char numberOfCalls = 0;
     char totalNumberOfCalls = 0;
-    
+
     System(int idVal): id(idVal){}
     virtual bool checkIfDone(int breakValue) = 0;
-    virtual void setMember(int &number, AutonFlags &currentFlag, int value) = 0; 
-    virtual void resetObj() = 0;                                                
+    virtual void setMember(int &number, AutonFlags &currentFlag, int value) = 0;
+    virtual void resetObj() = 0;
     virtual void initializePid(AutonFlags pidPack) = 0;
 
     int getTriggerNumberProgress()
@@ -338,7 +339,7 @@ public:
                 {
                     if(state == WAITINGFORINSTRUCTIONS) //Checks again just in case there are multiple calls.
                     {
-                        resetObj(); //have to change this 
+                        resetObj(); //have to change this
                         parameters[i] = (int)NULLOPTION;
                         AutonFlags currentFlag;  //DRIVE,FORWARD,1000,TILTER,FLAG
                         int subFlag = 0;
@@ -400,7 +401,7 @@ class Drive : public System
     {
         rightDrive[1].tare_position();
     }
-    
+
     bool checkIfDone(int breakVal = driveObj->target)
     {
         if(triggerE == NONETE)
@@ -422,24 +423,10 @@ class Drive : public System
             }
             return false;
         }
-        //if(triggerTimerE.current() > breakValE)
-        /*
-        if(gyroVals.Left < gyroVals.Right)
+        if(triggerE == TIMETE)
         {
-            if(gyroVals.Left < 10)
-            {
-                return true;
-            }
-            return false;
+            if(triggerTimerE.current() > )
         }
-        else
-        {
-            if(gyroVals.Right < 10)
-            {
-                return true;
-            }
-            return false;
-        } */
     }
 
     void gyroCorrections(float &leftCorrect, float &rightCorrect)
@@ -499,7 +486,7 @@ class Drive : public System
         {
             difference = abs(rightEncoder.get_value()) - abs(leftEncoder.get_value());
         }
-        else 
+        else
         {
             difference = getSweepDifference(); //reduces call amount
         }
@@ -528,7 +515,7 @@ class Drive : public System
     void move();
     int getCurrentDistance()
     {
-        if(direction == TURN) 
+        if(direction == TURN)
         {
             getDistances(turnStats, target);
             if(turnStats.Left <= turnStats.Right)
@@ -579,7 +566,7 @@ void Drive::setMember(int &number, AutonFlags &currentFlag, int value)
             case(BACKWARDS):
                 switch(number) //use same straight drive for turns and straight drive
                 {
-                    case(1): 
+                    case(1):
                         direction = currentFlag;
                         target = value;
                         number++;
@@ -689,7 +676,7 @@ class Tilter : public System  //very quick acceleration
                 case(POSITION):
                     switch(number) //use same straight drive for turns and straight drive
                     {
-                        case(1): 
+                        case(1):
                             target = value;
                             number++;
                             break;
@@ -716,7 +703,7 @@ class Tilter : public System  //very quick acceleration
                 tilter.move(-speed);
             }
         }
-        else 
+        else
         {
             tilter.move(0);
             updateEndingState();
@@ -809,10 +796,10 @@ void Drive::move()
                     speed = pid.output(getDriveEncoder(), target);
                     break;
             }
-            
+
             switch(direction) //drive straight
             {
-                case(UPLEFTSWEEP): 
+                case(UPLEFTSWEEP):
                 case(UPRIGHTSWEEP):
                 case(DOWNLEFTSWEEP):
                 case(DOWNRIGHTSWEEP):
@@ -849,7 +836,7 @@ void Drive::move()
             driveMotorsSpeed(speed*rightCorrection, rightDrive);
             driveMotorsSpeed(speed*leftCorrection, leftDrive);
         }
-        else 
+        else
         {
             target = fixTarget(target); //so you can put in negative values
             GyroDistances Dist;
@@ -860,7 +847,7 @@ void Drive::move()
                 rightCorrection *= -1;
                 speed = pid.output(-Dist.Right, 0);
             }
-            else 
+            else
             {
                 leftCorrection *= -1;
                 speed = pid.output(-Dist.Left, 0);
@@ -874,7 +861,7 @@ void Drive::move()
             driveMotorsSpeed(speed*rightCorrection,rightDrive);
         }
     }
-    else 
+    else
     {
         driveMotorsSpeed(0,rightDrive);
         driveMotorsSpeed(0,leftDrive);
@@ -1009,7 +996,7 @@ all(DRIVE,FORWARDS,1300,NOSTRAIGHT,NOPID,60,
     motorGroupMove(-100,intakeM);
     pros::delay(550);
     motorGroupMove(0,intakeM);
-    all(TILTER,POSITION,7100,100); 
+    all(TILTER,POSITION,7100,100);
     pros::delay(2000);
     driveMotorsSpeed(-50,leftDrive);
     driveMotorsSpeed(-50,rightDrive);
@@ -1031,7 +1018,6 @@ all(DRIVE,FORWARDS,1300,NOSTRAIGHT,NOPID,60,
     DRIVE,TURN,2390,NOSTRAIGHT,TURNPID,
     INTAKE,OUT,127,
     INTAKE,IN,127,DRIVET,1,230);
-
     driveMotorsSpeed(110,leftDrive);
     driveMotorsSpeed(110,rightDrive);
     pros::delay(520);
@@ -1041,7 +1027,7 @@ all(DRIVE,FORWARDS,1300,NOSTRAIGHT,NOPID,60,
     motorGroupMove(-100,intakeM);
     pros::delay(550);               ////////////////////blue small
     motorGroupMove(0,intakeM);
-    all(TILTER,POSITION,7100,100); 
+    all(TILTER,POSITION,7100,100);
     pros::delay(2000);
     driveMotorsSpeed(-50,leftDrive);
     driveMotorsSpeed(-50,rightDrive);
@@ -1072,7 +1058,7 @@ void thiccRed()
     motorGroupMove(-100,intakeM);
     pros::delay(550);               //red big
     motorGroupMove(0,intakeM);
-    all(TILTER,POSITION,7100,100); 
+    all(TILTER,POSITION,7100,100);
     pros::delay(2000);
     driveMotorsSpeed(-50,leftDrive);
     driveMotorsSpeed(-50,rightDrive);
@@ -1109,4 +1095,3 @@ void autonomous()
 /*
 
 */
-
