@@ -141,6 +141,43 @@ public:
         }
     }
 
+    bool triggerCheckE(int breakVal)
+    {
+        switch(triggerE)  //have it set at something until everything ends or its set to end
+        {
+            case(NONETE):
+                return true;
+            case(TIMETE):
+                if(triggerTimerE.current() > breakVal) 
+                {
+                    return true;
+                }
+                return false;
+            default:
+                if(triggerSystemE->state == END)
+                {
+                    return true;
+                }
+                else if(triggerNumberE < triggerSystemE->getTriggerNumberProgress())
+                {
+                    return true;
+                }
+                else if(triggerNumberE > triggerSystemE->getTriggerNumberProgress())
+                {
+                    return false;
+                }
+                else //is equal and needs to be checked
+                {
+                    if(triggerSystemE->checkIfDone(breakVal) == true)
+                    {
+                        return true;
+                    }
+                    return false;
+                }
+        }
+
+    }
+
     void updateTriggerState()
     {
         switch(trigger)  //have it set at something until everything ends or its set to end
@@ -402,7 +439,7 @@ class Drive : public System
         rightDrive[1].tare_position();
     }
 
-    bool checkIfDone(int breakVal = driveObj->target)
+    bool checkIfDone(int breakVal)
     {
         if(triggerE == NONETE)
         {
@@ -423,9 +460,9 @@ class Drive : public System
             }
             return false;
         }
-        if(triggerE == TIMETE)
-        {
-            if(triggerTimerE.current() > )
+        else 
+        { //ending triggers are universal so a system function can be used.
+            return triggerCheckE(breakVal);
         }
     }
 
@@ -631,7 +668,7 @@ class Tilter : public System  //very quick acceleration
         return (int)abs(tilter.get_position());
     }
 
-    bool checkIfDone(int breakVal = tilterObj->target)
+    bool checkIfDone(int breakVal)
     {
         if(underTarget == true)
         {
@@ -692,7 +729,7 @@ class Tilter : public System  //very quick acceleration
 
     void move()
     {
-        if(checkIfDone() == false)
+        if(checkIfDone(target) == false)
         {
             if(getPosition() < target)
             {
@@ -732,7 +769,7 @@ class Intake : public System  //very quick acceleration
             }
         }
 
-    bool checkIfDone(int breakVal = intakeObj->target)
+    bool checkIfDone(int breakVal)
     {
         return true;
     }
@@ -783,7 +820,8 @@ void Drive::move()
 {
     float leftCorrection = 1; //reset every call
     float rightCorrection = 1;
-    if(checkIfDone() == false)
+    //put here or add
+    if(checkIfDone(target) == false)
     {
         if(direction != TURN)
         {
