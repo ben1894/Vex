@@ -109,6 +109,7 @@ protected:
     Timer triggerTimerE;
 
 public:
+    System(int idVal): id(idVal){}
     AutonFlags speedControl = BLANK;
     SystemStates state = END;
     PidController pid; //eventualy initialized to defaults later in inherited classes
@@ -118,7 +119,6 @@ public:
     char numberOfCalls = 0;
     char totalNumberOfCalls = 0;
 
-    System(int idVal): id(idVal){}
     virtual bool checkIfDone(int breakValue) = 0;
     virtual void setMember(int &number, AutonFlags &currentFlag, int value) = 0;
     virtual void resetObj() = 0;
@@ -493,6 +493,8 @@ class Drive : public System
         {
             case(UPLEFTSWEEP):
             case(DOWNLEFTSWEEP):
+            case(UPLEFTSWEEPE):
+            case(DOWNLEFTSWEEPE):
                 return abs(rightEncoder.get_value());
             default:
                 return abs(leftEncoder.get_value());
@@ -505,6 +507,8 @@ class Drive : public System
         {
             case(UPLEFTSWEEP):
             case(DOWNLEFTSWEEP):
+            case(UPLEFTSWEEPE):
+            case(DOWNLEFTSWEEPE):
                 return abs(leftEncoder.get_value());
             default:
                 return abs(rightEncoder.get_value());
@@ -519,7 +523,7 @@ class Drive : public System
     void wheelCorrections(float &leftCorrect, float &rightCorrect)
     {
         int difference;
-        if(direction == TURN)
+        if(direction == TURN || direction == FORWARDS || direction == FORWARDSE || direction ==BACKWARDS || direction == BACKWARDSE)
         {
             difference = abs(rightEncoder.get_value()) - abs(leftEncoder.get_value());
         }
@@ -572,6 +576,10 @@ class Drive : public System
             case(UPLEFTSWEEP):
             case(DOWNLEFTSWEEP):
             case(DOWNRIGHTSWEEP):
+            case(UPRIGHTSWEEPE):
+            case(UPLEFTSWEEPE):
+            case(DOWNLEFTSWEEPE):
+            case(DOWNRIGHTSWEEPE):
                 return getOutsideEncoder();
             default:
                 return (int)abs(rightDrive[1].get_position()); //////////////////abs
@@ -670,21 +678,28 @@ class Tilter : public System  //very quick acceleration
 
     bool checkIfDone(int breakVal)
     {
-        if(underTarget == true)
+        if(triggerE == NONET)
         {
-            if(getPosition() > breakVal)
+            if(underTarget == true)
             {
-                return true;
+                if(getPosition() > breakVal)
+                {
+                    return true;
+                }
+                return false;
             }
-            return false;
+            else
+            {
+                if(getPosition() < breakVal)
+                {
+                    return true;
+                }
+                return false;
+            }
         }
-        else
+        else 
         {
-            if(getPosition() < breakVal)
-            {
-                return true;
-            }
-            return false;
+            return triggerCheckE(breakVal);
         }
     }
 
@@ -729,7 +744,8 @@ class Tilter : public System  //very quick acceleration
 
     void move()
     {
-        if(checkIfDone(target) == false)
+        int breakVal = (triggerE == NONET) ? target : triggerBreakE;
+        if(checkIfDone(breakVal) == false)
         {
             if(getPosition() < target)
             {
@@ -771,7 +787,7 @@ class Intake : public System  //very quick acceleration
 
     bool checkIfDone(int breakVal)
     {
-        return true;
+        return triggerCheckE(breakVal);
     }
 
     void resetObj()
@@ -812,7 +828,17 @@ class Intake : public System  //very quick acceleration
             speed *= -1;
         }
         motorGroupMove(speed, intakeM);
-        updateEndingState();
+        if(triggerE != NONET)
+        {
+            if(checkIfDone(triggerBreakE))
+            {
+                updateEndingState();
+            }
+        }
+        else 
+        {
+            updateEndingState();
+        }
     }
 };
 
@@ -821,18 +847,18 @@ void Drive::move()
     float leftCorrection = 1; //reset every call
     float rightCorrection = 1;
     //put here or add
-    if(checkIfDone(target) == false)
+    int breakVal = (triggerE == NONET) ? target : triggerBreakE;
+    if(checkIfDone(breakVal) == false)
     {
         if(direction != TURN)
         {
-            switch(speedControl) //pid or nah
+            if(speedControl == NOPID || triggerE != NONET)
             {
-                case(NOPID):
-                    speed = pid.maxOutput;
-                    break; //reset integral at 0
-                default:
-                    speed = pid.output(getDriveEncoder(), target);
-                    break;
+                speed = pid.maxOutput;
+            }
+            else 
+            {
+                speed = pid.output(getDriveEncoder(), target);
             }
 
             switch(direction) //drive straight
@@ -841,11 +867,16 @@ void Drive::move()
                 case(UPRIGHTSWEEP):
                 case(DOWNLEFTSWEEP):
                 case(DOWNRIGHTSWEEP):
-                    wheelCorrections(leftCorrection, rightCorrection);
+                case(UPLEFTSWEEPE):
+                case(UPRIGHTSWEEPE):
+                case(DOWNLEFTSWEEPE):
+                case(DOWNRIGHTSWEEPE):
                     switch(direction) //sweep turn stuffz
                     {
                         case(UPLEFTSWEEP):
-                        case(DOWNLEFTSWEEP):
+                        case(DOWNLEFTSWEEP): //add here
+                        case(UPLEFTSWEEPE):
+                        case(DOWNLEFTSWEEPE):
                             leftCorrection *= outerInnerRatio;
                             break;
                         default:
@@ -853,12 +884,15 @@ void Drive::move()
                             break;
                     }
                     break;
-                default:
-                    if(correctTo != NOSTRAIGHT)
-                    {
-                        gyroCorrections(leftCorrection, rightCorrection);
-                    }
-                    break;
+            }
+            
+            if(correctTo == WHEELCORRECTION)
+            {
+                wheelCorrections(leftCorrection, rightCorrection); //break into two, trigger system, other other
+            }
+            if(correctTo != NOSTRAIGHT)
+            {
+                gyroCorrections(leftCorrection, rightCorrection);
             }
 
             switch(direction)
@@ -866,6 +900,9 @@ void Drive::move()
                 case(DOWNLEFTSWEEP):
                 case(DOWNRIGHTSWEEP):
                 case(BACKWARDS):
+                case(DOWNLEFTSWEEPE):
+                case(DOWNRIGHTSWEEPE):
+                case(BACKWARDSE):
                     leftCorrection *= -1;
                     rightCorrection *= -1;
                     break;
@@ -901,6 +938,7 @@ void Drive::move()
     }
     else
     {
+        speed = pid.maxOutput;
         driveMotorsSpeed(0,rightDrive);
         driveMotorsSpeed(0,leftDrive);
         updateEndingState();

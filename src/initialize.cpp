@@ -53,7 +53,7 @@ void initialize()
 
 	intakeM[0].set_reversed(true);
 	tilter.set_brake_mode(pros::E_MOTOR_BRAKE_BRAKE);
-	tilter.set_reversed(true);
+	tilter.set_reversed(false);
 	lift.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
 
 	leftEncoder.reset();
