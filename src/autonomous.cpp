@@ -232,6 +232,9 @@ public:
                 case(NONET):
                     trigger = currentFlag;
                     return false;
+                case(NONETE):
+                    triggerE = currentFlag;
+                    return false;
                 case(REGPID):
                     speedControl = currentFlag;
                     initializePid(currentFlag); //pure virtual function
@@ -282,6 +285,39 @@ public:
                     trigger = currentFlag;
                     triggerBreak = value;
                     triggerTimer.clear();
+                    number = 0;
+                    return false;
+                case(DRIVETE): //(int = target) or otherwise specified by ther break when testing for trigger
+                case(TILTERTE): //cant have a trigger based off the intake... yet (maybe idk I don't think there will be a use)
+                case(INTAKETE):
+                    switch(number)
+                    {
+                        case(1):       //its never going to be 0 because it only goes in this loops if its not 0;
+                            if(currentFlag == DRIVETE)
+                            {
+                                triggerSystemE = reinterpret_cast<System *>(driveObj);
+                            }
+                            else if(currentFlag == TILTERTE)
+                            {
+                                triggerSystemE = reinterpret_cast<System *>(tilterObj);
+                            }
+                            else if(currentFlag == INTAKETE)
+                            {
+                                triggerSystemE = reinterpret_cast<System *>(intakeObj);
+                            }
+                            triggerE = currentFlag;
+                            triggerNumberE = value; //distance
+                            number++;
+                            return false;
+                        case(2):
+                            number = 0;
+                            triggerBreakE = value;
+                            return false;
+                    }
+                case(TIMETE):
+                    triggerE = currentFlag;
+                    triggerBreakE = value;
+                    triggerTimerE.clear();
                     number = 0;
                     return false;
                 case(NOPID):
@@ -475,14 +511,14 @@ class Drive : public System
         {
             if(off.Right > 3)
             {
-                rightCorrect *= ((float).97 - ((float)off.Right/(float)70));
+                rightCorrect *= ((float).98 - ((float)off.Right/(float)140));
             }
         }
         else
         {
             if(off.Left > 3)
             {
-                leftCorrect *= ((float).97 - ((float)off.Left/(float)70)); //left decrease
+                leftCorrect *= ((float).98 - ((float)off.Left/(float)140)); //left decrease
             }
         }
     }
@@ -582,7 +618,7 @@ class Drive : public System
             case(DOWNRIGHTSWEEPE):
                 return getOutsideEncoder();
             default:
-                return (int)abs(rightDrive[1].get_position()); //////////////////abs
+                return leftEncoder.get_value(); //////////////////abs
         }
     }
 };
@@ -609,6 +645,8 @@ void Drive::setMember(int &number, AutonFlags &currentFlag, int value)
             case(TURN):
             case(FORWARDS):
             case(BACKWARDS):
+            case(FORWARDSE):
+            case(BACKWARDSE):
                 switch(number) //use same straight drive for turns and straight drive
                 {
                     case(1):
@@ -633,6 +671,10 @@ void Drive::setMember(int &number, AutonFlags &currentFlag, int value)
             case(UPLEFTSWEEP):
             case(DOWNLEFTSWEEP):
             case(DOWNRIGHTSWEEP):
+            case(UPRIGHTSWEEPE):
+            case(UPLEFTSWEEPE):
+            case(DOWNLEFTSWEEPE):
+            case(DOWNRIGHTSWEEPE):
                 switch(number)
                 {
                     case(1):
@@ -678,7 +720,7 @@ class Tilter : public System  //very quick acceleration
 
     bool checkIfDone(int breakVal)
     {
-        if(triggerE == NONET)
+        if(triggerE == NONETE)
         {
             if(underTarget == true)
             {
@@ -738,22 +780,38 @@ class Tilter : public System  //very quick acceleration
                             break;
                     }
                     break;
+                case(SPEED):
+                    switch(number) //use same straight drive for turns and straight drive
+                    {
+                        case(1):
+                            speed = value;
+                            number = 0;
+                            break;
+                    }
+                    break;
             }
         }
     }
 
     void move()
     {
-        int breakVal = (triggerE == NONET) ? target : triggerBreakE;
+        int breakVal = (triggerE == NONETE) ? target : triggerBreakE;
         if(checkIfDone(breakVal) == false)
         {
-            if(getPosition() < target)
+            if(triggerE != NONETE)
             {
                 tilter.move(speed);
             }
-            else
+            else 
             {
-                tilter.move(-speed);
+                if(getPosition() < target)
+                {
+                    tilter.move(speed);
+                }
+                else
+                {
+                    tilter.move(-speed);
+                }
             }
         }
         else
@@ -828,9 +886,9 @@ class Intake : public System  //very quick acceleration
             speed *= -1;
         }
         motorGroupMove(speed, intakeM);
-        if(triggerE != NONET)
+        if(triggerE != NONETE)
         {
-            if(checkIfDone(triggerBreakE))
+            if(checkIfDone(triggerBreakE) == true)
             {
                 updateEndingState();
             }
@@ -847,14 +905,18 @@ void Drive::move()
     float leftCorrection = 1; //reset every call
     float rightCorrection = 1;
     //put here or add
-    int breakVal = (triggerE == NONET) ? target : triggerBreakE;
+    int breakVal = (triggerE == NONETE) ? target : triggerBreakE;
     if(checkIfDone(breakVal) == false)
     {
         if(direction != TURN)
         {
-            if(speedControl == NOPID || triggerE != NONET)
+            if(speedControl == NOPID)
             {
                 speed = pid.maxOutput;
+            }
+            else if(triggerE != NONETE)
+            {
+                speed = target;
             }
             else 
             {
@@ -1053,6 +1115,17 @@ void smallRed()
 {
     gyro.reset();
     tilter.tare_position();
+all(
+    DRIVE,FORWARDSE,100,1,TIMETE,2000,
+    DRIVE,FORWARDSE,100,1,TIMETE,2000,
+    DRIVE,FORWARDSE,100,1,TIMETE,2000,
+    DRIVE,FORWARDSE,100,NOSTRAIGHT,TIMETE,2000,
+    TILTER,SPEED,100,DRIVET,3,200,DRIVETE,3,1300
+    );
+
+    /*
+    gyro.reset();
+    tilter.tare_position();
 all(DRIVE,FORWARDS,1300,NOSTRAIGHT,NOPID,60,
     DRIVE,FORWARDS,450,NOSTRAIGHT,NOPID,60,TIMET,600,
     DRIVE,FORWARDS,450,NOSTRAIGHT,NOPID,60,TIMET,600,
@@ -1079,6 +1152,7 @@ all(DRIVE,FORWARDS,1300,NOSTRAIGHT,NOPID,60,
     pros::delay(1500);
     driveMotorsSpeed(0,leftDrive);
     driveMotorsSpeed(0,rightDrive);
+    */
 }
 
 void smallBlue()
@@ -1150,6 +1224,7 @@ void thiccBlue()
 
 void autonomous()
 {
+    smallRed();
     /*
     switch(count)
     {
