@@ -996,7 +996,7 @@ void Drive::move()
             GyroDistances Dist;
             getDistances(Dist, target);
 
-            if(Dist.Right<Dist.Left)
+            if(Dist.Right < Dist.Left)
             {
                 rightCorrection *= -1;
                 speed = pid.output(-Dist.Right, 0);

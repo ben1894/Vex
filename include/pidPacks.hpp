@@ -6,10 +6,10 @@
 #define regDriveMin 24
 #define regDriveMax 127
 
-#define regTurnP .05
+#define regTurnP .09
 #define regTurnI 0
 #define regTurnD 0
-#define regTurnMin 20
+#define regTurnMin 25
 #define regTurnMax 80
 
 #define regIntakeP 0
