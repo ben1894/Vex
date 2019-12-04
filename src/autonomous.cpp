@@ -148,7 +148,7 @@ public:
             case(NONETE):
                 return true;
             case(TIMETE):
-                if(triggerTimerE.current() > breakVal) 
+                if(triggerTimerE.current() > breakVal)
                 {
                     return true;
                 }
@@ -500,7 +500,7 @@ class Drive : public System
             }
             return false;
         }
-        else 
+        else
         { //ending triggers are universal so a system function can be used.
             return triggerCheckE(breakVal);
         }
@@ -754,7 +754,7 @@ class Tilter : public System  //very quick acceleration
                 return false;
             }
         }
-        else 
+        else
         {
             return triggerCheckE(breakVal);
         }
@@ -817,7 +817,7 @@ class Tilter : public System  //very quick acceleration
             {
                 tilter.move(speed);
             }
-            else 
+            else
             {
                 if(getPosition() < target)
                 {
@@ -906,11 +906,11 @@ class Intake : public System  //very quick acceleration
             if(checkIfDone(triggerBreakE) == true)
             {
                 motorGroupMove(0, intakeM); //only goes to zero after an ending trigger, this allows for the setting of the intake
-                updateEndingState();        //without a specific time or place to stop since it will most likely be going throught the 
+                updateEndingState();        //without a specific time or place to stop since it will most likely be going throught the
                                             //entire time just about
             }
         }
-        else 
+        else
         {
             updateEndingState();
         }
@@ -935,7 +935,7 @@ void Drive::move()
             {
                 speed = target;
             }
-            else 
+            else
             {
                 speed = pid.output(getDriveEncoder(), target);
             }
@@ -964,7 +964,7 @@ void Drive::move()
                     }
                     break;
             }
-            
+
             if(correctTo == WHEELCORRECTION)
             {
                 wheelCorrections(leftCorrection, rightCorrection); //break into two, trigger system, other other
@@ -1070,7 +1070,7 @@ void addCommands(Ts... input)
                 drive->target = fixTarget(drive->target); //so you can put in negative values
                 GyroDistances Dist;
                 getDistances(Dist, drive->target);
-                pros::lcd::print(1,"%f", actualGyroPgyro.get_value());
+                pros::lcd::print(1,"%f", gyro.get_value());
                 pros::lcd::print(2,"%d", actualGyroPosition());
                 pros::lcd::print(3,"%d", Dist.Left);
                 pros::lcd::print(4,"%d", Dist.Right);
