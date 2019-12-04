@@ -477,6 +477,7 @@ class Drive : public System
     {
         leftEncoder.reset();
         rightEncoder.reset();
+        rightDrive[1].tare_position();
     }
 
     bool checkIfDone(int breakVal)
@@ -622,7 +623,8 @@ class Drive : public System
             case(DOWNRIGHTSWEEPE):
                 return getOutsideEncoder();
             default:
-                return abs(leftEncoder.get_value()); //////////////////abs
+                //return abs(leftEncoder.get_value()); //////////////////abs
+                return abs(rightDrive[1].get_position());
         }
     }
 };

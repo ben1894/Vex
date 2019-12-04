@@ -1,16 +1,16 @@
 #pragma once
 
-#define regDriveP .12
+#define regDriveP .14
 #define regDriveI 0
 #define regDriveD 0
-#define regDriveMin 24
+#define regDriveMin 30
 #define regDriveMax 127
 
 #define regTurnP .09
 #define regTurnI 0
 #define regTurnD 0
-#define regTurnMin 25
-#define regTurnMax 75
+#define regTurnMin 28
+#define regTurnMax 90
 
 #define regIntakeP 0
 #define regIntakeI 0
