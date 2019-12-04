@@ -23,7 +23,7 @@ void smallRed()
     gyro.reset();
     tilter.tare_position();
 addCommands(
-    DRIVE,FORWARDS,1500,0,MMREGPID,60,127,
+    DRIVE,FORWARDS,500,0,MMREGPID,60,127,
     DRIVE,FORWARDS,1000,0,NOPID,60,
     DRIVE,TURN,3000,NOSTRAIGHT,TURNPID,
     DRIVE,BACKWARDS,3000,3000,
