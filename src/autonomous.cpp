@@ -47,7 +47,7 @@ class PidController
         unsigned char minOutput;
         unsigned char maxOutput;
 
-        PidController(double P = 0, double I = 0, double D = 0, unsigned char minOutput = 0, unsigned char maxOutput = 0) 
+        PidController(double P = 0, double I = 0, double D = 0, unsigned char minOutput = 0, unsigned char maxOutput = 0)
         { //Initializes the object with default values. Also allows values to be put in on creation
             this->P = P; //Differentiates between the member P and the parameter P. this->P is the member
             this->I = I;
@@ -75,7 +75,7 @@ class PidController
                 long currentIntegral = error * changeInTime; //calculation for the area under the curve for the latest movement. The faster this updates the more accurate
                 combinedIntegral += currentIntegral;         //adds latest to the total integral
             }
-            
+
             double derivative = (error - lastError) / changeInTime; //formula to calculate the (almost) instantaneous rate of change.     */                                            //affected by how quickly the rate is changing (maybe reduce rate)
             lastTime = pros::millis(); //put here before the returns
             lastError = error;
@@ -92,23 +92,24 @@ class PidController
             return output;
         }
 };
- 
+
 class System
 {
 protected:
-    char triggerNumber; 
+    char triggerNumber;
     int triggerBreak;
     System *triggerSystem;
     AutonFlags trigger = NONET; //Holds the type of trigger system will have    All sub systems will have the option of starting on a trigger
     Timer triggerTimer;
 
-    char triggerNumberE; 
+    char triggerNumberE;
     int triggerBreakE;
     System *triggerSystemE;
     AutonFlags triggerE = NONETE; //Holds the type of trigger system will have    All sub systems will have the option of starting on a trigger
     Timer triggerTimerE;
 
 public:
+    System(int idVal): id(idVal){}
     AutonFlags speedControl = BLANK;
     SystemStates state = END;
     PidController pid; //eventualy initialized to defaults later in inherited classes
@@ -117,11 +118,10 @@ public:
     int target;
     char numberOfCalls = 0;
     char totalNumberOfCalls = 0;
-    
-    System(int idVal): id(idVal){}
+
     virtual bool checkIfDone(int breakValue) = 0;
-    virtual void setMember(int &number, AutonFlags &currentFlag, int value) = 0; 
-    virtual void resetObj() = 0;                                                
+    virtual void setMember(int &number, AutonFlags &currentFlag, int value) = 0;
+    virtual void resetObj() = 0;
     virtual void initializePid(AutonFlags pidPack) = 0;
 
     int getTriggerNumberProgress()
@@ -139,6 +139,43 @@ public:
         {
             state = WAITINGFORINSTRUCTIONS;
         }
+    }
+
+    bool triggerCheckE(int breakVal)
+    {
+        switch(triggerE)  //have it set at something until everything ends or its set to end
+        {
+            case(NONETE):
+                return true;
+            case(TIMETE):
+                if(triggerTimerE.current() > breakVal) 
+                {
+                    return true;
+                }
+                return false;
+            default:
+                if(triggerSystemE->state == END)
+                {
+                    return true;
+                }
+                else if(triggerNumberE < triggerSystemE->getTriggerNumberProgress())
+                {
+                    return true;
+                }
+                else if(triggerNumberE > triggerSystemE->getTriggerNumberProgress())
+                {
+                    return false;
+                }
+                else //is equal and needs to be checked
+                {
+                    if(triggerSystemE->checkIfDone(breakVal) == true)
+                    {
+                        return true;
+                    }
+                    return false;
+                }
+        }
+
     }
 
     void updateTriggerState()
@@ -195,6 +232,9 @@ public:
                 case(NONET):
                     trigger = currentFlag;
                     return false;
+                case(NONETE):
+                    triggerE = currentFlag;
+                    return false;
                 case(REGPID):
                     speedControl = currentFlag;
                     initializePid(currentFlag); //pure virtual function
@@ -245,6 +285,39 @@ public:
                     trigger = currentFlag;
                     triggerBreak = value;
                     triggerTimer.clear();
+                    number = 0;
+                    return false;
+                case(DRIVETE): //(int = target) or otherwise specified by ther break when testing for trigger
+                case(TILTERTE): //cant have a trigger based off the intake... yet (maybe idk I don't think there will be a use)
+                case(INTAKETE):
+                    switch(number)
+                    {
+                        case(1):       //its never going to be 0 because it only goes in this loops if its not 0;
+                            if(currentFlag == DRIVETE)
+                            {
+                                triggerSystemE = reinterpret_cast<System *>(driveObj);
+                            }
+                            else if(currentFlag == TILTERTE)
+                            {
+                                triggerSystemE = reinterpret_cast<System *>(tilterObj);
+                            }
+                            else if(currentFlag == INTAKETE)
+                            {
+                                triggerSystemE = reinterpret_cast<System *>(intakeObj);
+                            }
+                            triggerE = currentFlag;
+                            triggerNumberE = value; //distance
+                            number++;
+                            return false;
+                        case(2):
+                            number = 0;
+                            triggerBreakE = value;
+                            return false;
+                    }
+                case(TIMETE):
+                    triggerE = currentFlag;
+                    triggerBreakE = value;
+                    triggerTimerE.clear();
                     number = 0;
                     return false;
                 case(NOPID):
@@ -339,7 +412,7 @@ public:
                 {
                     if(state == WAITINGFORINSTRUCTIONS) //Checks again just in case there are multiple calls.
                     {
-                        resetObj(); //have to change this 
+                        resetObj(); //have to change this
                         parameters[i] = (int)NULLOPTION;
                         AutonFlags currentFlag;  //DRIVE,FORWARD,1000,TILTER,FLAG
                         int subFlag = 0;
@@ -402,8 +475,8 @@ class Drive : public System
         leftEncoder.reset();
         rightEncoder.reset();
     }
-    
-    bool checkIfDone(int breakVal = driveObj->target)
+
+    bool checkIfDone(int breakVal)
     {
         if(triggerE == NONETE)
         {
@@ -424,24 +497,10 @@ class Drive : public System
             }
             return false;
         }
-        //if(triggerTimerE.current() > breakValE)
-        /*
-        if(gyroVals.Left < gyroVals.Right)
-        {
-            if(gyroVals.Left < 10)
-            {
-                return true;
-            }
-            return false;
+        else 
+        { //ending triggers are universal so a system function can be used.
+            return triggerCheckE(breakVal);
         }
-        else
-        {
-            if(gyroVals.Right < 10)
-            {
-                return true;
-            }
-            return false;
-        } */
     }
 
     void gyroCorrections(float &leftCorrect, float &rightCorrect)
@@ -453,14 +512,14 @@ class Drive : public System
         {
             if(off.Right > 3)
             {
-                rightCorrect *= ((float).97 - ((float)off.Right/(float)70));
+                rightCorrect *= ((float).98 - ((float)off.Right/(float)140));
             }
         }
         else
         {
             if(off.Left > 3)
             {
-                leftCorrect *= ((float).97 - ((float)off.Left/(float)70)); //left decrease
+                leftCorrect *= ((float).98 - ((float)off.Left/(float)140)); //left decrease
             }
         }
     }
@@ -471,6 +530,8 @@ class Drive : public System
         {
             case(UPLEFTSWEEP):
             case(DOWNLEFTSWEEP):
+            case(UPLEFTSWEEPE):
+            case(DOWNLEFTSWEEPE):
                 return abs(rightEncoder.get_value());
             default:
                 return abs(leftEncoder.get_value());
@@ -483,6 +544,8 @@ class Drive : public System
         {
             case(UPLEFTSWEEP):
             case(DOWNLEFTSWEEP):
+            case(UPLEFTSWEEPE):
+            case(DOWNLEFTSWEEPE):
                 return abs(leftEncoder.get_value());
             default:
                 return abs(rightEncoder.get_value());
@@ -497,11 +560,11 @@ class Drive : public System
     void wheelCorrections(float &leftCorrect, float &rightCorrect)
     {
         int difference;
-        if(direction == TURN)
+        if(direction == TURN || direction == FORWARDS || direction == FORWARDSE || direction ==BACKWARDS || direction == BACKWARDSE)
         {
             difference = abs(rightEncoder.get_value()) - abs(leftEncoder.get_value());
         }
-        else 
+        else
         {
             difference = getSweepDifference(); //reduces call amount
         }
@@ -530,7 +593,7 @@ class Drive : public System
     void move();
     int getCurrentDistance()
     {
-        if(direction == TURN) 
+        if(direction == TURN)
         {
             getDistances(turnStats, target);
             if(turnStats.Left <= turnStats.Right)
@@ -550,6 +613,10 @@ class Drive : public System
             case(UPLEFTSWEEP):
             case(DOWNLEFTSWEEP):
             case(DOWNRIGHTSWEEP):
+            case(UPRIGHTSWEEPE):
+            case(UPLEFTSWEEPE):
+            case(DOWNLEFTSWEEPE):
+            case(DOWNRIGHTSWEEPE):
                 return getOutsideEncoder();
             default:
                 return abs(leftEncoder.get_value()); //////////////////abs
@@ -579,9 +646,11 @@ void Drive::setMember(int &number, AutonFlags &currentFlag, int value)
             case(TURN):
             case(FORWARDS):
             case(BACKWARDS):
+            case(FORWARDSE):
+            case(BACKWARDSE):
                 switch(number) //use same straight drive for turns and straight drive
                 {
-                    case(1): 
+                    case(1):
                         direction = currentFlag;
                         target = value;
                         number++;
@@ -603,6 +672,10 @@ void Drive::setMember(int &number, AutonFlags &currentFlag, int value)
             case(UPLEFTSWEEP):
             case(DOWNLEFTSWEEP):
             case(DOWNRIGHTSWEEP):
+            case(UPRIGHTSWEEPE):
+            case(UPLEFTSWEEPE):
+            case(DOWNLEFTSWEEPE):
+            case(DOWNRIGHTSWEEPE):
                 switch(number)
                 {
                     case(1):
@@ -611,8 +684,19 @@ void Drive::setMember(int &number, AutonFlags &currentFlag, int value)
                         number++;
                         break;
                     case(2):
-                        number = 0; //radius
+                        number++; //radius
                         outerInnerRatio = (value - wheelDistance) / value;
+                        break;
+                    case(3):
+                        if(value == NOSTRAIGHT)
+                        {
+                            correctTo = NOSTRAIGHT;
+                        }
+                        else
+                        {
+                            correctTo = WHEELCORRECTION;
+                        }
+                        number = 0;
                         break;
                 }
                 break;
@@ -646,23 +730,30 @@ class Tilter : public System  //very quick acceleration
         return (int)abs(tilter.get_position());
     }
 
-    bool checkIfDone(int breakVal = tilterObj->target)
+    bool checkIfDone(int breakVal)
     {
-        if(underTarget == true)
+        if(triggerE == NONETE)
         {
-            if(getPosition() > breakVal)
+            if(underTarget == true)
             {
-                return true;
+                if(getPosition() > breakVal)
+                {
+                    return true;
+                }
+                return false;
             }
-            return false;
+            else
+            {
+                if(getPosition() < breakVal)
+                {
+                    return true;
+                }
+                return false;
+            }
         }
-        else
+        else 
         {
-            if(getPosition() < breakVal)
-            {
-                return true;
-            }
-            return false;
+            return triggerCheckE(breakVal);
         }
     }
 
@@ -691,11 +782,20 @@ class Tilter : public System  //very quick acceleration
                 case(POSITION):
                     switch(number) //use same straight drive for turns and straight drive
                     {
-                        case(1): 
+                        case(1):
                             target = value;
                             number++;
                             break;
                         case(2):
+                            speed = value;
+                            number = 0;
+                            break;
+                    }
+                    break;
+                case(SPEED):
+                    switch(number) //use same straight drive for turns and straight drive
+                    {
+                        case(1):
                             speed = value;
                             number = 0;
                             break;
@@ -707,18 +807,26 @@ class Tilter : public System  //very quick acceleration
 
     void move()
     {
-        if(checkIfDone() == false)
+        int breakVal = (triggerE == NONETE) ? target : triggerBreakE;
+        if(checkIfDone(breakVal) == false)
         {
-            if(getPosition() < target)
+            if(triggerE != NONETE)
             {
                 tilter.move(speed);
             }
-            else
+            else 
             {
-                tilter.move(-speed);
+                if(getPosition() < target)
+                {
+                    tilter.move(speed);
+                }
+                else
+                {
+                    tilter.move(-speed);
+                }
             }
         }
-        else 
+        else
         {
             tilter.move(0);
             updateEndingState();
@@ -747,9 +855,9 @@ class Intake : public System  //very quick acceleration
             }
         }
 
-    bool checkIfDone(int breakVal = intakeObj->target)
+    bool checkIfDone(int breakVal)
     {
-        return true;
+        return triggerCheckE(breakVal);
     }
 
     void resetObj()
@@ -790,7 +898,17 @@ class Intake : public System  //very quick acceleration
             speed *= -1;
         }
         motorGroupMove(speed, intakeM);
-        updateEndingState();
+        if(triggerE != NONETE)
+        {
+            if(checkIfDone(triggerBreakE) == true)
+            {
+                updateEndingState();
+            }
+        }
+        else 
+        {
+            updateEndingState();
+        }
     }
 };
 
@@ -798,31 +916,41 @@ void Drive::move()
 {
     float leftCorrection = 1; //reset every call
     float rightCorrection = 1;
-    if(checkIfDone() == false)
+    //put here or add
+    int breakVal = (triggerE == NONETE) ? target : triggerBreakE;
+    if(checkIfDone(breakVal) == false)
     {
         if(direction != TURN)
         {
-            switch(speedControl) //pid or nah
+            if(speedControl == NOPID)
             {
-                case(NOPID):
-                    speed = pid.maxOutput;
-                    break; //reset integral at 0
-                default:
-                    speed = pid.output(getDriveEncoder(), target);
-                    break;
+                speed = pid.maxOutput;
             }
-            
+            else if(triggerE != NONETE)
+            {
+                speed = target;
+            }
+            else 
+            {
+                speed = pid.output(getDriveEncoder(), target);
+            }
+
             switch(direction) //drive straight
             {
-                case(UPLEFTSWEEP): 
+                case(UPLEFTSWEEP):
                 case(UPRIGHTSWEEP):
                 case(DOWNLEFTSWEEP):
                 case(DOWNRIGHTSWEEP):
-                    wheelCorrections(leftCorrection, rightCorrection);
+                case(UPLEFTSWEEPE):
+                case(UPRIGHTSWEEPE):
+                case(DOWNLEFTSWEEPE):
+                case(DOWNRIGHTSWEEPE):
                     switch(direction) //sweep turn stuffz
                     {
                         case(UPLEFTSWEEP):
-                        case(DOWNLEFTSWEEP):
+                        case(DOWNLEFTSWEEP): //add here
+                        case(UPLEFTSWEEPE):
+                        case(DOWNLEFTSWEEPE):
                             leftCorrection *= outerInnerRatio;
                             break;
                         default:
@@ -830,12 +958,15 @@ void Drive::move()
                             break;
                     }
                     break;
-                default:
-                    if(correctTo != NOSTRAIGHT)
-                    {
-                        gyroCorrections(leftCorrection, rightCorrection);
-                    }
-                    break;
+            }
+            
+            if(correctTo == WHEELCORRECTION)
+            {
+                wheelCorrections(leftCorrection, rightCorrection); //break into two, trigger system, other other
+            }
+            if(correctTo != NOSTRAIGHT)
+            {
+                gyroCorrections(leftCorrection, rightCorrection);
             }
 
             switch(direction)
@@ -843,6 +974,9 @@ void Drive::move()
                 case(DOWNLEFTSWEEP):
                 case(DOWNRIGHTSWEEP):
                 case(BACKWARDS):
+                case(DOWNLEFTSWEEPE):
+                case(DOWNRIGHTSWEEPE):
+                case(BACKWARDSE):
                     leftCorrection *= -1;
                     rightCorrection *= -1;
                     break;
@@ -851,7 +985,7 @@ void Drive::move()
             driveMotorsSpeed(speed*rightCorrection, rightDrive);
             driveMotorsSpeed(speed*leftCorrection, leftDrive);
         }
-        else 
+        else
         {
             target = fixTarget(target); //so you can put in negative values
             GyroDistances Dist;
@@ -862,7 +996,7 @@ void Drive::move()
                 rightCorrection *= -1;
                 speed = pid.output(-Dist.Right, 0);
             }
-            else 
+            else
             {
                 leftCorrection *= -1;
                 speed = pid.output(-Dist.Left, 0);
@@ -876,8 +1010,9 @@ void Drive::move()
             driveMotorsSpeed(speed*rightCorrection,rightDrive);
         }
     }
-    else 
+    else
     {
+        speed = pid.maxOutput;
         driveMotorsSpeed(0,rightDrive);
         driveMotorsSpeed(0,leftDrive);
         updateEndingState();
@@ -992,6 +1127,16 @@ void smallRed()
 {
     gyro.reset();
     tilter.tare_position();
+all(
+    DRIVE,UPLEFTSWEEP,10000,300,NOSTRAIGHT,MMREGPID,40,127,
+    DRIVE,DOWNRIGHTSWEEP,10000,300,NOSTRAIGHT,MMREGPID,40,127,
+    DRIVE,DOWNLEFTSWEEP,10000,300,NOSTRAIGHT,MMREGPID,40,127,
+    DRIVE,UPRIGHTSWEEP,10000,300,NOSTRAIGHT,MMREGPID,40,127
+    );
+
+    /*
+    gyro.reset();
+    tilter.tare_position();
 all(DRIVE,FORWARDS,1300,NOSTRAIGHT,NOPID,60,
     DRIVE,FORWARDS,450,NOSTRAIGHT,NOPID,60,TIMET,600,
     DRIVE,FORWARDS,450,NOSTRAIGHT,NOPID,60,TIMET,600,
@@ -1010,13 +1155,14 @@ all(DRIVE,FORWARDS,1300,NOSTRAIGHT,NOPID,60,
     motorGroupMove(-100,intakeM);
     pros::delay(550);
     motorGroupMove(0,intakeM);
-    all(TILTER,POSITION,7100,100); 
+    all(TILTER,POSITION,7100,100);
     pros::delay(2000);
     driveMotorsSpeed(-50,leftDrive);
     driveMotorsSpeed(-50,rightDrive);
     pros::delay(1500);
     driveMotorsSpeed(0,leftDrive);
     driveMotorsSpeed(0,rightDrive);
+    */
 }
 
 void smallBlue()
@@ -1032,7 +1178,6 @@ all(DRIVE,FORWARDS,1300,NOSTRAIGHT,NOPID,60,
     DRIVE,TURN,2390,NOSTRAIGHT,TURNPID,
     INTAKE,OUT,127,
     INTAKE,IN,127,DRIVET,1,230);
-
     driveMotorsSpeed(110,leftDrive);
     driveMotorsSpeed(110,rightDrive);
     pros::delay(520);
@@ -1042,7 +1187,7 @@ all(DRIVE,FORWARDS,1300,NOSTRAIGHT,NOPID,60,
     motorGroupMove(-100,intakeM);
     pros::delay(550);               ////////////////////blue small
     motorGroupMove(0,intakeM);
-    all(TILTER,POSITION,7100,100); 
+    all(TILTER,POSITION,7100,100);
     pros::delay(2000);
     driveMotorsSpeed(-50,leftDrive);
     driveMotorsSpeed(-50,rightDrive);
@@ -1073,7 +1218,7 @@ void thiccRed()
     motorGroupMove(-100,intakeM);
     pros::delay(550);               //red big
     motorGroupMove(0,intakeM);
-    all(TILTER,POSITION,7100,100); 
+    all(TILTER,POSITION,7100,100);
     pros::delay(2000);
     driveMotorsSpeed(-50,leftDrive);
     driveMotorsSpeed(-50,rightDrive);
@@ -1089,6 +1234,7 @@ void thiccBlue()
 
 void autonomous()
 {
+    smallRed();
     /*
     switch(count)
     {
@@ -1110,4 +1256,3 @@ void autonomous()
 /*
 
 */
-
