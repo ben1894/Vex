@@ -661,7 +661,7 @@ void Drive::setMember(int &number, AutonFlags &currentFlag, int value)
                     case(2):
                         if(value == CURRENTVAL)
                         {
-                            correctTo = fixTarget(gyro.get_value());
+                            correctTo = actualGyroPosition();
                         }
                         else
                         {
@@ -1067,9 +1067,16 @@ void addCommands(Ts... input)
                 break;
             case(EXECUTINGINSTRUCTIONS):
                 drive->move();
-                pros::lcd::print(2,"%d", drive->speed);
-                pros::lcd::print(3,"%d", drive->pid.maxOutput);
-                pros::lcd::print(4,"%f", gyro.get_value());
+                drive->target = fixTarget(drive->target); //so you can put in negative values
+                GyroDistances Dist;
+                getDistances(Dist, drive->target);
+                pros::lcd::print(1,"%f", actualGyroPgyro.get_value());
+                pros::lcd::print(2,"%d", actualGyroPosition());
+                pros::lcd::print(3,"%d", Dist.Left);
+                pros::lcd::print(4,"%d", Dist.Right);
+                //pros::lcd::print(2,"%d", drive->speed);
+                //pros::lcd::print(3,"%d", drive->pid.maxOutput);
+                //pros::lcd::print(4,"%f", gyro.get_value());
                 break;
             case(END):
                 driveMotorsSpeed(0,rightDrive);
