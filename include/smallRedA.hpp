@@ -36,12 +36,12 @@ addCommands(
     INTAKE,IN,127
     );
 addCommands(
-    INTAKE,OUT,100,TIMETE,550,
-    TILTER,POSITION,7100,100,TIMET,500
+    TILTER,POSITION,7100,100
     );
 addCommands(
+    INTAKE,OUT,80,
     DRIVE,BACKWARDS,500,NOSTRAIGHT,TIMET,500
-    );
+);
 }
 
 /* //values with free rolling encoders
