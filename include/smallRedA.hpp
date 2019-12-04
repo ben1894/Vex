@@ -2,6 +2,19 @@
 #include "main.h"
 #include "forwardDeclairations.hpp"
 
+//here is basically everything you may need to know... i haven't documented everything yet...
+/*
+DRIVE,DIRECTION,distance,driveStraight{GyroVal,NOSTRAIGHT}
+INTAKE,IN/OUT,speed
+TILTER,POSITION,speed
+trigger{INTAKET,TILTERT,DRIVET},numberCallToReference,valueToStart
+trigger{TIMET},timeToWait
+endingTrigger{TIMETE},timeToMove
+endingTrigger{DRIVETE,INTAKETE,TILTERTE},numberCallToReference,valueToEnd
+MMPID,min,max
+NOPID,speed
+*/
+//all the commands go in order of call
 void smallRed()
 {
     gyro.reset();
@@ -15,9 +28,21 @@ addCommands(
     DRIVE,FORWARDS,1200,0,MMREGPID,60,127,
     DRIVE,FORWARDS,1300,0,NOPID,60,
     DRIVE,TURN,2000,NOSTRAIGHT,TURNPID,
-    DRIVE,FORWARDS,3500,2000
+    DRIVE,FORWARDS,3500,2000,
+    INTAKE,OUT,127,TIMETE,500,
+    INTAKE,IN,127
     );
+addCommands(
+    INTAKE,OUT,100,TIMETE,550,
+    TILTER,POSITION,7100,100,TIMET,500
+    );
+addCommands(
+    DRIVE,BACKWARDS,500,NOSTRAIGHT,TIMET,500
+    );
+}
 
+
+    //DRIVETE,3,1300
     /*
         DRIVE,UPLEFTSWEEP,10000,300,NOSTRAIGHT,MMREGPID,40,127,
     DRIVE,DOWNRIGHTSWEEP,10000,300,NOSTRAIGHT,MMREGPID,40,127,
@@ -51,4 +76,3 @@ addCommands(DRIVE,FORWARDS,1300,NOSTRAIGHT,NOPID,60,
     driveMotorsSpeed(0,leftDrive);
     driveMotorsSpeed(0,rightDrive);
     */
-}

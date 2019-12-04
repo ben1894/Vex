@@ -2,7 +2,7 @@
 #include "forwardDeclairations.hpp"
 #include "pidPacks.hpp"
 
-bool autonTest = false;
+bool autonTest = true;
 const bool voltage = true;
 const bool gyroTurns = true;
 const bool gyroUpsidedown = false;
@@ -907,7 +907,9 @@ class Intake : public System  //very quick acceleration
         {
             if(checkIfDone(triggerBreakE) == true)
             {
-                updateEndingState();
+                motorGroupMove(0, intakeM); //only goes to zero after an ending trigger, this allows for the setting of the intake
+                updateEndingState();        //without a specific time or place to stop since it will most likely be going throught the 
+                                            //entire time just about
             }
         }
         else 
