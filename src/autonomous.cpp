@@ -461,8 +461,6 @@ class Drive : public System
         : System((int)idVal)
         {
             pid = {regDriveP,regDriveI,regDriveD,regDriveMin,regDriveMax};
-            leftEncoder.reset(); ///////////
-	        rightEncoder.reset();
             clearEncoders();
             triggerTimer.clear();
             if(driveObj == nullptr)

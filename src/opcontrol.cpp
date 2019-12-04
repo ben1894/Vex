@@ -71,9 +71,9 @@ void opcontrol() //0.0078740157480315 = quadradic value
 			tilter.move(0);
 		}
 		
-		pros::lcd::print(3,"%f", rightDrive[1].get_position());
-		pros::lcd::print(4,"%f", gyro.get_value());
-		pros::lcd::print(2,"%f", tilter.get_position());
+		pros::lcd::print(3,"%f", leftEncoder.get_value());
+		//pros::lcd::print(4,"%f", gyro.get_value());
+		pros::lcd::print(2,"%d", leftEncoder.get_value());
 
 		if(cVal(DIGITAL_X))
 		{
