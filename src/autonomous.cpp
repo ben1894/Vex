@@ -683,8 +683,19 @@ void Drive::setMember(int &number, AutonFlags &currentFlag, int value)
                         number++;
                         break;
                     case(2):
-                        number = 0; //radius
+                        number++; //radius
                         outerInnerRatio = (value - wheelDistance) / value;
+                        break;
+                    case(3):
+                        if(value == NOSTRAIGHT)
+                        {
+                            correctTo = NOSTRAIGHT;
+                        }
+                        else
+                        {
+                            correctTo = WHEELCORRECTION;
+                        }
+                        number = 0;
                         break;
                 }
                 break;
@@ -1116,11 +1127,10 @@ void smallRed()
     gyro.reset();
     tilter.tare_position();
 all(
-    DRIVE,FORWARDSE,100,1,TIMETE,2000,
-    DRIVE,FORWARDSE,100,1,TIMETE,2000,
-    DRIVE,FORWARDSE,100,1,TIMETE,2000,
-    DRIVE,FORWARDSE,100,NOSTRAIGHT,TIMETE,2000,
-    TILTER,SPEED,100,DRIVET,3,200,DRIVETE,3,1300
+    DRIVE,UPLEFTSWEEP,10000,300,NOSTRAIGHT,MMREGPID,40,127,
+    DRIVE,DOWNRIGHTSWEEP,10000,300,NOSTRAIGHT,MMREGPID,40,127,
+    DRIVE,DOWNLEFTSWEEP,10000,300,NOSTRAIGHT,MMREGPID,40,127,
+    DRIVE,UPRIGHTSWEEP,10000,300,NOSTRAIGHT,MMREGPID,40,127
     );
 
     /*
