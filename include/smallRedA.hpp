@@ -6,7 +6,7 @@
 /*
 DRIVE,DIRECTION,distance,driveStraight{GyroVal,NOSTRAIGHT}
 INTAKE,IN/OUT,speed
-TILTER,POSITION,speed
+TILTER,POSITION,position,speed
 trigger{INTAKET,TILTERT,DRIVET},numberCallToReference,valueToStart
 trigger{TIMET},timeToWait
 endingTrigger{TIMETE},timeToMove
@@ -15,6 +15,9 @@ MMPID,min,max
 NOPID,speed
 */
 //all the commands go in order of call
+//to add a delay before the start of a command add this TIMET,100, for a 100 millisecond delay
+//also make sure to go save all and then build all before you upload
+//Finally, only make commits after you've made a lot of changes and try to label the appropriately :P
 void smallRed()
 {
     gyro.reset();
