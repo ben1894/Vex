@@ -1006,10 +1006,10 @@ void Drive::move()
                 leftCorrection *= -1;
                 speed = pid.output(-Dist.Left, 0);
             }
-            /*if(correctTo == WHEELCORRECTION)
+            if(correctTo == WHEELCORRECTION)
             {
                 wheelCorrections(leftCorrection, rightCorrection);
-            }*/ //removed this
+            }
 
             driveMotorsSpeed((float)speed*leftCorrection,leftDrive);   //to float casting
             driveMotorsSpeed((float)speed*rightCorrection,rightDrive);
