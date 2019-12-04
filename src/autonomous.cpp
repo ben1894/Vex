@@ -1006,13 +1006,13 @@ void Drive::move()
                 leftCorrection *= -1;
                 speed = pid.output(-Dist.Left, 0);
             }
-            if(correctTo == WHEELCORRECTION)
+            /*if(correctTo == WHEELCORRECTION)
             {
                 wheelCorrections(leftCorrection, rightCorrection);
-            }
+            }*/ //removed this
 
-            driveMotorsSpeed(speed*leftCorrection,leftDrive);
-            driveMotorsSpeed(speed*rightCorrection,rightDrive);
+            driveMotorsSpeed((float)speed*leftCorrection,leftDrive);   //to float casting
+            driveMotorsSpeed((float)speed*rightCorrection,rightDrive);
         }
     }
     else
@@ -1070,7 +1070,7 @@ void addCommands(Ts... input)
                 drive->target = fixTarget(drive->target); //so you can put in negative values
                 GyroDistances Dist;
                 getDistances(Dist, drive->target);
-                pros::lcd::print(1,"%f", actualGyroPgyro.get_value());
+                pros::lcd::print(1,"%f", gyro.get_value());
                 pros::lcd::print(2,"%d", actualGyroPosition());
                 pros::lcd::print(3,"%d", Dist.Left);
                 pros::lcd::print(4,"%d", Dist.Right);
