@@ -157,6 +157,6 @@ extern int cVal(pros::controller_digital_e_t button);
 extern int cVal(pros::controller_analog_e_t button);
 extern int actualGyroPosition();
 extern int fixTarget(int oldTarget);
-template <typename Ts> void all(Ts);
+template <typename Ts> void addCommands(Ts);
 
 #include "templateMotorFunctions.hpp"

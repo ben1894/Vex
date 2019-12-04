@@ -261,6 +261,7 @@ public:
             {
                 case(DRIVET): //(int = target) or otherwise specified by ther break when testing for trigger
                 case(TILTERT): //cant have a trigger based off the intake... yet (maybe idk I don't think there will be a use)
+                case(INTAKET):
                     switch(number)
                     {
                         case(1):       //its never going to be 0 because it only goes in this loops if its not 0;
@@ -271,6 +272,10 @@ public:
                             else if(currentFlag == TILTERT)
                             {
                                 triggerSystem = reinterpret_cast<System *>(tilterObj);
+                            }
+                            else if(currentFlag == INTAKET)
+                            {
+                                triggerSystem = reinterpret_cast<System *>(intakeObj);
                             }
                             trigger = currentFlag;
                             triggerNumber = value; //distance
@@ -1020,7 +1025,7 @@ void Drive::move()
 }
 
 template <typename... Ts>
-void all(Ts... input)
+void addCommands(Ts... input)
 {
     std::vector<int> parameters = {(int)input...,NULLOPTION};
 
@@ -1130,7 +1135,7 @@ void smallBlue()
 {
     gyro.reset();
     tilter.tare_position();
-all(DRIVE,FORWARDS,1300,NOSTRAIGHT,NOPID,60,
+addCommands(DRIVE,FORWARDS,1300,NOSTRAIGHT,NOPID,60,
     DRIVE,FORWARDS,450,NOSTRAIGHT,NOPID,60,TIMET,600,
     DRIVE,FORWARDS,450,NOSTRAIGHT,NOPID,60,TIMET,600,
     DRIVE,FORWARDS,450,NOSTRAIGHT,NOPID,60,TIMET,600,
@@ -1148,7 +1153,7 @@ all(DRIVE,FORWARDS,1300,NOSTRAIGHT,NOPID,60,
     motorGroupMove(-100,intakeM);
     pros::delay(550);               ////////////////////blue small
     motorGroupMove(0,intakeM);
-    all(TILTER,POSITION,7100,100);
+    addCommands(TILTER,POSITION,7100,100);
     pros::delay(2000);
     driveMotorsSpeed(-50,leftDrive);
     driveMotorsSpeed(-50,rightDrive);
@@ -1161,7 +1166,7 @@ void thiccRed()
 {
     gyro.reset();
     tilter.tare_position();
-    all(
+    addCommands(
     DRIVE,FORWARDS,400,NOSTRAIGHT,NOPID,60,TIMET,400,
     DRIVE,FORWARDS,2600,NOSTRAIGHT,NOPID,60,TIMET,500,
     DRIVE,TURN,2200,NOSTRAIGHT,TURNPID,
@@ -1179,7 +1184,7 @@ void thiccRed()
     motorGroupMove(-100,intakeM);
     pros::delay(550);               //red big
     motorGroupMove(0,intakeM);
-    all(TILTER,POSITION,7100,100);
+    addCommands(TILTER,POSITION,7100,100);
     pros::delay(2000);
     driveMotorsSpeed(-50,leftDrive);
     driveMotorsSpeed(-50,rightDrive);

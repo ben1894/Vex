@@ -6,7 +6,7 @@ void smallRed()
 {
     gyro.reset();
     tilter.tare_position();
-all( //ignore error, it compiles
+addCommands(
     DRIVE,FORWARDS,1500,0,MMREGPID,60,127,
     DRIVE,FORWARDS,1000,0,NOPID,60,
     DRIVE,TURN,3000,NOSTRAIGHT,TURNPID,
@@ -14,7 +14,8 @@ all( //ignore error, it compiles
     DRIVE,TURN,0,NOSTRAIGHT,TURNPID,
     DRIVE,FORWARDS,1200,0,MMREGPID,60,127,
     DRIVE,FORWARDS,1300,0,NOPID,60,
-    DRIVE,TURN,1400,NOSTRAIGHT,TURNPID
+    DRIVE,TURN,2000,NOSTRAIGHT,TURNPID,
+    DRIVE,FORWARDS,3500,2000
     );
 
     /*
@@ -24,7 +25,7 @@ all( //ignore error, it compiles
     DRIVE,UPRIGHTSWEEP,10000,300,NOSTRAIGHT,MMREGPID,40,127
     gyro.reset();
     tilter.tare_position();
-all(DRIVE,FORWARDS,1300,NOSTRAIGHT,NOPID,60,
+addCommands(DRIVE,FORWARDS,1300,NOSTRAIGHT,NOPID,60,
     DRIVE,FORWARDS,450,NOSTRAIGHT,NOPID,60,TIMET,600,
     DRIVE,FORWARDS,450,NOSTRAIGHT,NOPID,60,TIMET,600,
     DRIVE,FORWARDS,450,NOSTRAIGHT,NOPID,60,TIMET,600,
@@ -42,7 +43,7 @@ all(DRIVE,FORWARDS,1300,NOSTRAIGHT,NOPID,60,
     motorGroupMove(-100,intakeM);
     pros::delay(550);
     motorGroupMove(0,intakeM);
-    all(TILTER,POSITION,7100,100);
+    addCommands(TILTER,POSITION,7100,100);
     pros::delay(2000);
     driveMotorsSpeed(-50,leftDrive);
     driveMotorsSpeed(-50,rightDrive);
