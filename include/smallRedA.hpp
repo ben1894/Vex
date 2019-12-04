@@ -20,6 +20,7 @@ NOPID,speed
 //Finally, only make commits after you've made a lot of changes and try to label the appropriately :P
 void smallRed()
 {
+    /*
     gyro.reset();
     tilter.tare_position();
 addCommands(
@@ -27,7 +28,7 @@ addCommands(
     DRIVE,FORWARDS,1000,0,NOPID,60,
     DRIVE,TURN,3000,NOSTRAIGHT,TURNPID,
     DRIVE,BACKWARDS,3000,3000,
-    DRIVE,TURN,1,NOSTRAIGHT,TURNPID,
+    DRIVE,TURN,10,NOSTRAIGHT,TURNPID,
     DRIVE,FORWARDS,1200,0,MMREGPID,60,127,
     DRIVE,FORWARDS,1300,0,NOPID,60,
     DRIVE,TURN,2000,NOSTRAIGHT,TURNPID,
@@ -41,6 +42,19 @@ addCommands(
     );
 addCommands(
     DRIVE,BACKWARDS,500,NOSTRAIGHT,TIMET,500
+    );
+    */
+    gyro.reset();
+    tilter.tare_position();
+addCommands(
+    DRIVE,TURN,3000,NOSTRAIGHT,TURNPID
+    );
+addCommands(
+    DRIVE,TURN,10,NOSTRAIGHT,TURNPID
+    );
+addCommands(
+    DRIVE,TURN,3000,NOSTRAIGHT,TURNPID,
+    DRIVE,TURN,10,NOSTRAIGHT,TURNPID
     );
 }
 
