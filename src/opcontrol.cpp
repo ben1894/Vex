@@ -60,17 +60,17 @@ void opcontrol() //0.0078740157480315 = quadradic value
 
 		if(cVal(DIGITAL_L1))
 		{
-			tilter.move(80);
+			tilter.move(120);
 		}
 		else if(cVal(DIGITAL_L2))
 		{
-			tilter.move(-120);
+			tilter.move(-127);
 		}
 		else
 		{
 			tilter.move(0);
 		}
-		
+		pros::lcd::print(1,"%d",count);
 		pros::lcd::print(3,"%f", leftEncoder.get_value());
 		pros::lcd::print(4,"%f", gyro.get_value());
 		pros::lcd::print(2,"%d", leftEncoder.get_value());

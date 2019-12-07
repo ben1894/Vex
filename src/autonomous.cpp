@@ -475,10 +475,12 @@ class Drive : public System
     private:
     bool stopAcceleration = false;
     bool stopDeacceleration = false;
+    bool acceleration = false;
     int correctTo = -1;
     int offSet; //used for sweep Turns
     GyroDistances turnStats;
     AutonFlags direction;
+    Timer accelerationTimer;
 
     public:
     int speed;
@@ -489,6 +491,7 @@ class Drive : public System
             pid = {regDriveP,regDriveI,regDriveD,regDriveMin,regDriveMax};
             clearEncoders();
             triggerTimer.clear();
+            accelerationTimer.clear();
             if(driveObj == nullptr)
             {
                 driveObj = this;
@@ -521,7 +524,7 @@ class Drive : public System
 
             GyroDistances gyroVals;
             getDistances(gyroVals, breakVal);
-            if((gyroVals.Left < 6) || (gyroVals.Right < 6))
+            if((gyroVals.Left < 3) || (gyroVals.Right < 3))
             {
                 return true;
             }
@@ -552,6 +555,16 @@ class Drive : public System
                 leftCorrect *= ((float).98 - ((float)off.Left/(float)240)); //left decrease
             }
         }
+    }
+
+    int accelerationSpeed()
+    {
+        if(accelerationTimer.current() > 200)
+        {
+            acceleration = false;
+            return pid.maxOutput;
+        }
+        return (((pid.maxOutput-pid.minOutput)/200) * accelerationTimer.current()) + pid.minOutput;
     }
 
     int getOutsideEncoder()
@@ -665,6 +678,8 @@ void Drive::setMember(int &number, AutonFlags &currentFlag, int value)
             case(NOACCEL):
                 stopAcceleration = true;
                 break;
+            case(ACCEL):
+                acceleration = true;
             default:
                 number++; //Just sets currentFlag, will get next values when increasead next time
                 break;
@@ -966,7 +981,14 @@ void Drive::move()
             }
             else
             {
-                speed = pid.output(getDriveEncoder(), target);
+                if(acceleration == true)
+                {
+                    speed = accelerationSpeed();
+                }
+                else 
+                {
+                    speed = pid.output(getDriveEncoder(), target);
+                }
             }
 
             switch(direction) //drive straight
@@ -1197,14 +1219,14 @@ void autonomous()
             smallRed();
             break;
         case(SMALLBLUE):
-            break;
             smallBlue();
+            break;
         case(THICCRED):
-            break;
             bigRed();
-        case(THICCBLUE):
             break;
+        case(THICCBLUE):
             bigBlue();
+            break;
     }
 }
 

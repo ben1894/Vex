@@ -141,10 +141,12 @@ void competition_initialize()
 					pros::lcd::print(0, "Thicc Red");
 					pros::lcd::print(2,  "Center to Select");
 					mainController.print(0,0,"Thicc Red");
+					break;
 				case(THICCBLUE):
 					pros::lcd::print(0, "Thicc Blue");
 					pros::lcd::print(2,  "Center to Select");
 					mainController.print(0,0,"Thicc Blue");
+					break;
 				case(UNDER):
 					count = (Select)((int)OVER - 1);
 					onceAcception = true;

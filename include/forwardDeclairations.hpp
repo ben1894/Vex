@@ -78,6 +78,7 @@ enum AutonFlags
 	DOWNRIGHTSWEEPE,
 
 	NOACCEL,
+	ACCEL,
 	BLANK
 };
 
