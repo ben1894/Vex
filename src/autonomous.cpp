@@ -1260,7 +1260,8 @@ void thiccBlue()
 
 void autonomous()
 {
-    bigRed();
+    //bigRed();
+    bigBlue();
     /*
     switch(count)
     {
