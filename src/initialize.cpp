@@ -14,9 +14,7 @@ Select count = UNDEFINED;
 
 /*
  * Runs initialization code. This occurs as soon as the program is started.
- *
- * All other competition modes are blocked by initialize; it is recommended
- * to keep execution time for this mode under a few seconds.
+ * All other competition modes are blocked by initialize
  */
 pros::Controller mainController(pros::E_CONTROLLER_MASTER);
 pros::Controller secondaryController(pros::E_CONTROLLER_PARTNER);
@@ -56,9 +54,6 @@ void initialize()
 	tilter.set_reversed(false);
 	lift.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
 
-	leftEncoder.reset();
-	rightEncoder.reset();
-
 	if(autonTest == true)
 	{
 		competition_initialize();
@@ -93,6 +88,7 @@ void waitForRelease()
 
 void competition_initialize()
 {
+	pros::lcd::initialize();
 	Select oldCount = UNDER;
 	bool onceAcception = false;
 	int oldLCD = 0;
@@ -124,7 +120,6 @@ void competition_initialize()
 
 		if(count != oldCount)
 		{
-			pros::Task::delay(70);
 			switch(count)
 			{
 				case(UNDEFINED):
@@ -159,6 +154,7 @@ void competition_initialize()
 					count = UNDEFINED;
 					break;
 			}
+			pros::Task::delay(70);
 		}
 		
 		if(onceAcception == true)
@@ -184,5 +180,4 @@ void competition_initialize()
 		pros::delay(2);
 	}
 	pros::lcd::print(2,"Auton Selected");
-	return;
 }

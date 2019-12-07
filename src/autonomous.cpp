@@ -1,6 +1,5 @@
 ﻿/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * 
-* 
-*
+
  █████▄  █████  ███▄    █     ████▄  ██▀███   █████  █████   ██████
 ▒██  ▄██ █   ▀  ██ ▀█   █    ▒█  ▀█▌ ██   ██▒ █   ▀  █   ▀ ▒██    ▒ 
 ▒████▀  ▒███    ██  ▀█  █▒   ░█   █▌ ██ ░▄█  ▒███   ▒███   ░  ██▄   
@@ -22,28 +21,7 @@
   \ \ \L\ \/\  __//\ \/\ \   \ \ \_\ \ \ \//\  __//\  __//\__, `\
    \ \____/\ \____\ \_\ \_\   \ \____/\ \_\\ \____\ \____\/\____/
     \/___/  \/____/\/_/\/_/    \/___/  \/_/ \/____/\/____/\/___/ 
-
-* |
-* |
-* |
-* |
-*
-*
-
-/***             
- 
-
-                                             
-
-*
-                                                                                                                 
-
-                                                                             
-/
-* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *//*
-
 */
-
 
 #include "main.h"
 #include "forwardDeclairations.hpp"
@@ -890,9 +868,9 @@ class Tilter : public System  //very quick acceleration
 class Intake : public System  //very quick acceleration
 {
     private:
-    //speed to private
-    public:
     int speed;
+
+    public:
     AutonFlags direction;
     Intake(int id = INTAKE)
         : System((int)id)
@@ -1107,11 +1085,7 @@ void addCommands(Ts... input)
         {
             case(WAITINGFORINSTRUCTIONS):
                 drive->update(parameters);
-                //drive->pid.minOutput /= drive->outerInnerRatio; //has to be put here so it doesn't get overwritten by the pid initialization
-                //if(drive->speedControl == BLANK)
-                //{
-                //    drive->initializePid(REGPID); //if left default //MOVE NO NO NON O
-                //}
+                drive->pid.minOutput /= drive->outerInnerRatio; //has to be put here so it doesn't get overwritten by the pid initialization
                 break;
             case(WAITINGFORTRIGGER):
                 drive->updateTriggerState();
@@ -1120,16 +1094,6 @@ void addCommands(Ts... input)
                 break;
             case(EXECUTINGINSTRUCTIONS):
                 drive->move();
-                drive->target = fixTarget(drive->target); //so you can put in negative values
-                GyroDistances Dist;
-                getDistances(Dist, drive->target);
-                pros::lcd::print(1,"%f", gyro.get_value());
-                pros::lcd::print(2,"%d", actualGyroPosition());
-                pros::lcd::print(3,"%d", Dist.Left);
-                pros::lcd::print(4,"%d", Dist.Right);
-                //pros::lcd::print(2,"%d", drive->speed);
-                //pros::lcd::print(3,"%d", drive->pid.maxOutput);
-                //pros::lcd::print(4,"%f", gyro.get_value());
                 break;
             case(END):
                 driveMotorsSpeed(0,rightDrive);
@@ -1157,7 +1121,7 @@ void addCommands(Ts... input)
                 tilter->move();
                 break;
             case(END):
-                break; //adding retain position later
+                break;
         }
 
         switch(intake->state)
@@ -1172,7 +1136,7 @@ void addCommands(Ts... input)
                 intake->move();
                 break;
             case(END):
-                break; //adding retain position later
+                break;
         }
 
         pros::delay(2);
@@ -1186,8 +1150,6 @@ void addCommands(Ts... input)
     intakeObj = nullptr;
     tilterObj = nullptr;
 }
-
-//DRIVE, distance, correctTo(value,CURRENTVAL,NOSTRAIGHT,WHEELCORRECTION), {speedControl - REGPID(NOPID, MMPID)} //7280 max for tilter
 
 #include "bigAutons.hpp"
 
@@ -1211,7 +1173,7 @@ addCommands(DRIVE,FORWARDS,1300,NOSTRAIGHT,NOPID,60,
     driveMotorsSpeed(0,rightDrive);
     pros::delay(500);
     motorGroupMove(-100,intakeM);
-    pros::delay(550);               ////////////////////blue small
+    pros::delay(550);             
     motorGroupMove(0,intakeM);
     addCommands(TILTER,POSITION,7100,100);
     pros::delay(2000);
@@ -1222,6 +1184,34 @@ addCommands(DRIVE,FORWARDS,1300,NOSTRAIGHT,NOPID,60,
     driveMotorsSpeed(0,rightDrive);
 }
 
+void smallRed()
+{
+
+}
+
+void autonomous()
+{
+    switch(count)
+    {
+        case(SMALLRED):
+            smallRed();
+            break;
+        case(SMALLBLUE):
+            break;
+            smallBlue();
+        case(THICCRED):
+            break;
+            bigRed();
+        case(THICCBLUE):
+            break;
+            bigBlue();
+    }
+}
+
+//pros::lcd::print(2,"%d", drive->speed);
+//pros::lcd::print(3,"%d", drive->pid.maxOutput);
+//pros::lcd::print(4,"%f", gyro.get_value());
+/*
 void thiccRed()
 {
     gyro.reset();
@@ -1251,27 +1241,4 @@ void thiccRed()
     pros::delay(1500);
     driveMotorsSpeed(0,leftDrive);
     driveMotorsSpeed(0,rightDrive);
-}
-
-void thiccBlue()
-{
-
-}
-
-void autonomous()
-{
-    //bigRed();
-    bigBlue();
-    /*
-    switch(count)
-    {
-        case(SMALLRED):
-            smallRed();
-        case(SMALLBLUE):
-            smallBlue();
-        case(THICCRED):
-            thiccRed();
-        case(THICCBLUE):
-            thiccBlue();*/
-        //thiccRed();
-}
+}*/
