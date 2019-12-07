@@ -1189,7 +1189,7 @@ void addCommands(Ts... input)
 
 //DRIVE, distance, correctTo(value,CURRENTVAL,NOSTRAIGHT,WHEELCORRECTION), {speedControl - REGPID(NOPID, MMPID)} //7280 max for tilter
 
-#include "smallRedA.hpp"
+#include "bigAutons.hpp"
 
 void smallBlue()
 {
@@ -1260,7 +1260,7 @@ void thiccBlue()
 
 void autonomous()
 {
-    smallRed();
+    bigRed();
     /*
     switch(count)
     {
