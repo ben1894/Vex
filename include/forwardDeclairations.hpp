@@ -21,7 +21,7 @@ public:
 	}
 };
 
-//inside wheel Speed = 2pir
+//all uses documented in smallRedA.hpp
 enum AutonFlags
 {
 	WHEELCORRECTION = -3,
@@ -63,7 +63,8 @@ enum AutonFlags
 	BACKWARDS,
 	FORWARDS,
 	TURN,
-	ENCODERTURN,
+	ENCODERTURNLEFT,
+	ENCODERTURNRIGHT,
 	UPLEFTSWEEP,
 	DOWNLEFTSWEEP,
 	UPRIGHTSWEEP,
@@ -71,13 +72,10 @@ enum AutonFlags
 
 	BACKWARDSE,
 	FORWARDSE,
-	UPLEFTSWEEPE, //DIRECTION, SPEED, TRIGGER, #,REG,REG, 
+	UPLEFTSWEEPE, //Different setup for when it has an ending trigger
 	DOWNLEFTSWEEPE,
 	UPRIGHTSWEEPE,
 	DOWNRIGHTSWEEPE,
-	INTAKEE,
-	LIFTE,
-	TILTERE,
 
 	NOACCEL,
 	BLANK
@@ -137,6 +135,8 @@ extern Select count;
 extern pros::ADIEncoder leftEncoder;
 extern pros::ADIEncoder rightEncoder;
 extern pros::ADIGyro gyro;
+extern Timer autonTimer;
+
 
 struct GyroDistances
 {

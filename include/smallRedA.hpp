@@ -2,45 +2,74 @@
 #include "main.h"
 #include "forwardDeclairations.hpp"
 
-//here is basically everything you may need to know... i haven't documented everything yet...
+//All Auton Options
 /*
-DRIVE,DIRECTION,distance,driveStraight{GyroVal,NOSTRAIGHT}
-INTAKE,IN/OUT,speed
-TILTER,POSITION,position,speed
-trigger{INTAKET,TILTERT,DRIVET},numberCallToReference,valueToStart
-trigger{TIMET},timeToWait
-endingTrigger{TIMETE},timeToMove
-endingTrigger{DRIVETE,INTAKETE,TILTERTE},numberCallToReference,valueToEnd
-MMPID,min,max
-NOPID,speed
+Drive System Call
+    <DRIVE>,Direction(FORWARDS,BACKWARDS,TURN,UPLEFTSWEEP,UPRIGHTSWEEP,DOWNLEFTSWEEP,DOWNRIGHTSWEEP),Distance(0+),DriveStraight(0-3600,NOSTRAIGHT,WHEELCORRECT,CURRENTVAL)
+    *<DRIVE>,Direction(FORWARDSE,BACKWARDSE,UPLEFTSWEEPE,UPRIGHTSWEEPE,DOWNLEFTSWEEPE,DOWNRIGHTSWEEPE),Speed(0-127),DriveStraight(0-3600,NOSTRAIGHT,WHEELCORRECT,CURRENTVAL)
+    NOACCEL
+
+Intake System Call
+    <INTAKE>,direction(IN,OUT),Speed 
+
+Tilter System Call
+    <TILTER>,POSITION,position(0-7100)
+    *<TILTER>,SPEED,Speed(0-127)
+
+Starting Trigger
+    StartingTrigger(TIMET),TimeToWait(0milliseconds+)
+    StartingTrigger(DRIVET,INTAKET,TILTERTE),NumberCallOfOtherSystem(1+),ValueToStartAt(0+)
+
+Ending Trigger
+    EndingTrigger(TIMETE),TimeToWait(0milliseconds+)
+    EndingTrigger(DRIVETE,INTAKETE,TILTERTE),NumberCallOfOtherSystem(1+),ValueToGoTill(0+)
+
+Other Options
+    REGPID
+    TURNPID
+    TILTERPID
+    DRIVEPID
+    INTAKEPID
+    NOPID,speed(0-127)
+    MMPID,minumum(0-127),maximum(0-127)
+    CUSTOMPID,P,I,D,minimum,maximum
+
+*Needs an ending trigger
 */
-//all the commands go in order of call
-//to add a delay before the start of a command add this TIMET,100, for a 100 millisecond delay
-//also make sure to go save all and then build all before you upload
-//Finally, only make commits after you've made a lot of changes and try to label the appropriately :P
+
+//Other Notes
+/*
+All commands go in order of call
+*/
+
 void smallRed()
 {
+    autonTimer.clear();
     gyro.reset();
     tilter.tare_position();
 addCommands(
-    DRIVE,FORWARDS,900,0,MMREGPID,60,127,
-    DRIVE,FORWARDS,2100,0,NOPID,60,
-    DRIVE,TURN,3200,NOSTRAIGHT,TURNPID,
-    DRIVE,BACKWARDS,2800,NOSTRAIGHT,
-    DRIVE,TURN,1,NOSTRAIGHT,TURNPID,
-    DRIVE,FORWARDS,400,NOSTRAIGHT,MMREGPID,60,127,
-    DRIVE,FORWARDS,1500,NOSTRAIGHT,NOPID,60,
-    DRIVE,TURN,1500,NOSTRAIGHT,TURNPID,
-    DRIVE,FORWARDS,1300,NOSTRAIGHT,
-    INTAKE,OUT,127,TIMETE,500,
-    INTAKE,IN,127
+    DRIVE,FORWARDS,900,0,TIMET,450,MMREGPID,50,127,
+    DRIVE,FORWARDS,1900,0,NOPID,45,
+    DRIVE,TURN,3330,NOSTRAIGHT,TURNPID,
+    DRIVE,BACKWARDS,2700,NOSTRAIGHT,
+    DRIVE,TURN,3570,NOSTRAIGHT,TURNPID,
+    DRIVE,FORWARDS,550,3570,MMREGPID,60,127,
+    DRIVE,FORWARDS,2500,3570,NOPID,45,
+    DRIVE,TURN,1480,NOSTRAIGHT,TURNPID,
+    DRIVE,FORWARDS,2900,1480,
+    INTAKE,OUT,127,
+    INTAKE,IN,127,TIMET,400,
+    INTAKE,IN,0,DRIVET,9,0,
+    INTAKE,OUT,50,DRIVET,9,2100,
+    INTAKE,IN,0,TIMET,370
     );
 addCommands(
     TILTER,POSITION,7100,100
     );
 addCommands(
     INTAKE,OUT,80,
-    DRIVE,BACKWARDS,500,NOSTRAIGHT,TIMET,500
+    INTAKE,OUT,0,TIMET,300,
+    DRIVE,BACKWARDS,500,NOSTRAIGHT,INTAKET,3,200,NOPID,60
 );
 }
 

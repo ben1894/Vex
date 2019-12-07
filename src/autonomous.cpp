@@ -1,8 +1,56 @@
-﻿#include "main.h"
+﻿/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * 
+* 
+*
+ █████▄  █████  ███▄    █     ████▄  ██▀███   █████  █████   ██████
+▒██  ▄██ █   ▀  ██ ▀█   █    ▒█  ▀█▌ ██   ██▒ █   ▀  █   ▀ ▒██    ▒ 
+▒████▀  ▒███    ██  ▀█  █▒   ░█   █▌ ██ ░▄█  ▒███   ▒███   ░  ██▄   
+░██  ▀█▓▒█   ▄  ██▒  ▐▌██▒   ░█   ▄▌ ██▀▀█▄  ▒█   ▄ ▒█   ▄   ▒   ██▒
+░█████▀▒░█████▒▒██░   ▓██░   ░█████ ░██  ▒██ ░█████▒░█████▒▒██████▒▒
+▒░▒   ░ ░░ ▒░ ░░ ▒░   ▒ ▒     ▒▒   ▒ ░ ▒  ░▒ ░░░ ▒░ ░░░ ▒░ ░▒ ▒ ▒ ▒ ░
+ ░    ░  ░ ░  ░░ ░░   ░ ▒░    ░ ▒  ▒   ░▒ ░ ▒░ ░ ░  ░ ░ ░  ░░ ░▒  ░ ░
+ ░         ░      ░   ░ ░     ░ ░  ░   ░░   ░    ░      ░   ░  ░  ░  
+       ░   ░  ░         ░       ░       ░        ░  ░   ░  ░      ░  
+      ░                       ░                                      
+ *     ____  ____  __ _    ____  ____  ____  ____  ____ 
+ *    (  _ \(  __)(  ( \  (    \(  _ \(  __)(  __)/ ___)
+ *     ) _ ( ) _) /    /   ) D ( )   / ) _)  ) _) \___ \
+ *    (____/(____)\_)__)  (____/(__\_)(____)(____)(____/
+ ____                       ____                                 
+/\  _`\                    /\  _`\                               
+\ \ \L\ \     __    ___    \ \ \/\ \  _ __    __     __    ____  
+ \ \  _ <   /'__`\/' _ `\   \ \ \ \ \/\`'__\/'__`\ /'__`\ /',__\ 
+  \ \ \L\ \/\  __//\ \/\ \   \ \ \_\ \ \ \//\  __//\  __//\__, `\
+   \ \____/\ \____\ \_\ \_\   \ \____/\ \_\\ \____\ \____\/\____/
+    \/___/  \/____/\/_/\/_/    \/___/  \/_/ \/____/\/____/\/___/ 
+
+* |
+* |
+* |
+* |
+*
+*
+
+/***             
+ 
+
+                                             
+
+*
+                                                                                                                 
+
+                                                                             
+/
+* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *//*
+
+*/
+
+
+#include "main.h"
 #include "forwardDeclairations.hpp"
 #include "pidPacks.hpp"
 
-bool autonTest = true;
+bool autonTest = false;
+Timer autonTimer;
 const bool voltage = true;
 const bool gyroTurns = true;
 const bool gyroUpsidedown = false;
@@ -514,16 +562,16 @@ class Drive : public System
 
         if(off.Right < off.Left) //keep!!
         {
-            if(off.Right > 3)
+            if(off.Right > 4)
             {
-                rightCorrect *= ((float).98 - ((float)off.Right/(float)140));
+                rightCorrect *= ((float).98 - ((float)off.Right/(float)240));
             }
         }
         else
         {
-            if(off.Left > 3)
+            if(off.Left > 4)
             {
-                leftCorrect *= ((float).98 - ((float)off.Left/(float)140)); //left decrease
+                leftCorrect *= ((float).98 - ((float)off.Left/(float)240)); //left decrease
             }
         }
     }
@@ -842,9 +890,9 @@ class Tilter : public System  //very quick acceleration
 class Intake : public System  //very quick acceleration
 {
     private:
-    int speed;
-
+    //speed to private
     public:
+    int speed;
     AutonFlags direction;
     Intake(int id = INTAKE)
         : System((int)id)
@@ -903,7 +951,12 @@ class Intake : public System  //very quick acceleration
             speed *= -1;
         }
         motorGroupMove(speed, intakeM);
-        if(triggerE != NONETE)
+        
+        if(triggerE == NONETE) //timete
+        {
+            updateEndingState();
+        }
+        else
         {
             if(checkIfDone(triggerBreakE) == true)
             {
@@ -911,10 +964,6 @@ class Intake : public System  //very quick acceleration
                 updateEndingState();        //without a specific time or place to stop since it will most likely be going throught the
                                             //entire time just about
             }
-        }
-        else
-        {
-            updateEndingState();
         }
     }
 };
@@ -1052,7 +1101,7 @@ void addCommands(Ts... input)
     }
     //drive->pid.minOutput /= drive->outerInnerRatio;
 
-    while((tilter->state != END) || (drive->state != END) || (intake->state != END))
+    while(((tilter->state != END) || (drive->state != END) || (intake->state != END)) && (autonTimer.current() < 15000 )) 
     {
         switch(drive->state)
         {
@@ -1066,6 +1115,8 @@ void addCommands(Ts... input)
                 break;
             case(WAITINGFORTRIGGER):
                 drive->updateTriggerState();
+                driveMotorsSpeed(0,rightDrive);
+                driveMotorsSpeed(0,leftDrive);
                 break;
             case(EXECUTINGINSTRUCTIONS):
                 drive->move();
@@ -1131,7 +1182,7 @@ void addCommands(Ts... input)
     delete intake;
     delete tilter;
 
-    driveObj = nullptr;
+    driveObj = nullptr;  //while the actual object gets "deleted" the space in the memory might still hold the old data causing it to falsly read a valid address
     intakeObj = nullptr;
     tilterObj = nullptr;
 }

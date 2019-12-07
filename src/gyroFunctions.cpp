@@ -3,7 +3,7 @@
 
 int actualGyroPosition()
 {
-	int fixingGyro = gyro.get_value();
+	int fixingGyro = gyro.get_value(); //corrects for negative values
 
 	if(gyroUpsidedown == true)
 	{
