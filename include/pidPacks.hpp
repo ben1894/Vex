@@ -3,14 +3,14 @@
 #define regDriveP .24
 #define regDriveI 0
 #define regDriveD 0
-#define regDriveMin 30
+#define regDriveMin 35
 #define regDriveMax 127
 
-#define regTurnP .13
+#define regTurnP .16
 #define regTurnI 0
 #define regTurnD 0
-#define regTurnMin 30
-#define regTurnMax 90
+#define regTurnMin 38
+#define regTurnMax 98
 
 #define regIntakeP 0
 #define regIntakeI 0

@@ -506,7 +506,11 @@ class Drive : public System
     {
         leftEncoder.reset();
         rightEncoder.reset();
-        rightDrive[1].tare_position();
+        for(int motor = 0; motor < leftDrive.size; motor++)
+        {
+            leftDrive[motor].tare_position();
+            rightDrive[motor].tare_position();
+        }
     }
 
     bool checkIfDone(int breakVal)
@@ -559,12 +563,17 @@ class Drive : public System
 
     int accelerationSpeed()
     {
-        if(accelerationTimer.current() > 200)
+        if(accelerationTimer.current() > 150)
         {
             acceleration = false;
             return pid.maxOutput;
         }
-        return (((pid.maxOutput-pid.minOutput)/200) * accelerationTimer.current()) + pid.minOutput;
+        if(target < getDriveEncoder()*2)
+        {
+            acceleration = false;        
+        }
+        
+        return (((pid.maxOutput-pid.minOutput)/150) * accelerationTimer.current()) + pid.minOutput;
     }
 
     int getOutsideEncoder()
@@ -1080,42 +1089,42 @@ void addCommands(Ts... input)
 {
     std::vector<int> parameters = {(int)input...,NULLOPTION};
 
-    Drive *drive = new Drive;
-    Tilter *tilter = new Tilter;
-    Intake *intake = new Intake;
+    Drive drive{};
+    Tilter tilter{};
+    Intake intake{};
 
     for(int i = 0; i < parameters.size()-1; i++)
     {
-        drive->initialUpdate(i, parameters);
-        tilter->initialUpdate(i, parameters);
-        intake->initialUpdate(i, parameters);
+        drive.initialUpdate(i, parameters);
+        tilter.initialUpdate(i, parameters);
+        intake.initialUpdate(i, parameters);
     }
 
-    if(tilter->getPosition() > tilter->target)
+    if(tilter.getPosition() > tilter.target)
     {
-        tilter->underTarget = false;
+        tilter.underTarget = false;
     }
     else
     {
-        tilter->underTarget = true;
+        tilter.underTarget = true;
     }
-    //drive->pid.minOutput /= drive->outerInnerRatio;
+    //drive.pid.minOutput /= drive.outerInnerRatio;
 
-    while(((tilter->state != END) || (drive->state != END) || (intake->state != END)) && (autonTimer.current() < 15000 )) 
+    while(((tilter.state != END) || (drive.state != END) || (intake.state != END)) && (autonTimer.current() < 15000 )) 
     {
-        switch(drive->state)
+        switch(drive.state)
         {
             case(WAITINGFORINSTRUCTIONS):
-                drive->update(parameters);
-                drive->pid.minOutput /= drive->outerInnerRatio; //has to be put here so it doesn't get overwritten by the pid initialization
+                drive.update(parameters);
+                drive.pid.minOutput /= drive.outerInnerRatio; //has to be put here so it doesn't get overwritten by the pid initialization
                 break;
             case(WAITINGFORTRIGGER):
-                drive->updateTriggerState();
+                drive.updateTriggerState();
                 driveMotorsSpeed(0,rightDrive);
                 driveMotorsSpeed(0,leftDrive);
                 break;
             case(EXECUTINGINSTRUCTIONS):
-                drive->move();
+                drive.move();
                 break;
             case(END):
                 driveMotorsSpeed(0,rightDrive);
@@ -1123,39 +1132,39 @@ void addCommands(Ts... input)
                 break; //adding retain position later
         }
 
-        switch(tilter->state)
+        switch(tilter.state)
         {
             case(WAITINGFORINSTRUCTIONS):
-                tilter->update(parameters);
-                if(tilter->getPosition() > tilter->target)
+                tilter.update(parameters);
+                if(tilter.getPosition() > tilter.target)
                 {
-                    tilter->underTarget = false;
+                    tilter.underTarget = false;
                 }
                 else
                 {
-                    tilter->underTarget = true;
+                    tilter.underTarget = true;
                 }
                 break;
             case(WAITINGFORTRIGGER):
-                tilter->updateTriggerState();
+                tilter.updateTriggerState();
                 break;
             case(EXECUTINGINSTRUCTIONS):
-                tilter->move();
+                tilter.move();
                 break;
             case(END):
                 break;
         }
 
-        switch(intake->state)
+        switch(intake.state)
         {
             case(WAITINGFORINSTRUCTIONS):
-                intake->update(parameters);
+                intake.update(parameters);
                 break;
             case(WAITINGFORTRIGGER):
-                intake->updateTriggerState();
+                intake.updateTriggerState();
                 break;
             case(EXECUTINGINSTRUCTIONS):
-                intake->move();
+                intake.move();
                 break;
             case(END):
                 break;
@@ -1163,10 +1172,6 @@ void addCommands(Ts... input)
 
         pros::delay(2);
     }
-
-    delete drive;
-    delete intake;
-    delete tilter;
 
     driveObj = nullptr;  //while the actual object gets "deleted" the space in the memory might still hold the old data causing it to falsly read a valid address
     intakeObj = nullptr;
