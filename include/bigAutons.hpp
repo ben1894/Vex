@@ -16,13 +16,17 @@ Tilter System Call
     <TILTER>,POSITION,position(0-7100)
     *<TILTER>,SPEED,Speed(0-127)
 
+Lift System Call
+    <LIFT>,POSITION,position(0-7100)
+    *<LIFT>,SPEED,Speed(0-127)
+
 Starting Trigger
     StartingTrigger(TIMET),TimeToWait(0milliseconds+)
-    StartingTrigger(DRIVET,INTAKET,TILTERTE),NumberCallOfOtherSystem(1+),ValueToStartAt(0+)
+    StartingTrigger(DRIVET,INTAKET,TILTERTE,LIFTT),NumberCallOfOtherSystem(1+),ValueToStartAt(0+)
 
 Ending Trigger
     EndingTrigger(TIMETE),TimeToWait(0milliseconds+)
-    EndingTrigger(DRIVETE,INTAKETE,TILTERTE),NumberCallOfOtherSystem(1+),ValueToGoTill(0+)
+    EndingTrigger(DRIVETE,INTAKETE,TILTERTE,LIFTTE),NumberCallOfOtherSystem(1+),ValueToGoTill(0+)
 
 Other Options
     REGPID
@@ -30,6 +34,7 @@ Other Options
     TILTERPID
     DRIVEPID
     INTAKEPID
+    LIFTPID
     NOPID,speed(0-127)
     MMPID,minumum(0-127),maximum(0-127)
     CUSTOMPID,P,I,D,minimum,maximum
@@ -144,31 +149,3 @@ addCommands(
     DRIVE,TURN,10,NOSTRAIGHT,TURNPID
     );*/
     //DRIVETE,3,1300
-    /*
-    tilter.tare_position();
-addCommands(DRIVE,FORWARDS,1300,NOSTRAIGHT,NOPID,60,
-    DRIVE,FORWARDS,450,NOSTRAIGHT,NOPID,60,TIMET,600,
-    DRIVE,FORWARDS,450,NOSTRAIGHT,NOPID,60,TIMET,600,
-    DRIVE,FORWARDS,450,NOSTRAIGHT,NOPID,60,TIMET,600,
-    DRIVE,FORWARDS,580,NOSTRAIGHT,NOPID,60,TIMET,600,
-    DRIVE,BACKWARDS,1860,NOSTRAIGHT,TIMET,100,
-    DRIVE,TURN,1210,NOSTRAIGHT,TURNPID,
-    INTAKE,OUT,127,
-    INTAKE,IN,127,DRIVET,1,230);
-    driveMotorsSpeed(110,leftDrive);
-    driveMotorsSpeed(110,rightDrive);
-    pros::delay(520);
-    driveMotorsSpeed(0,leftDrive);   /////////////////////red small
-    driveMotorsSpeed(0,rightDrive);
-    pros::delay(500);
-    motorGroupMove(-100,intakeM);
-    pros::delay(550);
-    motorGroupMove(0,intakeM);
-    addCommands(TILTER,POSITION,7100,100);
-    pros::delay(2000);
-    driveMotorsSpeed(-50,leftDrive);
-    driveMotorsSpeed(-50,rightDrive);
-    pros::delay(1500);
-    driveMotorsSpeed(0,leftDrive);
-    driveMotorsSpeed(0,rightDrive);
-    */

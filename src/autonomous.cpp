@@ -1346,33 +1346,7 @@ void addCommands(Ts... input)
 
 void smallBlue()
 {
-    gyro.reset();
-    tilter.tare_position();
-addCommands(DRIVE,FORWARDS,1300,NOSTRAIGHT,NOPID,60,
-    DRIVE,FORWARDS,450,NOSTRAIGHT,NOPID,60,TIMET,600,
-    DRIVE,FORWARDS,450,NOSTRAIGHT,NOPID,60,TIMET,600,
-    DRIVE,FORWARDS,450,NOSTRAIGHT,NOPID,60,TIMET,600,
-    DRIVE,FORWARDS,580,NOSTRAIGHT,NOPID,60,TIMET,600,
-    DRIVE,BACKWARDS,1860,NOSTRAIGHT,TIMET,100,
-    DRIVE,TURN,2390,NOSTRAIGHT,TURNPID,
-    INTAKE,OUT,127,
-    INTAKE,IN,127,DRIVET,1,230);
-    driveMotorsSpeed(110,leftDrive);
-    driveMotorsSpeed(110,rightDrive);
-    pros::delay(520);
-    driveMotorsSpeed(0,leftDrive);
-    driveMotorsSpeed(0,rightDrive);
-    pros::delay(500);
-    motorGroupMove(-100,intakeM);
-    pros::delay(550);             
-    motorGroupMove(0,intakeM);
-    addCommands(TILTER,POSITION,7100,100);
-    pros::delay(2000);
-    driveMotorsSpeed(-50,leftDrive);
-    driveMotorsSpeed(-50,rightDrive);
-    pros::delay(1500);
-    driveMotorsSpeed(0,leftDrive);
-    driveMotorsSpeed(0,rightDrive);
+
 }
 
 void smallRed()
@@ -1402,34 +1376,3 @@ void autonomous()
 //pros::lcd::print(2,"%d", drive->speed);
 //pros::lcd::print(3,"%d", drive->pid.maxOutput);
 //pros::lcd::print(4,"%f", gyro.get_value());
-/*
-void thiccRed()
-{
-    gyro.reset();
-    tilter.tare_position();
-    addCommands(
-    DRIVE,FORWARDS,400,NOSTRAIGHT,NOPID,60,TIMET,400,
-    DRIVE,FORWARDS,2600,NOSTRAIGHT,NOPID,60,TIMET,500,
-    DRIVE,TURN,2200,NOSTRAIGHT,TURNPID,
-    DRIVE,FORWARDS,3000,NOSTRAIGHT,NOPID,60,
-    INTAKE,OUT,127,
-    INTAKE,IN,127,DRIVET,1,2
-    );
-
-    driveMotorsSpeed(110,leftDrive);
-    driveMotorsSpeed(110,rightDrive);
-    pros::delay(200);
-    driveMotorsSpeed(0,leftDrive);
-    driveMotorsSpeed(0,rightDrive);
-    pros::delay(500);
-    motorGroupMove(-100,intakeM);
-    pros::delay(550);               //red big
-    motorGroupMove(0,intakeM);
-    addCommands(TILTER,POSITION,7100,100);
-    pros::delay(2000);
-    driveMotorsSpeed(-50,leftDrive);
-    driveMotorsSpeed(-50,rightDrive);
-    pros::delay(1500);
-    driveMotorsSpeed(0,leftDrive);
-    driveMotorsSpeed(0,rightDrive);
-}*/
