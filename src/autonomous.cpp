@@ -529,6 +529,20 @@ class Drive : public System
         }
     }
 
+    void verifySpeedOutput(float &leftCorrect, float &rightCorrect)
+    {
+        if(abs(speed*rightCorrect) < pid.minOutput)
+        {
+            double constantToMinimum = pid.minOutput/abs(speed*rightCorrect);
+            rightCorrect *= constantToMinimum;
+        }
+        if(abs(speed*leftCorrect) < pid.minOutput)
+        {
+            double constantToMinimum = pid.minOutput/abs(speed*leftCorrect);
+            leftCorrect *= constantToMinimum;
+        }
+    }
+
     bool checkIfDone(int breakVal)
     {
         if(triggerE == NONETE)
@@ -1193,6 +1207,9 @@ void Drive::move()
                     break;
             }
 
+            //check to make sure the speed wont be under the movable rate
+            verifySpeedOutput(leftCorrection, rightCorrection);
+            
             driveMotorsSpeed(speed*rightCorrection, rightDrive);
             driveMotorsSpeed(speed*leftCorrection, leftDrive);
         }
