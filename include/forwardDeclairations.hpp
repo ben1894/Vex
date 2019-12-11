@@ -35,6 +35,7 @@ enum AutonFlags
 	DRIVEPID,
 	TILTERPID,
 	INTAKEPID,
+	LIFTPID,
 	MMREGPID,
 	MMDRIVEPID,
 	MMTILTERPID,
@@ -52,6 +53,7 @@ enum AutonFlags
 	DRIVET,
 	TILTERT,
 	INTAKET,
+	LIFTT,
 	NONET,
 
 	NONETE,
@@ -59,6 +61,7 @@ enum AutonFlags
 	DRIVETE,
 	TILTERTE,
 	INTAKETE,
+	LIFTTE,
 
 	BACKWARDS,
 	FORWARDS,
@@ -106,8 +109,9 @@ enum Ids
 	DRIVE = 999999999,
 	TILTER = 999999998,
 	CLAW = 999999997,
-	INNER = 999999996,
+	LIFT = 999999996,
 	INTAKE =999999995,
+
 	NULLOPTION = 999999994
 };
 
@@ -158,6 +162,7 @@ extern int cVal(pros::controller_digital_e_t button);
 extern int cVal(pros::controller_analog_e_t button);
 extern int actualGyroPosition();
 extern int fixTarget(int oldTarget);
+extern void resetAutonVals();
 template <typename Ts> void addCommands(Ts);
 
 #include "templateMotorFunctions.hpp"

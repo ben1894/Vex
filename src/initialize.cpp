@@ -59,6 +59,7 @@ void initialize()
 		competition_initialize();
 	}
     tilter.tare_position();
+	lift.tare_position();
 }
 
 /**

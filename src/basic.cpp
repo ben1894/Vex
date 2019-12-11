@@ -42,3 +42,10 @@ int cVal( pros::controller_analog_e_t button)
 {
 	return mainController.get_analog(button);
 }
+
+void resetAutonVals()
+{
+	tilter.tare_position();
+	lift.tare_position();
+	gyro.reset();
+}

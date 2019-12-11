@@ -41,10 +41,12 @@ const int encoderTurnBaseSpeed = 10;
 class Drive;
 class Tilter;
 class Intake;
+class Lift;
 class PidController;
 Drive *driveObj;
 Tilter *tilterObj;
 Intake *intakeObj;
+Lift *liftObj;
 
 
 /**
@@ -277,6 +279,10 @@ public:
                     speedControl = currentFlag;
                     pid = PidController(regTilterP,regTilterI,regTilterD,regTilterMin,regTilterMax);
                     return false;
+                case(LIFTPID):
+                    speedControl = currentFlag;
+                    pid = PidController(regLiftP,regLiftI,regLiftD,regLiftMin,regLiftMax);
+                    return false;
                 default:
                     return true; //dont plus one yet because it will go through the other flags
             }
@@ -288,6 +294,7 @@ public:
                 case(DRIVET): //(int = target) or otherwise specified by ther break when testing for trigger
                 case(TILTERT): //cant have a trigger based off the intake... yet (maybe idk I don't think there will be a use)
                 case(INTAKET):
+                case(LIFTT):
                     switch(number)
                     {
                         case(1):       //its never going to be 0 because it only goes in this loops if its not 0;
@@ -302,6 +309,10 @@ public:
                             else if(currentFlag == INTAKET)
                             {
                                 triggerSystem = reinterpret_cast<System *>(intakeObj);
+                            }
+                            else if(currentFlag == LIFTT)
+                            {
+                                triggerSystem = reinterpret_cast<System *>(liftObj);
                             }
                             trigger = currentFlag;
                             triggerNumber = value; //distance
@@ -321,6 +332,7 @@ public:
                 case(DRIVETE): //(int = target) or otherwise specified by ther break when testing for trigger
                 case(TILTERTE): //cant have a trigger based off the intake... yet (maybe idk I don't think there will be a use)
                 case(INTAKETE):
+                case(LIFTTE):
                     switch(number)
                     {
                         case(1):       //its never going to be 0 because it only goes in this loops if its not 0;
@@ -335,6 +347,10 @@ public:
                             else if(currentFlag == INTAKETE)
                             {
                                 triggerSystemE = reinterpret_cast<System *>(intakeObj);
+                            }
+                            else if(currentFlag == LIFTTE)
+                            {
+                                triggerSystemE = reinterpret_cast<System *>(liftObj);
                             }
                             triggerE = currentFlag;
                             triggerNumberE = value; //distance
@@ -970,6 +986,136 @@ class Intake : public System  //very quick acceleration
     }
 };
 
+class Lift : public System  //very quick acceleration
+{
+    private:
+    int speed;
+
+    public:
+    bool underTarget;
+    Lift(int id = LIFT)
+        : System((int)id)
+        {
+            pid = {regLiftP,regLiftI,regLiftD,regLiftMin,regLiftMax};
+            if(liftObj == nullptr) //if declairing this for the first time
+            {
+                liftObj = this;
+            }
+            else //global is declaired meaning the object is being reset. Keep the state and total number of calls.
+            {
+                totalNumberOfCalls = liftObj->totalNumberOfCalls;
+            }
+        }
+
+    int getPosition()
+    {
+        return (int)abs(lift.get_position());
+    }
+
+    bool checkIfDone(int breakVal)
+    {
+        if(triggerE == NONETE)
+        {
+            if(underTarget == true)
+            {
+                if(getPosition() > breakVal)
+                {
+                    return true;
+                }
+                return false;
+            }
+            else
+            {
+                if(getPosition() < breakVal)
+                {
+                    return true;
+                }
+                return false;
+            }
+        }
+        else
+        {
+            return triggerCheckE(breakVal);
+        }
+    }
+
+    void resetObj()
+    {
+        *this = Lift();
+    }
+
+    void initializePid(AutonFlags pidPack)
+    {
+        pid = PidController(regLiftP,regLiftI,regLiftD,regLiftMin,regLiftMax);
+    }
+
+    void setMember(int &number, AutonFlags &currentFlag, int value)
+    {
+        if(number == 0)
+        {
+            currentFlag = (AutonFlags)value;
+            number++;
+            return;
+        }
+        else
+        {
+            switch(currentFlag)
+            {
+                case(POSITION):
+                    switch(number) //use same straight drive for turns and straight drive
+                    {
+                        case(1):
+                            target = value;
+                            number++;
+                            break;
+                        case(2):
+                            speed = value;
+                            number = 0;
+                            break;
+                    }
+                    break;
+                case(SPEED):
+                    switch(number) //use same straight drive for turns and straight drive
+                    {
+                        case(1):
+                            speed = value;
+                            number = 0;
+                            break;
+                    }
+                    break;
+            }
+        }
+    }
+
+    void move()
+    {
+        int breakVal = (triggerE == NONETE) ? target : triggerBreakE;
+        if(checkIfDone(breakVal) == false)
+        {
+            if(triggerE != NONETE)
+            {
+                lift.move(speed);
+            }
+            else
+            {
+                if(getPosition() < target)
+                {
+                    lift.move(speed);
+                }
+                else
+                {
+                    lift.move(-speed);
+                }
+            }
+        }
+        else
+        {
+            lift.move(0);
+            updateEndingState();
+        }
+    }
+};
+
 void Drive::move()
 {
     float leftCorrection = 1; //reset every call
@@ -1092,7 +1238,8 @@ void addCommands(Ts... input)
     Drive drive{};
     Tilter tilter{};
     Intake intake{};
-
+    Lift lift{};
+    
     for(int i = 0; i < parameters.size()-1; i++)
     {
         drive.initialUpdate(i, parameters);

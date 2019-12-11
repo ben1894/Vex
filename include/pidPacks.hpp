@@ -22,4 +22,10 @@
 #define regTilterI 0
 #define regTilterD 0
 #define regTilterMin 0
-#define regTilterMax 0//
+#define regTilterMax 0
+
+#define regLiftP 0
+#define regLiftI 0
+#define regLiftD 0
+#define regLiftMin 0
+#define regLiftMax 0//
