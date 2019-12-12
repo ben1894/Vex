@@ -493,7 +493,6 @@ class Drive : public System
     bool stopDeacceleration = false;
     bool acceleration = false;
     int correctTo = -1;
-    int offSet; //used for sweep Turns
     GyroDistances turnStats;
     AutonFlags direction;
     Timer accelerationTimer;
@@ -636,6 +635,7 @@ class Drive : public System
 
     int getSweepDifference() //positive, outside is faster. negative, inside is faster
     {
+        double offSet = (double)getOutsideEncoder()*outerInnerRatio;
         (double)getOutsideEncoder() - (double)(getInsideEncoder() + offSet);
     }
 
@@ -1280,7 +1280,7 @@ void addCommands(Ts... input)
         {
             case(WAITINGFORINSTRUCTIONS):
                 drive.update(parameters);
-                drive.pid.minOutput /= drive.outerInnerRatio; //has to be put here so it doesn't get overwritten by the pid initialization
+                drive.pid.minOutput /= drive.outerInnerRatio; //has to be put here so it doesn't get overwritten by the pid initializatio
                 break;
             case(WAITINGFORTRIGGER):
                 drive.updateTriggerState();
