@@ -6,6 +6,11 @@
 #include <vector>
 #include <typeinfo>
 
+#define brakeTimeTurn 50
+#define brakeTimeDrive 50
+#define brakeSpeedTurn 100
+#define brakeSpeedDrive 100
+
 class Timer
 {
 private:
@@ -82,6 +87,7 @@ enum AutonFlags
 
 	NOACCEL,
 	ACCEL,
+	NOBRAKE,
 	BLANK
 };
 
@@ -90,7 +96,7 @@ enum SystemStates
 	WAITINGFORINSTRUCTIONS,
 	WAITINGFORTRIGGER,
 	END,
-	EXECUTINGINSTRUCTIONS
+	EXECUTINGINSTRUCTIONS,
 };
 
 enum Select

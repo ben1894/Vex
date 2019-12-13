@@ -1,19 +1,6 @@
-﻿/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * 
-
- █████▄  █████  ███▄    █     ████▄  ██▀███   █████  █████   ██████
-▒██  ▄██ █   ▀  ██ ▀█   █    ▒█  ▀█▌ ██   ██▒ █   ▀  █   ▀ ▒██    ▒ 
-▒████▀  ▒███    ██  ▀█  █▒   ░█   █▌ ██ ░▄█  ▒███   ▒███   ░  ██▄   
-░██  ▀█▓▒█   ▄  ██▒  ▐▌██▒   ░█   ▄▌ ██▀▀█▄  ▒█   ▄ ▒█   ▄   ▒   ██▒
-░█████▀▒░█████▒▒██░   ▓██░   ░█████ ░██  ▒██ ░█████▒░█████▒▒██████▒▒
-▒░▒   ░ ░░ ▒░ ░░ ▒░   ▒ ▒     ▒▒   ▒ ░ ▒  ░▒ ░░░ ▒░ ░░░ ▒░ ░▒ ▒ ▒ ▒ ░
- ░    ░  ░ ░  ░░ ░░   ░ ▒░    ░ ▒  ▒   ░▒ ░ ▒░ ░ ░  ░ ░ ░  ░░ ░▒  ░ ░
- ░         ░      ░   ░ ░     ░ ░  ░   ░░   ░    ░      ░   ░  ░  ░  
-       ░   ░  ░         ░       ░       ░        ░  ░   ░  ░      ░  
-      ░                       ░                                      
- *     ____  ____  __ _    ____  ____  ____  ____  ____ 
- *    (  _ \(  __)(  ( \  (    \(  _ \(  __)(  __)/ ___)
- *     ) _ ( ) _) /    /   ) D ( )   / ) _)  ) _) \___ \
- *    (____/(____)\_)__)  (____/(__\_)(____)(____)(____/
+﻿/*
+2019-2020 536E Vex Team Code
+All code created by:
  ____                       ____                                 
 /\  _`\                    /\  _`\                               
 \ \ \L\ \     __    ___    \ \ \/\ \  _ __    __     __    ____  
@@ -97,18 +84,18 @@ class PidController
         {
             int error = target - currentSensorData;
             unsigned long changeInTime = pros::millis() - lastTime;
-            /*
+            
             if((P*error) < maxOutput) //to prevent windup
             {
                 long currentIntegral = error * changeInTime; //calculation for the area under the curve for the latest movement. The faster this updates the more accurate
                 combinedIntegral += currentIntegral;         //adds latest to the total integral
             }
 
-            double derivative = (error - lastError) / changeInTime; //formula to calculate the (almost) instantaneous rate of change.     */                                            //affected by how quickly the rate is changing (maybe reduce rate)
+            double derivative = (error - lastError) / changeInTime; //formula to calculate the (almost) instantaneous rate of change.      
             lastTime = pros::millis(); //put here before the returns
             lastError = error;
 
-            int output = (P * (double)error) + (I * combinedIntegral) + (D * 0);
+            int output = (P * (double)error) + (I * combinedIntegral) + (D * derivative);
             if(output > maxOutput)
             {
                 return maxOutput;
@@ -133,7 +120,7 @@ protected:
     char triggerNumberE;
     int triggerBreakE;
     System *triggerSystemE;
-    AutonFlags triggerE = NONETE; //Holds the type of trigger system will have    All sub systems will have the option of starting on a trigger
+    AutonFlags triggerE = NONETE;
     Timer triggerTimerE;
 
 public:
@@ -142,7 +129,6 @@ public:
     SystemStates state = END;
     PidController pid; //eventualy initialized to defaults later in inherited classes
     int id;
-    bool hi = false;
     int target;
     char numberOfCalls = 0;
     char totalNumberOfCalls = 0;
@@ -154,12 +140,15 @@ public:
 
     int getTriggerNumberProgress()
     {
-        return (totalNumberOfCalls - numberOfCalls)+1; //number of calls decreases throughout runtime. //Starts at 1 and increases
-    } //if 0 from beginning, initial update takes care of it
+        //number of calls decreases throughout runtime. Starts at 1 and increases
+        //if 0 from beginning, initial update takes care of it
+        return (totalNumberOfCalls - numberOfCalls)+1;
+    }
 
     void updateEndingState()
     {
-        if(numberOfCalls == 0) //if it was on its last run
+        //if it was on its last run
+        if(numberOfCalls == 0) 
         {
             state = END;
         }
@@ -171,7 +160,7 @@ public:
 
     bool triggerCheckE(int breakVal)
     {
-        switch(triggerE)  //have it set at something until everything ends or its set to end
+        switch(triggerE)
         {
             case(NONETE):
                 return true;
@@ -182,14 +171,17 @@ public:
                 }
                 return false;
             default:
+                //if the system is already done don't bother checking
                 if(triggerSystemE->state == END)
                 {
                     return true;
                 }
+                //if the current call is currently passed the one wanted, break
                 else if(triggerNumberE < triggerSystemE->getTriggerNumberProgress())
                 {
                     return true;
                 }
+                //if not, wait
                 else if(triggerNumberE > triggerSystemE->getTriggerNumberProgress())
                 {
                     return false;
@@ -250,6 +242,8 @@ public:
         }
     }
 
+    //sets system variables scrolling through main parameter vectors, all systems can have these options
+    //returns whether or not to check the virtual flag options
     bool setSystemMember(int &number, AutonFlags &currentFlag, int value) //returning true means to check the other flags
     {
         if(number == 0)
@@ -300,6 +294,7 @@ public:
                         case(1):       //its never going to be 0 because it only goes in this loops if its not 0;
                             if(currentFlag == DRIVET)
                             {
+                                //changes pointers to system pointers making calls be able to be managed by non-virtual functions
                                 triggerSystem = reinterpret_cast<System *>(driveObj);
                             }
                             else if(currentFlag == TILTERT)
@@ -329,13 +324,13 @@ public:
                     triggerTimer.clear();
                     number = 0;
                     return false;
-                case(DRIVETE): //(int = target) or otherwise specified by ther break when testing for trigger
-                case(TILTERTE): //cant have a trigger based off the intake... yet (maybe idk I don't think there will be a use)
+                case(DRIVETE):
+                case(TILTERTE):
                 case(INTAKETE):
                 case(LIFTTE):
                     switch(number)
                     {
-                        case(1):       //its never going to be 0 because it only goes in this loops if its not 0;
+                        case(1):
                             if(currentFlag == DRIVETE)
                             {
                                 triggerSystemE = reinterpret_cast<System *>(driveObj);
@@ -421,17 +416,18 @@ public:
         }
 
     }
+
     void initialUpdate(int &i, std::vector<int> &parameters)
     {
         if(parameters[i] == id)
         {
-            if(state == END)
+            if(state == END) //if the object call in uninitialized
             {
-                parameters[i] = (int)NULLOPTION;
+                parameters[i] = (int)NULLOPTION; //sets it back to NULLOPTION so it doesn't get called again
                 AutonFlags currentFlag;
                 int subFlag = 0;
                 state = WAITINGFORTRIGGER;
-                do
+                do //loops through the data to give to the specific system
                 {
                     ++i;
                     bool checkSecondaryFlags = setSystemMember(subFlag,currentFlag,parameters[i]);
@@ -459,9 +455,9 @@ public:
                 {
                     if(state == WAITINGFORINSTRUCTIONS) //Checks again just in case there are multiple calls.
                     {
-                        resetObj(); //have to change this
+                        resetObj(); //resets the object
                         parameters[i] = (int)NULLOPTION;
-                        AutonFlags currentFlag;  //DRIVE,FORWARD,1000,TILTER,FLAG
+                        AutonFlags currentFlag; 
                         int subFlag = 0;
 
                         do //loops through the data to give to the specific system
@@ -477,7 +473,7 @@ public:
                         state = WAITINGFORTRIGGER; //trigger obj might not be in scope yet so cant check its process.
                     }
                     else
-                    {  //=0
+                    {
                         ++numberOfCalls;
                     }
                 }
@@ -492,10 +488,13 @@ class Drive : public System
     bool stopAcceleration = false;
     bool stopDeacceleration = false;
     bool acceleration = false;
+    bool brake = true;
+    bool rightTurn;
     int correctTo = -1;
     GyroDistances turnStats;
     AutonFlags direction;
     Timer accelerationTimer;
+    Timer brakeTimer;
 
     public:
     int speed;
@@ -521,7 +520,7 @@ class Drive : public System
     {
         leftEncoder.reset();
         rightEncoder.reset();
-        for(int motor = 0; motor < leftDrive.size; motor++)
+        for(int motor = 0; motor < leftDrive.size(); motor++)
         {
             leftDrive[motor].tare_position();
             rightDrive[motor].tare_position();
@@ -719,6 +718,10 @@ void Drive::setMember(int &number, AutonFlags &currentFlag, int value)
                 break;
             case(ACCEL):
                 acceleration = true;
+                break;
+            case(NOBRAKE):
+                brake = false;
+                break;
             default:
                 number++; //Just sets currentFlag, will get next values when increasead next time
                 break;
@@ -1227,11 +1230,13 @@ void Drive::move()
 
             if(Dist.Right < Dist.Left)
             {
+                rightTurn = true;
                 rightCorrection *= -1;
                 speed = pid.output(-Dist.Right, 0);
             }
             else
             {
+                rightTurn = false;
                 leftCorrection *= -1;
                 speed = pid.output(-Dist.Left, 0);
             }
@@ -1243,13 +1248,65 @@ void Drive::move()
             driveMotorsSpeed((float)speed*leftCorrection,leftDrive);   //to float casting
             driveMotorsSpeed((float)speed*rightCorrection,rightDrive);
         }
+        brakeTimer.clear();
     }
     else
     {
-        speed = pid.maxOutput;
-        driveMotorsSpeed(0,rightDrive);
-        driveMotorsSpeed(0,leftDrive);
-        updateEndingState();
+        if(brake == true)
+        {
+            int brakeTime;
+            int brakeSpeed;
+            if(direction == TURN)
+            {
+                brakeTime = brakeTimeTurn;
+                brakeSpeed = brakeTimeTurn;
+            }
+            else 
+            {
+                brakeTime = brakeTimeDrive;
+                brakeSpeed = brakeTimeDrive;
+            }
+
+            if(brakeTimer.current() < brakeTime)
+            {
+                int leftDirection;
+                int rightDirection;
+                switch(direction)
+                {
+                    case(DOWNLEFTSWEEP):
+                    case(DOWNRIGHTSWEEP):
+                    case(BACKWARDS):
+                    case(DOWNLEFTSWEEPE):
+                    case(DOWNRIGHTSWEEPE):
+                    case(BACKWARDSE):
+                        leftDirection *= -1;
+                        rightDirection *= -1;
+                        break;
+                    case(TURN):
+                        if(rightTurn == true)
+                        {
+                            rightDirection *= -1;
+                        }
+                        else 
+                        {
+                            leftDirection *= -1;
+                        }
+                        break;
+                }
+                driveMotorsSpeed(rightDirection*brakeSpeed,rightDrive);
+                driveMotorsSpeed(rightDirection*brakeSpeed,leftDrive);
+            }
+            else
+            {
+                brake = false;
+            }
+        }
+        else
+        {
+            driveMotorsSpeed(0,rightDrive);
+            driveMotorsSpeed(0,leftDrive);
+            updateEndingState();
+        }
     }
 }
 
