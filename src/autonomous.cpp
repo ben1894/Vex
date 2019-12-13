@@ -1132,9 +1132,10 @@ class Lift : public System  //very quick acceleration
 
 void Drive::move()
 {
-    float leftCorrection = 1; //reset every call
+    //Corrections are reset to 1 every call
+    float leftCorrection = 1;
     float rightCorrection = 1;
-    //put here or add
+
     int breakVal = (triggerE == NONETE) ? target : triggerBreakE;
     if(checkIfDone(breakVal) == false)
     {
@@ -1160,7 +1161,8 @@ void Drive::move()
                 }
             }
 
-            switch(direction) //drive straight
+            //Deals with sweepturns and sets the speed according to the radius specified
+            switch(direction)
             {
                 case(UPLEFTSWEEP):
                 case(UPRIGHTSWEEP):
@@ -1173,7 +1175,7 @@ void Drive::move()
                     switch(direction) //sweep turn stuffz
                     {
                         case(UPLEFTSWEEP):
-                        case(DOWNLEFTSWEEP): //add here
+                        case(DOWNLEFTSWEEP):
                         case(UPLEFTSWEEPE):
                         case(DOWNLEFTSWEEPE):
                             leftCorrection *= outerInnerRatio;
@@ -1185,6 +1187,7 @@ void Drive::move()
                     break;
             }
 
+            //Applies the autocorrect if specified
             if(correctTo == WHEELCORRECTION)
             {
                 wheelCorrections(leftCorrection, rightCorrection); //break into two, trigger system, other other
@@ -1194,6 +1197,7 @@ void Drive::move()
                 gyroCorrections(leftCorrection, rightCorrection);
             }
 
+            //controls wheels going forwards or backwards
             switch(direction)
             {
                 case(DOWNLEFTSWEEP):
@@ -1207,9 +1211,11 @@ void Drive::move()
                     break;
             }
 
-            //check to make sure the speed wont be under the movable rate
+            //check to make sure the speed won't be under the movable rate
             verifySpeedOutput(leftCorrection, rightCorrection);
             
+            //Sets the drive motors at speed multiplied by the respective correction
+            //Corrections start at 1 by default
             driveMotorsSpeed(speed*rightCorrection, rightDrive);
             driveMotorsSpeed(speed*leftCorrection, leftDrive);
         }
