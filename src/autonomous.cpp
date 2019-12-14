@@ -596,17 +596,18 @@ class Drive : public System
 
     int accelerationOutput()
     {
+        int output = (((pid.maxOutput-accelerationMin)/150) * accelerationTimer.current()) + accelerationMin;
         if(accelerationTimer.current() > 150)
         {
             accelerationControl = NOACCEL;
             return pid.maxOutput;
         }
-        if(target < getDriveEncoder()*2)
+        if(output > pid.output(getDriveEncoder(), target))
         {
-            accelerationControl = NOACCEL;       
+            accelerationControl = NOACCEL;     
+            return pid.output(getDriveEncoder(), target);  
         }
-        
-        return (((pid.maxOutput-accelerationMin)/150) * accelerationTimer.current()) + accelerationMin;
+        return output;
     }
 
     int getOutsideEncoder()

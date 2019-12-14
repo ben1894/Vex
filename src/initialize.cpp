@@ -28,7 +28,7 @@ pros::Motor lift(8,pros::E_MOTOR_GEARSET_36,false,pros::E_MOTOR_ENCODER_COUNTS);
 void initialize() 
 {
 	pros::lcd::initialize();
-	pros::ADIGyro gyro(2);
+	pros::ADIGyro gyro(1);
 	pros::Task::delay(2000);
 	for(int i = 0; i < leftDrive.size(); i++)
 	{
@@ -105,12 +105,10 @@ void competition_initialize()
 		{
 			if((pros::lcd::read_buttons() ==  leftButton) || (cVal(DIGITAL_RIGHT)))
 			{
-				//waitForRelease();
 				count = (Select)((int)count + 1);
 			}
 			else if((pros::lcd::read_buttons() == rightButton) || (cVal(DIGITAL_LEFT)))
 			{
-				//waitForRelease();
 				count = (Select)((int)count - 1);
 			}
 		}
@@ -180,7 +178,8 @@ void competition_initialize()
 		oldLCD = pros::lcd::read_buttons();
 		oldRight = cVal(DIGITAL_RIGHT);
 		oldLeft = cVal(DIGITAL_LEFT);
-		pros::delay(2);
+		pros::lcd::print(4,"%d", fixTarget(gyro.get_value()));
+		pros::delay(3);
 	}
 	pros::lcd::print(2,"Auton Selected");
 }
