@@ -19,6 +19,8 @@ pros::ADIEncoder rightEncoder(5, 6, true);
 
 void opcontrol() //0.0078740157480315 = quadradic value
 {
+	int oldButtonY = 0;
+	int intakeHoldingPower = 0;
 	for(int i = 0; i < leftDrive.size(); i++)
 	{
 		leftDrive[i].set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
@@ -32,6 +34,20 @@ void opcontrol() //0.0078740157480315 = quadradic value
 		driveMotorsSpeed(cVal(ANALOG_RIGHT_Y),rightDrive);
 		driveMotorsSpeed(cVal(ANALOG_LEFT_Y),leftDrive);
 
+		if(cVal(DIGITAL_Y) != oldButtonY)
+		{
+			if(cVal(DIGITAL_Y) == 1)
+			{
+				if(intakeHoldingPower == 0)
+				{
+					intakeHoldingPower = 50;
+				}
+				else 
+				{
+					intakeHoldingPower = 0;
+				}
+			}
+		}
 		if(cVal(DIGITAL_R1))
 		{
 			motorGroupMove(127, intakeM);
@@ -42,7 +58,7 @@ void opcontrol() //0.0078740157480315 = quadradic value
 		}
 		else
 		{
-			motorGroupMove(0, intakeM);
+			motorGroupMove(intakeHoldingPower, intakeM);
 		}
 
 		if(cVal(DIGITAL_DOWN))
@@ -60,7 +76,14 @@ void opcontrol() //0.0078740157480315 = quadradic value
 
 		if(cVal(DIGITAL_L1))
 		{
-			tilter.move(120);
+			if(tilter.get_position() > 5000)
+			{
+				tilter.move(70);
+			}
+			else
+			{
+				tilter.move(127);
+			}
 		}
 		else if(cVal(DIGITAL_L2))
 		{
@@ -87,6 +110,7 @@ void opcontrol() //0.0078740157480315 = quadradic value
 				autonomous();
 			}
 		}
+		oldButtonY = cVal(DIGITAL_Y);
 		pros::delay(3);
 	}
 }

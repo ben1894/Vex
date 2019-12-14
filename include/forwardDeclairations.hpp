@@ -26,6 +26,18 @@ public:
 	}
 };
 
+class Button
+{
+	/*
+	private
+	void func ( void (*f)(int) ) {
+  	for ( int ctr = 0 ; ctr < 5 ; ctr++ ) {
+    (*f)(ctr);
+  }
+  func(print);
+}*/
+};
+
 //all uses documented in smallRedA.hpp
 enum AutonFlags
 {
