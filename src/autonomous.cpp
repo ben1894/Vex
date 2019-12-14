@@ -1,5 +1,5 @@
 ﻿/*
-2019-2020 536E Vex Team Code
+536E Vex Team Code 2019-2020 
 All code created by:
  ____                       ____                                 
 /\  _`\                    /\  _`\                               
@@ -165,11 +165,11 @@ public:
             case(NONETE):
                 return true;
             case(TIMETE):
-                if(triggerTimerE.current() > breakVal)
+                if(triggerTimerE.current() < breakVal)
                 {
-                    return true;
+                    return false;
                 }
-                return false;
+                return true;
             default:
                 //if the system is already done don't bother checking
                 if(triggerSystemE->state == END)
@@ -240,6 +240,7 @@ public:
                     break;
                 }
         }
+        triggerTimerE.clear();
     }
 
     //sets system variables scrolling through main parameter vectors, all systems can have these options
@@ -285,8 +286,8 @@ public:
         {
             switch(currentFlag)
             {
-                case(DRIVET): //(int = target) or otherwise specified by ther break when testing for trigger
-                case(TILTERT): //cant have a trigger based off the intake... yet (maybe idk I don't think there will be a use)
+                case(DRIVET): 
+                case(TILTERT):
                 case(INTAKET):
                 case(LIFTT):
                     switch(number)
@@ -359,7 +360,6 @@ public:
                 case(TIMETE):
                     triggerE = currentFlag;
                     triggerBreakE = value;
-                    triggerTimerE.clear();
                     number = 0;
                     return false;
                 case(NOPID):
@@ -489,7 +489,7 @@ class Drive : public System
     bool stopDeacceleration = false;
     bool acceleration = false;
     bool brake = true;
-    bool rightTurn;
+    bool runBrake = false;
     int correctTo = -1;
     GyroDistances turnStats;
     AutonFlags direction;
@@ -498,6 +498,7 @@ class Drive : public System
 
     public:
     int speed;
+    bool rightTurn;
     double outerInnerRatio = 1;
     Drive(int idVal = DRIVE)
         : System((int)idVal)
@@ -508,11 +509,11 @@ class Drive : public System
             accelerationTimer.clear();
             if(driveObj == nullptr)
             {
-                driveObj = this;
+                driveObj = this; //resets the global pointer to the reset object
             }
             else
             {
-                totalNumberOfCalls = driveObj->totalNumberOfCalls;
+                totalNumberOfCalls = driveObj->totalNumberOfCalls; //passes on the totalNumberOfCalls after reset
             }
         };
 
@@ -556,7 +557,7 @@ class Drive : public System
 
             GyroDistances gyroVals;
             getDistances(gyroVals, breakVal);
-            if((gyroVals.Left < 3) || (gyroVals.Right < 3))
+            if((gyroVals.Left < 4) || (gyroVals.Right < 4))
             {
                 return true;
             }
@@ -573,7 +574,7 @@ class Drive : public System
         GyroDistances off;
         getDistances(off, correctTo);
 
-        if(off.Right < off.Left) //keep!!
+        if(off.Right < off.Left)
         {
             if(off.Right > 4)
             {
@@ -701,7 +702,7 @@ class Drive : public System
                 return getOutsideEncoder();
             default:
                 //return abs(leftEncoder.get_value()); //////////////////abs
-                return abs(rightDrive[1].get_position());
+                return fabs(rightDrive[1].get_position());
         }
     }
 };
@@ -815,7 +816,7 @@ class Tilter : public System  //very quick acceleration
 
     int getPosition()
     {
-        return (int)abs(tilter.get_position());
+        return (int)fabs(tilter.get_position());
     }
 
     bool checkIfDone(int breakVal)
@@ -1026,7 +1027,7 @@ class Lift : public System  //very quick acceleration
 
     int getPosition()
     {
-        return (int)abs(lift.get_position());
+        return (int)fabs(lift.get_position());
     }
 
     bool checkIfDone(int breakVal)
@@ -1140,67 +1141,25 @@ void Drive::move()
     float rightCorrection = 1;
 
     int breakVal = (triggerE == NONETE) ? target : triggerBreakE;
-    if(checkIfDone(breakVal) == false)
+    if(runBrake == true)
     {
-        if(direction != TURN)
+        int brakeTime;
+        int brakeSpeed;
+        if(direction == TURN)
         {
-            if(speedControl == NOPID)
-            {
-                speed = pid.maxOutput;
-            }
-            else if(triggerE != NONETE)
-            {
-                speed = target;
-            }
-            else
-            {
-                if(acceleration == true)
-                {
-                    speed = accelerationSpeed();
-                }
-                else 
-                {
-                    speed = pid.output(getDriveEncoder(), target);
-                }
-            }
+            brakeTime = brakeTimeTurn;
+            brakeSpeed = brakeTimeTurn;
+        }
+        else 
+        {
+            brakeTime = brakeTimeDrive;
+            brakeSpeed = brakeTimeDrive;
+        }
 
-            //Deals with sweepturns and sets the speed according to the radius specified
-            switch(direction)
-            {
-                case(UPLEFTSWEEP):
-                case(UPRIGHTSWEEP):
-                case(DOWNLEFTSWEEP):
-                case(DOWNRIGHTSWEEP):
-                case(UPLEFTSWEEPE):
-                case(UPRIGHTSWEEPE):
-                case(DOWNLEFTSWEEPE):
-                case(DOWNRIGHTSWEEPE):
-                    switch(direction) //sweep turn stuffz
-                    {
-                        case(UPLEFTSWEEP):
-                        case(DOWNLEFTSWEEP):
-                        case(UPLEFTSWEEPE):
-                        case(DOWNLEFTSWEEPE):
-                            leftCorrection *= outerInnerRatio;
-                            break;
-                        default:
-                            rightCorrection *= outerInnerRatio;
-                            break;
-                    }
-                    break;
-            }
-
-            //Applies the autocorrect if specified
-            if(correctTo == WHEELCORRECTION)
-            {
-                wheelCorrections(leftCorrection, rightCorrection); //break into two, trigger system, other other
-            }
-            if(correctTo != NOSTRAIGHT)
-            {
-                gyroCorrections(leftCorrection, rightCorrection);
-            }
-
-            //controls wheels going forwards or backwards
+        if(brakeTimer.current() < brakeTime)
+        {
+            int leftDirection;
+            int rightDirection;
             switch(direction)
             {
                 case(DOWNLEFTSWEEP):
@@ -1209,68 +1168,95 @@ void Drive::move()
                 case(DOWNLEFTSWEEPE):
                 case(DOWNRIGHTSWEEPE):
                 case(BACKWARDSE):
-                    leftCorrection *= -1;
-                    rightCorrection *= -1;
+                    break;
+                case(TURN):
+                    if(rightTurn == true)
+                    {
+                        leftDirection *= -1;
+                    }
+                    else 
+                    {
+                        rightDirection *= -1;
+                    }
+                    break;
+                default:
+                    leftDirection *= -1;
+                    rightDirection *= -1;
                     break;
             }
-
-            //check to make sure the speed won't be under the movable rate
-            verifySpeedOutput(leftCorrection, rightCorrection);
-            
-            //Sets the drive motors at speed multiplied by the respective correction
-            //Corrections start at 1 by default
-            driveMotorsSpeed(speed*rightCorrection, rightDrive);
-            driveMotorsSpeed(speed*leftCorrection, leftDrive);
+            driveMotorsSpeed(rightDirection*brakeSpeed,rightDrive);
+            driveMotorsSpeed(rightDirection*brakeSpeed,leftDrive);
         }
         else
         {
-            target = fixTarget(target); //so you can put in negative values
-            GyroDistances Dist;
-            getDistances(Dist, target);
-
-            if(Dist.Right < Dist.Left)
-            {
-                rightTurn = true;
-                rightCorrection *= -1;
-                speed = pid.output(-Dist.Right, 0);
-            }
-            else
-            {
-                rightTurn = false;
-                leftCorrection *= -1;
-                speed = pid.output(-Dist.Left, 0);
-            }
-            if(correctTo == WHEELCORRECTION)
-            {
-                wheelCorrections(leftCorrection, rightCorrection);
-            }
-
-            driveMotorsSpeed((float)speed*leftCorrection,leftDrive);   //to float casting
-            driveMotorsSpeed((float)speed*rightCorrection,rightDrive);
+            driveMotorsSpeed(0,rightDrive);
+            driveMotorsSpeed(0,leftDrive);
+            updateEndingState();
         }
-        brakeTimer.clear();
     }
-    else
+    else 
     {
-        if(brake == true)
+        if(checkIfDone(breakVal) == false)
         {
-            int brakeTime;
-            int brakeSpeed;
-            if(direction == TURN)
+            if(direction != TURN)
             {
-                brakeTime = brakeTimeTurn;
-                brakeSpeed = brakeTimeTurn;
-            }
-            else 
-            {
-                brakeTime = brakeTimeDrive;
-                brakeSpeed = brakeTimeDrive;
-            }
+                if(speedControl == NOPID)
+                {
+                    speed = pid.maxOutput;
+                }
+                else if(triggerE != NONETE)
+                {
+                    speed = target;
+                }
+                else
+                {
+                    if(acceleration == true)
+                    {
+                        speed = accelerationSpeed();
+                    }
+                    else 
+                    {
+                        speed = pid.output(getDriveEncoder(), target);
+                    }
+                }
 
-            if(brakeTimer.current() < brakeTime)
-            {
-                int leftDirection;
-                int rightDirection;
+                //Deals with sweepturns and sets the speed according to the radius specified
+                switch(direction)
+                {
+                    case(UPLEFTSWEEP):
+                    case(UPRIGHTSWEEP):
+                    case(DOWNLEFTSWEEP):
+                    case(DOWNRIGHTSWEEP):
+                    case(UPLEFTSWEEPE):
+                    case(UPRIGHTSWEEPE):
+                    case(DOWNLEFTSWEEPE):
+                    case(DOWNRIGHTSWEEPE):
+                        switch(direction) //sweep turn stuffz
+                        {
+                            case(UPLEFTSWEEP):
+                            case(DOWNLEFTSWEEP):
+                            case(UPLEFTSWEEPE):
+                            case(DOWNLEFTSWEEPE):
+                                leftCorrection *= outerInnerRatio;
+                                break;
+                            default:
+                                rightCorrection *= outerInnerRatio;
+                                break;
+                        }
+                        break;
+                }
+
+                //Applies the autocorrect if specified
+                if(correctTo == WHEELCORRECTION)
+                {
+                    wheelCorrections(leftCorrection, rightCorrection); //break into two, trigger system, other other
+                }
+                if(correctTo != NOSTRAIGHT)
+                {
+                    gyroCorrections(leftCorrection, rightCorrection);
+                }
+
+                //controls wheels going forwards or backwards
                 switch(direction)
                 {
                     case(DOWNLEFTSWEEP):
@@ -1279,33 +1265,57 @@ void Drive::move()
                     case(DOWNLEFTSWEEPE):
                     case(DOWNRIGHTSWEEPE):
                     case(BACKWARDSE):
-                        leftDirection *= -1;
-                        rightDirection *= -1;
-                        break;
-                    case(TURN):
-                        if(rightTurn == true)
-                        {
-                            rightDirection *= -1;
-                        }
-                        else 
-                        {
-                            leftDirection *= -1;
-                        }
+                        leftCorrection *= -1;
+                        rightCorrection *= -1;
                         break;
                 }
-                driveMotorsSpeed(rightDirection*brakeSpeed,rightDrive);
-                driveMotorsSpeed(rightDirection*brakeSpeed,leftDrive);
+
+                //check to make sure the speed won't be under the movable rate
+                verifySpeedOutput(leftCorrection, rightCorrection);
+                
+                //Sets the drive motors at speed multiplied by the respective correction
+                //Corrections start at 1 by default
+                driveMotorsSpeed(speed*rightCorrection, rightDrive);
+                driveMotorsSpeed(speed*leftCorrection, leftDrive);
             }
             else
             {
-                brake = false;
+                target = fixTarget(target); //so you can put in negative values
+                GyroDistances Dist;
+                getDistances(Dist, target);
+
+                if(Dist.Right < Dist.Left)
+                {
+                    rightCorrection *= -1;
+                    speed = pid.output(-Dist.Right, 0);
+                }
+                else
+                {
+                    leftCorrection *= -1;
+                    speed = pid.output(-Dist.Left, 0);
+                }
+                if(correctTo == WHEELCORRECTION)
+                {
+                    wheelCorrections(leftCorrection, rightCorrection);
+                }
+
+                driveMotorsSpeed((float)speed*leftCorrection,leftDrive);
+                driveMotorsSpeed((float)speed*rightCorrection,rightDrive);
             }
         }
         else
         {
-            driveMotorsSpeed(0,rightDrive);
-            driveMotorsSpeed(0,leftDrive);
-            updateEndingState();
+            if(brake == true)
+            {
+                runBrake = true;
+                brakeTimer.clear();
+            }
+            else
+            {
+                driveMotorsSpeed(0,rightDrive);
+                driveMotorsSpeed(0,leftDrive);
+                updateEndingState();
+            }
         }
     }
 }
@@ -1325,6 +1335,7 @@ void addCommands(Ts... input)
         drive.initialUpdate(i, parameters);
         tilter.initialUpdate(i, parameters);
         intake.initialUpdate(i, parameters);
+        lift.initialUpdate(i, parameters);
     }
 
     if(tilter.getPosition() > tilter.target)
@@ -1335,9 +1346,18 @@ void addCommands(Ts... input)
     {
         tilter.underTarget = true;
     }
+   
+    if(lift.getPosition() > lift.target)
+    {
+        lift.underTarget = false;
+    }
+    else
+    {
+        lift.underTarget = true;
+    }
     //drive.pid.minOutput /= drive.outerInnerRatio;
 
-    while(((tilter.state != END) || (drive.state != END) || (intake.state != END)) && (autonTimer.current() < 15000 )) 
+    while(((tilter.state != END) || (drive.state != END) || (intake.state != END)) || (lift.state != END) && (autonTimer.current() < 15000 )) 
     {
         switch(drive.state)
         {
@@ -1347,8 +1367,17 @@ void addCommands(Ts... input)
                 break;
             case(WAITINGFORTRIGGER):
                 drive.updateTriggerState();
-                driveMotorsSpeed(0,rightDrive);
-                driveMotorsSpeed(0,leftDrive);
+                drive.target = fixTarget(drive.target); //so you can put in negative values
+                GyroDistances Dist;
+                getDistances(Dist, drive.target);
+                if(Dist.Right < Dist.Left)
+                {
+                    drive.rightTurn = true;
+                }
+                else 
+                {
+                    drive.rightTurn = false;
+                }
                 break;
             case(EXECUTINGINSTRUCTIONS):
                 drive.move();
@@ -1356,7 +1385,7 @@ void addCommands(Ts... input)
             case(END):
                 driveMotorsSpeed(0,rightDrive);
                 driveMotorsSpeed(0,leftDrive);
-                break; //adding retain position later
+                break; //adding retain position later if needed
         }
 
         switch(tilter.state)
@@ -1377,6 +1406,29 @@ void addCommands(Ts... input)
                 break;
             case(EXECUTINGINSTRUCTIONS):
                 tilter.move();
+                break;
+            case(END):
+                break;
+        }
+
+        switch(lift.state)
+        {
+            case(WAITINGFORINSTRUCTIONS):
+                lift.update(parameters);
+                if(lift.getPosition() > lift.target)
+                {
+                    lift.underTarget = false;
+                }
+                else
+                {
+                    lift.underTarget = true;
+                }
+                break;
+            case(WAITINGFORTRIGGER):
+                lift.updateTriggerState();
+                break;
+            case(EXECUTINGINSTRUCTIONS):
+                lift.move();
                 break;
             case(END):
                 break;
@@ -1403,13 +1455,16 @@ void addCommands(Ts... input)
     driveObj = nullptr;  //while the actual object gets "deleted" the space in the memory might still hold the old data causing it to falsly read a valid address
     intakeObj = nullptr;
     tilterObj = nullptr;
+    liftObj = nullptr;
 }
 
 #include "bigAutons.hpp"
 
 void smallBlue()
 {
-
+    resetAutonVals();
+    addCommands(
+        DRIVE,TURN,900,NOSTRAIGHT,TURNPID);
 }
 
 void smallRed()

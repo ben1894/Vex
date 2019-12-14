@@ -8,8 +8,8 @@
 
 #define brakeTimeTurn 50
 #define brakeTimeDrive 50
-#define brakeSpeedTurn 100
-#define brakeSpeedDrive 100
+#define brakeSpeedTurn 120
+#define brakeSpeedDrive 120
 
 class Timer
 {

@@ -48,4 +48,5 @@ void resetAutonVals()
 	tilter.tare_position();
 	lift.tare_position();
 	gyro.reset();
+	autonTimer.clear();
 }
