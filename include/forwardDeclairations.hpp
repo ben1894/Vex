@@ -88,6 +88,7 @@ enum AutonFlags
 
 	NOACCEL,
 	ACCEL,
+	REGACCEL,
 	NOBRAKE,
 	BLANK
 };

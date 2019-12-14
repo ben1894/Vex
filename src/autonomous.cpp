@@ -489,12 +489,12 @@ public:
 class Drive : public System
 {
     private:
-    bool stopAcceleration = false;
     bool stopDeacceleration = false;
-    bool acceleration = false;
     bool brake = true;
     bool runBrake = false;
+    int accelerationMin;
     int correctTo = -1;
+    AutonFlags accelerationControl = NOACCEL;
     GyroDistances turnStats;
     AutonFlags direction;
     Timer accelerationTimer;
@@ -594,19 +594,19 @@ class Drive : public System
         }
     }
 
-    int accelerationSpeed()
+    int accelerationOutput()
     {
         if(accelerationTimer.current() > 150)
         {
-            acceleration = false;
+            accelerationControl = NOACCEL;
             return pid.maxOutput;
         }
         if(target < getDriveEncoder()*2)
         {
-            acceleration = false;        
+            accelerationControl = NOACCEL;       
         }
         
-        return (((pid.maxOutput-pid.minOutput)/150) * accelerationTimer.current()) + pid.minOutput;
+        return (((pid.maxOutput-accelerationMin)/150) * accelerationTimer.current()) + accelerationMin;
     }
 
     int getOutsideEncoder()
@@ -719,10 +719,11 @@ void Drive::setMember(int &number, AutonFlags &currentFlag, int value)
         switch(currentFlag) //for if
         {
             case(NOACCEL):
-                stopAcceleration = true;
+                accelerationControl = currentFlag;
                 break;
-            case(ACCEL):
-                acceleration = true;
+            case(REGACCEL):
+                accelerationControl = currentFlag;
+                accelerationMin = regDriveMin;
                 break;
             case(NOBRAKE):
                 brake = false;
@@ -736,6 +737,11 @@ void Drive::setMember(int &number, AutonFlags &currentFlag, int value)
     {
         switch(currentFlag)
         {
+            case(ACCEL):
+                accelerationControl = currentFlag;
+                accelerationMin = value;
+                number = 0;
+                break;
             case(TURN):
             case(FORWARDS):
             case(BACKWARDS):
@@ -927,7 +933,7 @@ class Tilter : public System  //very quick acceleration
     }
 };
 
-class Intake : public System  //very quick acceleration
+class Intake : public System 
 {
     private:
     int speed;
@@ -1008,7 +1014,7 @@ class Intake : public System  //very quick acceleration
     }
 };
 
-class Lift : public System  //very quick acceleration
+class Lift : public System
 {
     private:
     int speed;
@@ -1214,9 +1220,9 @@ void Drive::move()
                 }
                 else
                 {
-                    if(acceleration == true)
+                    if(accelerationControl != NOACCEL)
                     {
-                        speed = accelerationSpeed();
+                        speed = accelerationOutput();
                     }
                     else 
                     {
