@@ -90,7 +90,7 @@ class PidController
                 long currentIntegral = error * changeInTime; //calculation for the area under the curve for the latest movement. The faster this updates the more accurate
                 combinedIntegral += currentIntegral;         //adds latest to the total integral
             }
-
+            
             double derivative = (error - lastError) / changeInTime; //formula to calculate the (almost) instantaneous rate of change.      
             lastTime = pros::millis(); //put here before the returns
             lastError = error;
@@ -265,6 +265,10 @@ public:
                 case(TURNPID):
                     speedControl = currentFlag;
                     pid = PidController(regTurnP,regTurnI,regTurnD,regTurnMin,regTurnMax);
+                    return false;
+                case(TURNPID2):
+                    speedControl = currentFlag;
+                    pid = PidController(regTurnP2,regTurnI2,regTurnD2,regTurnMin2,regTurnMax2);
                     return false;
                 case(DRIVEPID):
                     speedControl = currentFlag;
@@ -578,14 +582,14 @@ class Drive : public System
         {
             if(off.Right > 4)
             {
-                rightCorrect *= ((float).98 - ((float)off.Right/(float)240));
+                rightCorrect *= ((float).98 - ((float)off.Right/(float)50));
             }
         }
         else
         {
             if(off.Left > 4)
             {
-                leftCorrect *= ((float).98 - ((float)off.Left/(float)240)); //left decrease
+                leftCorrect *= ((float).98 - ((float)off.Left/(float)50)); //left decrease
             }
         }
     }
@@ -702,7 +706,7 @@ class Drive : public System
                 return getOutsideEncoder();
             default:
                 //return abs(leftEncoder.get_value()); //////////////////abs
-                return fabs(rightDrive[1].get_position());
+                return fabs(rightDrive[0].get_position());
         }
     }
 };
@@ -1357,7 +1361,7 @@ void addCommands(Ts... input)
     }
     //drive.pid.minOutput /= drive.outerInnerRatio;
 
-    while(((tilter.state != END) || (drive.state != END) || (intake.state != END)) || (lift.state != END) && (autonTimer.current() < 15000 )) 
+    while(((tilter.state != END) || (drive.state != END) || (intake.state != END) || (lift.state != END)) && (autonTimer.current() < 15000 )) 
     {
         switch(drive.state)
         {
