@@ -8,9 +8,6 @@ const short centerButton = 2;
 const short rightButton = 4;
 
 Select count = UNDEFINED;
-/////////////////flipper.set_brake_mode(pros::E_MOTOR_BRAKE_BRAKE);
-
-
 
 /*
  * Runs initialization code. This occurs as soon as the program is started.
@@ -29,7 +26,7 @@ void initialize()
 {
 	pros::lcd::initialize();
 	pros::ADIGyro gyro(1);
-	pros::Task::delay(2000);
+	pros::Task::delay(1000);
 	for(int i = 0; i < leftDrive.size(); i++)
 	{
 		leftDrive[i].set_brake_mode(pros::E_MOTOR_BRAKE_BRAKE);
@@ -98,6 +95,8 @@ void competition_initialize()
 	mainController.clear();
 	pros::Task::delay(50);
 	mainController.print(0,0,"Down To Select");
+	pros::lcd::print(2,  "Center to Select");
+	pros::Task::delay(50);
 
 	while(!selected)
 	{
@@ -119,31 +118,28 @@ void competition_initialize()
 
 		if(count != oldCount)
 		{
+			mainController.clear();
+			pros::Task::delay(50);
 			switch(count)
 			{
 				case(UNDEFINED):
-					pros::lcd::print(0, "< Auto Select >");
-					pros::lcd::print(2,  "Center to Select");
+					pros::lcd::print(0, "< Auton Select >");
 					mainController.print(0,0,"Down To Select");
 					break;
 				case(SMALLRED):
 					pros::lcd::print(0, "Small Red");
-					pros::lcd::print(2,  "Center to Select");
 					mainController.print(0,0,"Small Red");
 					break;
 				case(SMALLBLUE):
 					pros::lcd::print(0, "Small Blue");
-					pros::lcd::print(2,  "Center to Select");
 					mainController.print(0,0,"Small Blue");
 					break;
 				case(THICCRED):
 					pros::lcd::print(0, "Thicc Red");
-					pros::lcd::print(2,  "Center to Select");
 					mainController.print(0,0,"Thicc Red");
 					break;
 				case(THICCBLUE):
 					pros::lcd::print(0, "Thicc Blue");
-					pros::lcd::print(2,  "Center to Select");
 					mainController.print(0,0,"Thicc Blue");
 					break;
 				case(UNDER):
@@ -155,7 +151,7 @@ void competition_initialize()
 					count = UNDEFINED;
 					break;
 			}
-			pros::Task::delay(70);
+			pros::Task::delay(50);
 		}
 		
 		if(onceAcception == true)

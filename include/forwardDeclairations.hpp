@@ -26,17 +26,26 @@ public:
 	}
 };
 
+/*
+typedef void (* vFunctionCall)(int args);
+void funct(int a, vFunctionCall cVal)
+{
+   funct2(a);
+}
+*/
 class Button
 {
-	/*
-	private
-	void func ( void (*f)(int) ) {
-  	for ( int ctr = 0 ; ctr < 5 ; ctr++ ) {
-    (*f)(ctr);
-  }
-  func(print);
-}*/
+	pros::controller_digital_e_t trackingButton;
+	Button(pros::controller_digital_e_t button)
+	{
+
+	}
+	Button(pros::controller_analog_e_t button)
+	{
+
+	}
 };
+
 
 //all uses documented in smallRedA.hpp
 enum AutonFlags
