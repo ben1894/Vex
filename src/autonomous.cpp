@@ -14,8 +14,8 @@ All code created by:
 #include "forwardDeclairations.hpp"
 #include "pidPacks.hpp"
 
-bool autonTest = false;
 Timer autonTimer;
+bool autonTest = false;
 const bool voltage = true;
 const bool gyroTurns = true;
 const bool gyroUpsidedown = false;
@@ -30,11 +30,12 @@ class Tilter;
 class Intake;
 class Lift;
 class PidController;
+class PositionTracking;
 Drive *driveObj;
 Tilter *tilterObj;
 Intake *intakeObj;
 Lift *liftObj;
-
+PositionTracking posObj;
 
 /**
  * Runs the user autonomous code. This function will be started in its own task
@@ -47,6 +48,45 @@ Lift *liftObj;
  * will be stopped. Re-enabling the robot will restart the task, not re-start it
  * from where it left off.
  */
+
+class PositionTracking
+{
+    double xPosition = 0;
+    double yPosition = 0;
+    int prevLWheel = 0;
+    int prevRWheel = 0;
+    int prevAngle = 0;
+
+    void updatePosition()
+    {
+        int currentAngleDifference = actualGyroPosition() - prevAngle;
+        int currentLDifference = leftEncoder.get_value() - prevLWheel;
+        int currentRDifference = rightEncoder.get_value() - prevRWheel;
+        double currentAngle = (((actualGyroPosition() * -1) / 10) + 360) % 360;
+        float movement = (currentLDifference + currentRDifference)/2;
+
+        if(currentAngleDifference == 0)
+        {
+            xPosition += (double)movement*cos(currentAngle);
+            yPosition += (double)movement*sin(currentAngle);
+        }
+        else 
+        {   //fixes movement from arc to vector
+            movement = (double)2*(double)((double)currentAngleDifference/(double)movement)*sin((double)currentAngleDifference/(double)2);
+            xPosition += (double)movement*cos(currentAngleDifference+currentAngleDifference);
+            yPosition += (double)movement*sin(currentAngleDifference+currentAngleDifference);
+        }
+
+        prevLWheel = leftEncoder.get_value();
+        prevRWheel = rightEncoder.get_value(); //middle of the change
+        prevAngle = actualGyroPosition();
+    }
+
+    void reset()
+    {
+        *this = PositionTracking();
+    }
+};
 
 class PidController
 {
