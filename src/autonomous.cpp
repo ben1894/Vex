@@ -31,11 +31,11 @@ class Intake;
 class Lift;
 class PidController;
 class PositionTracking;
+PositionTracking posObj;
 Drive *driveObj;
 Tilter *tilterObj;
 Intake *intakeObj;
 Lift *liftObj;
-PositionTracking posObj;
 
 /**
  * Runs the user autonomous code. This function will be started in its own task
@@ -1247,6 +1247,33 @@ void Drive::move()
     }
     else 
     {
+        /*      
+                  /|
+                 / |
+                /  |
+               /   | y
+              /    |
+             /     |
+            /______|
+               x   
+        */
+        //use pythagorean theorem to find how close it is to the target
+        //always be updating how far it is to the target
+        //always to updating the change to value
+        //do a once time thing to find the turn and then automatically do that
+        //NO TURN NOT AUTOMATIC!!! Have a turn option that TURNS TOWARDS SPECIFIC POINTS
+        //CHECK IF THEY ARE EMPTY at the end or something
+        //Same thing as the previous turn
+        //have parameter PAST, that automatically uses the last coordinates used when going to a position
+        //Maybe have a forward option that just takes the value needed instead of having to find the slope involved with going a straight line.
+        //past coordinates, update with the total number of calls
+
+        //(xPosition-targetX)^2 + (yPosition-targetY)^2
+        //sqr(ans) //Distance to target
+        //(opposite is sin)(adjacent is cos)
+        //atan((yPosition-yTarget)/(xPosition-xTarget)) //angle needed for movement / set to correct to and inbeginning turn
+        
+
         if(checkIfDone(breakVal) == false)
         {
             if(direction != TURN)
