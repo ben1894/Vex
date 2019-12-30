@@ -48,9 +48,15 @@ Lift *liftObj;
  * will be stopped. Re-enabling the robot will restart the task, not re-start it
  * from where it left off.
  */
+/*
+correctTo = correctAtan(posObj.yPosition - yTarget, posObj.xPosition - xTarget);
 
+                //corrects this angle to represent gyrp values
+                target = ((((target-360) * -1) + 90) * 10);
+*/
 class PositionTracking
 {
+    public:
     double xPosition = 0;
     double yPosition = 0;
     int prevLWheel = 0;
@@ -71,7 +77,7 @@ class PositionTracking
             yPosition += (double)movement*sin(currentAngle);
         }
         else 
-        {   //fixes movement from arc to vector
+        {   //fixes movement from arc to vector   Set formula for arc
             movement = (double)2*(double)((double)currentAngleDifference/(double)movement)*sin((double)currentAngleDifference/(double)2);
             xPosition += (double)movement*cos(currentAngleDifference+currentAngleDifference);
             yPosition += (double)movement*sin(currentAngleDifference+currentAngleDifference);
@@ -80,6 +86,17 @@ class PositionTracking
         prevLWheel = leftEncoder.get_value();
         prevRWheel = rightEncoder.get_value(); //middle of the change
         prevAngle = actualGyroPosition();
+    }
+
+    double targetToAngle(double x, double y)
+    {
+        //((((target-360) * -1) + 90) * 10)
+        return correctAtan(yPosition - y, xPosition - x);
+    }
+
+    double angleToTarget(double target)
+    {
+
     }
 
     void reset()
@@ -235,7 +252,6 @@ public:
                     return false;
                 }
         }
-
     }
 
     void updateTriggerState()
@@ -534,6 +550,8 @@ class Drive : public System
     bool runBrake = false;
     int accelerationMin;
     int correctTo = -1;
+    int xTarget;
+    int yTarget;
     AutonFlags accelerationControl = NOACCEL;
     GyroDistances turnStats;
     AutonFlags direction;
@@ -590,6 +608,19 @@ class Drive : public System
     {
         if(triggerE == NONETE)
         {
+            if(direction == COORDINATES)
+            {
+                //simple distance formula based of the pythagorean theorum
+                int distanceToTarget = sqrt(pow(xTarget - posObj.xPosition, 2) + pow(yTarget - posObj.yPosition, 2));
+                if(distanceToTarget < breakVal)
+                {
+                    
+                }
+            }
+            if(direction == TURNC)
+            {
+
+            }
             if(direction != TURN)
             {
                 if(getDriveEncoder() > breakVal)
@@ -833,6 +864,35 @@ void Drive::setMember(int &number, AutonFlags &currentFlag, int value)
                             correctTo = NOSTRAIGHT;
                         }
                         else
+                        {
+                            correctTo = WHEELCORRECTION;
+                        }
+                        number = 0;
+                        break;
+                }
+                break;
+            case(COORDINATES):
+                switch(number)
+                {
+                    case(1):
+                        direction = currentFlag;
+                        target = value; //distance
+                        number++;
+                        break;
+                    case(2):
+                        xTarget = value;
+                        number++;
+                        break;
+                    case(3):
+                        yTarget = value;
+                        number++;
+                        break;
+                    case(4):
+                        if(value == NOSTRAIGHT)
+                        {
+                            correctTo = NOSTRAIGHT;
+                        }
+                        else if(value == WHEELCORRECTION)
                         {
                             correctTo = WHEELCORRECTION;
                         }
@@ -1271,12 +1331,20 @@ void Drive::move()
         //(xPosition-targetX)^2 + (yPosition-targetY)^2
         //sqr(ans) //Distance to target
         //(opposite is sin)(adjacent is cos)
-        //atan((yPosition-yTarget)/(xPosition-xTarget)) //angle needed for movement / set to correct to and inbeginning turn
+        //correctAtan((yPosition-yTarget)/(xPosition-xTarget)) //angle needed for movement / set to correct to and inbeginning turn
         
-
         if(checkIfDone(breakVal) == false)
         {
-            if(direction != TURN)
+            if(direction == POSITION)
+            {
+                //finds the angle that it should be facing
+                correctTo = correctAtan(posObj.yPosition - yTarget, posObj.xPosition - xTarget);
+
+                //corrects this angle to represent gyrp values
+                correctTo = ((((target-360) * -1) + 90) * 10);
+
+            }
+            else if((direction != TURN) && (direction != TURNC))
             {
                 if(speedControl == NOPID)
                 {
@@ -1358,6 +1426,11 @@ void Drive::move()
             }
             else
             {
+                if(direction == TURNC)
+                {
+                    target = correctAtan(posObj.yPosition - yTarget, posObj.xPosition - xTarget);
+                    target = ((((target-360) * -1) + 90) * 10);
+                }
                 target = fixTarget(target); //so you can put in negative values
                 GyroDistances Dist;
                 getDistances(Dist, target);

@@ -99,6 +99,8 @@ enum AutonFlags
 	DOWNLEFTSWEEP,
 	UPRIGHTSWEEP,
 	DOWNRIGHTSWEEP,
+	COORDINATES,
+	TURNC,
 
 	BACKWARDSE,
 	FORWARDSE,
@@ -187,6 +189,7 @@ extern void getDistances(GyroDistances &Val, int target);
 
 extern int getDriveEncoder();
 extern float map(float value, float istart, float istop, float ostart, float ostop);
+extern double correctAtan(double y, double x);
 extern int cVal(pros::controller_digital_e_t button);
 extern int cVal(pros::controller_analog_e_t button);
 extern int actualGyroPosition();

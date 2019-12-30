@@ -50,3 +50,8 @@ void resetAutonVals()
 	gyro.reset();
 	autonTimer.clear();
 }
+
+double correctAtan(double y, double x)
+{
+	return atan2(y,x) * (double)180 / (double)3.1415926535897923284;
+}
