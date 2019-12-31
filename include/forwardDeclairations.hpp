@@ -50,6 +50,7 @@ class Button
 //all uses documented in smallRedA.hpp
 enum AutonFlags
 {
+	PAST = -100000,
 	WHEELCORRECTION = -3,
 	NOSTRAIGHT = -2,
 	CURRENTVAL = -1,
@@ -113,6 +114,7 @@ enum AutonFlags
 	ACCEL,
 	REGACCEL,
 	NOBRAKE,
+	INVERSE,
 	BLANK
 };
 

@@ -548,6 +548,8 @@ class Drive : public System
     bool stopDeacceleration = false;
     bool brake = true;
     bool runBrake = false;
+    bool inverse = false;
+    bool past = false;
     int accelerationMin;
     int correctTo = -1;
     int xTarget;
@@ -575,6 +577,8 @@ class Drive : public System
             }
             else
             {
+                xTarget = driveObj->xTarget;
+                yTarget = driveObj->yTarget;
                 totalNumberOfCalls = driveObj->totalNumberOfCalls; //passes on the totalNumberOfCalls after reset
             }
         };
@@ -813,6 +817,9 @@ void Drive::setMember(int &number, AutonFlags &currentFlag, int value)
             case(NOBRAKE):
                 brake = false;
                 break;
+            case(INVERSE):
+                inverse = true;
+                break;
             default:
                 number++; //Just sets currentFlag, will get next values when increasead next time
                 break;
@@ -893,8 +900,16 @@ void Drive::setMember(int &number, AutonFlags &currentFlag, int value)
                         number++;
                         break;
                     case(2):
-                        xTarget = value;
-                        number++;
+                        if(value == PAST)
+                        {
+                            past = true;
+                            number = 4;
+                        }
+                        else 
+                        {
+                            number++;
+                            xTarget = value;
+                        }
                         break;
                     case(3):
                         yTarget = value;
@@ -913,6 +928,7 @@ void Drive::setMember(int &number, AutonFlags &currentFlag, int value)
                         break;
                 }
                 break;
+            
         }
     }
 }
@@ -1474,6 +1490,11 @@ void Drive::move()
                 {
                     target = correctAtan(posObj.yPosition - yTarget, posObj.xPosition - xTarget);
                     target = ((((target-360) * -1) + 90) * 10);
+
+                    if(inverse == true)
+                    {
+                        target += 1800;
+                    }
                 }
                 target = fixTarget(target); //so you can put in negative values
                 GyroDistances Dist;
