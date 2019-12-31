@@ -631,8 +631,8 @@ class Drive : public System
             }
 
             GyroDistances gyroVals;
-            getDistances(gyroVals, breakVal);
-            if((gyroVals.Left < 4) || (gyroVals.Right < 4))
+            getDistances(gyroVals, target);
+            if((gyroVals.Left < breakVal) || (gyroVals.Right < breakVal))
             {
                 return true;
             }
@@ -1251,7 +1251,20 @@ void Drive::move()
     float leftCorrection = 1;
     float rightCorrection = 1;
 
-    int breakVal = (triggerE == NONETE) ? target : triggerBreakE;
+    int breakVal;
+    if(triggerE != NONETE)
+    {
+        breakVal = triggerBreakE;
+    }
+    else if((direction == TURN) || (direction == TURNC) || (direction == COORDINATES)) //how far away it is from the target, not on specific value. Impractical for both of these
+    {
+        breakVal = 4;
+    }
+    else
+    {
+        breakVal = target;
+    }
+
     if(runBrake == true)
     {
         int brakeTime;
