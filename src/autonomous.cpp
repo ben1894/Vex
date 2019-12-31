@@ -137,7 +137,7 @@ class PidController
             lastError = 0;
         }
 
-        int output(int currentSensorData, int target)
+        double output(int currentSensorData, int target)
         {
             int error = target - currentSensorData;
             unsigned long changeInTime = pros::millis() - lastTime;
@@ -152,7 +152,7 @@ class PidController
             lastTime = pros::millis(); //put here before the returns
             lastError = error;
 
-            int output = (P * (double)error) + (I * combinedIntegral) + (D * derivative);
+            double output = (P * (double)error) + (I * combinedIntegral) + (D * derivative);
             if(output > maxOutput)
             {
                 return maxOutput;
@@ -665,18 +665,31 @@ class Drive : public System
         }
     }
 
-    int accelerationOutput()
+    double accelerationOutput()
     {
-        int output = (((pid.maxOutput-accelerationMin)/150) * accelerationTimer.current()) + accelerationMin;
+        double output = (((pid.maxOutput-accelerationMin)/150) * accelerationTimer.current()) + accelerationMin;
         if(accelerationTimer.current() > 150)
         {
             accelerationControl = NOACCEL;
             return pid.maxOutput;
         }
-        if(output > pid.output(getDriveEncoder(), target))
+
+        if(direction == COORDINATES)
         {
-            accelerationControl = NOACCEL;     
-            return pid.output(getDriveEncoder(), target);  
+            int distanceToTarget = sqrt(pow(xTarget - posObj.xPosition, 2) + pow(yTarget - posObj.yPosition, 2));
+            if(output > pid.output(-distanceToTarget, 0))
+            {
+                accelerationControl = NOACCEL;
+                return pid.output(-distanceToTarget, 0);  
+            }
+        }
+        else 
+        {
+            if(output > pid.output(getDriveEncoder(), target))
+            {
+                accelerationControl = NOACCEL;     
+                return pid.output(getDriveEncoder(), target);  
+            }
         }
         return output;
     }
@@ -1256,7 +1269,11 @@ void Drive::move()
     {
         breakVal = triggerBreakE;
     }
-    else if((direction == TURN) || (direction == TURNC) || (direction == COORDINATES)) //how far away it is from the target, not on specific value. Impractical for both of these
+    else if((direction == TURN) || (direction == TURNC)) //how far away it is from the target, not on specific value.
+    {
+        breakVal = 4;
+    }
+    else if(direction == COORDINATES)
     {
         breakVal = 4;
     }
@@ -1348,16 +1365,7 @@ void Drive::move()
         
         if(checkIfDone(breakVal) == false)
         {
-            if(direction == POSITION)
-            {
-                //finds the angle that it should be facing
-                correctTo = correctAtan(posObj.yPosition - yTarget, posObj.xPosition - xTarget);
-
-                //corrects this angle to represent gyrp values
-                correctTo = ((((target-360) * -1) + 90) * 10);
-
-            }
-            else if((direction != TURN) && (direction != TURNC))
+            if((direction != TURN) && (direction != TURNC))
             {
                 if(speedControl == NOPID)
                 {
@@ -1369,13 +1377,28 @@ void Drive::move()
                 }
                 else
                 {
-                    if(accelerationControl != NOACCEL)
+                    if(direction == COORDINATES)
                     {
-                        speed = accelerationOutput();
+                        if(accelerationControl != NOACCEL)
+                        {
+                            speed = accelerationOutput();
+                        }
+                        else
+                        {
+                            int distanceToTarget = sqrt(pow(xTarget - posObj.xPosition, 2) + pow(yTarget - posObj.yPosition, 2));
+                            speed = pid.output(-distanceToTarget, 0);
+                        }
                     }
                     else 
                     {
-                        speed = pid.output(getDriveEncoder(), target);
+                        if(accelerationControl != NOACCEL)
+                        {
+                            speed = accelerationOutput();
+                        }
+                        else 
+                        {
+                            speed = pid.output(getDriveEncoder(), target);
+                        }
                     }
                 }
 
@@ -1412,6 +1435,14 @@ void Drive::move()
                 }
                 if(correctTo != NOSTRAIGHT)
                 {
+                    if(direction == COORDINATES)
+                    {
+                        //finds the angle that it should be facing
+                        correctTo = correctAtan(posObj.yPosition - yTarget, posObj.xPosition - xTarget);
+
+                        //corrects this angle to represent gyrp values
+                        correctTo = ((((target-360) * -1) + 90) * 10);
+                    }
                     gyroCorrections(leftCorrection, rightCorrection);
                 }
 
