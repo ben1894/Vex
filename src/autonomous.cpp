@@ -31,7 +31,6 @@ class Intake;
 class Lift;
 class PidController;
 class PositionTracking;
-PositionTracking posObj;
 Drive *driveObj;
 Tilter *tilterObj;
 Intake *intakeObj;
@@ -54,6 +53,58 @@ correctTo = correctAtan(posObj.yPosition - yTarget, posObj.xPosition - xTarget);
                 //corrects this angle to represent gyrp values
                 target = ((((target-360) * -1) + 90) * 10);
 */
+/*
+class VelocityDrive
+{
+public:
+static PidController leftDrivePID;
+static PidController rightDrivePID;
+static int previousLeftDistance;
+static int previousRightDistance;
+static unsigned long previousRightTime;
+static unsigned long previousLeftTime;
+
+
+static void leftSide(double targetVelocity)
+{
+    //Derivative
+    double velocity = (leftEncoder.get_value() - previousLeftDistance) / (pros::millis() - previousLeftTime);
+    double extraSpeed = rightDrivePID.output(velocity, targetVelocity);
+    double velocityToSpeed;
+    //driveMotorsSpeed(leftDrive, )
+    previousLeftTime = pros::millis();
+    //leftDrivePID.output //current then target
+}
+
+static void rightSide(double targetVelocity)
+{
+    double velocity = (rightEncoder.get_value() - previousRightDistance) / (pros::millis() - previousRightTime);
+    double extraSpeed = rightDrivePID.output(velocity, targetVelocity);
+    previousRightTime = pros::millis();
+}
+
+static void reset()
+{
+    leftDrivePID = {leftSideP,leftSideI,leftSideD,leftSideMin,leftSideMax};
+    rightDrivePID = {rightSideP,rightSideI,rightSideD,rightSideMin,rightSideMax};
+    previousLeftDistance = 0;
+    previousRightDistance = 0;
+    previousRightTime = pros::millis();
+    previousLeftTime = pros::millis();
+}
+
+private:
+// Disallow creating an instance of this object
+VelocityDrive() {}
+};
+
+PidController VelocityDrive::leftDrivePID{leftSideP,leftSideI,leftSideD,leftSideMin,leftSideMax};
+PidController VelocityDrive::rightDrivePID{rightSideP,rightSideI,rightSideD,rightSideMin,rightSideMax};
+static int previousLeftDistance = 0;
+static int previousRightDistance = 0;
+static unsigned long previousRightTime = pros::millis();
+static unsigned long previousLeftTime = pros::millis();
+*/
 class PositionTracking
 {
     public:
@@ -62,30 +113,37 @@ class PositionTracking
     int prevLWheel = 0;
     int prevRWheel = 0;
     int prevAngle = 0;
+    int lastGyroPosition = actualGyroPosition();
 
     void updatePosition()
     {
-        int currentAngleDifference = actualGyroPosition() - prevAngle;
+        double currentAngle = fmod((((double)(actualGyroPosition() * -1) / 10) + 360), 360);
+        double currentAngleDifference = currentAngle - prevAngle;
+        int ifAngleChange = actualGyroPosition() - lastGyroPosition;
         int currentLDifference = leftEncoder.get_value() - prevLWheel;
         int currentRDifference = rightEncoder.get_value() - prevRWheel;
-        double currentAngle = (((actualGyroPosition() * -1) / 10) + 360) % 360;
-        float movement = (currentLDifference + currentRDifference)/2;
+        int combinedDistance = currentLDifference + currentRDifference;
 
-        if(currentAngleDifference == 0)
+        if(combinedDistance != 0)
         {
-            xPosition += (double)movement*cos(currentAngle);
-            yPosition += (double)movement*sin(currentAngle);
-        }
-        else 
-        {   //fixes movement from arc to vector   Set formula for arc
-            movement = (double)2*(double)((double)currentAngleDifference/(double)movement)*sin((double)currentAngleDifference/(double)2);
-            xPosition += (double)movement*cos(currentAngleDifference+currentAngleDifference);
-            yPosition += (double)movement*sin(currentAngleDifference+currentAngleDifference);
+            double movement = combinedDistance/(double)2;
+            if(ifAngleChange == 0)
+            {
+                xPosition += (double)movement*cos(currentAngle);
+                yPosition += (double)movement*sin(currentAngle);
+            }
+            else 
+            {   //fixes movement from arc to vector   Set formula for arc
+                movement = 2*(movement/((currentAngleDifference/360)*2*3.141592653589793238462643383))*sin(currentAngleDifference/2);
+                xPosition += movement*cos(currentAngle+currentAngleDifference/2);
+                yPosition += movement*sin(currentAngle+currentAngleDifference/2);
+            }
         }
 
-        prevLWheel = leftEncoder.get_value();
-        prevRWheel = rightEncoder.get_value(); //middle of the change
-        prevAngle = actualGyroPosition();
+        lastGyroPosition = ifAngleChange + lastGyroPosition;
+        prevLWheel = currentLDifference + prevLWheel;
+        prevRWheel = currentRDifference + prevRWheel; //middle of the change
+        prevAngle = currentAngle;
     }
 
     double targetToAngle(double x, double y)
@@ -104,6 +162,8 @@ class PositionTracking
         *this = PositionTracking();
     }
 };
+
+PositionTracking posObj;
 
 class PidController
 {
@@ -137,9 +197,9 @@ class PidController
             lastError = 0;
         }
 
-        double output(int currentSensorData, int target)
+        double output(double currentSensorData, double target)
         {
-            int error = target - currentSensorData;
+            double error = target - currentSensorData;
             unsigned long changeInTime = pros::millis() - lastTime;
             
             if((P*error) < maxOutput) //to prevent windup
@@ -618,12 +678,9 @@ class Drive : public System
                 int distanceToTarget = sqrt(pow(xTarget - posObj.xPosition, 2) + pow(yTarget - posObj.yPosition, 2));
                 if(distanceToTarget < breakVal)
                 {
-                    
+                    return true;
                 }
-            }
-            if(direction == TURNC)
-            {
-
+                return false;
             }
             if(direction != TURN)
             {
@@ -632,6 +689,17 @@ class Drive : public System
                     return true;
                 }
                 return false;
+            }
+            if(direction == TURNC)
+            {
+                target = correctAtan(posObj.yPosition - yTarget, posObj.xPosition - xTarget);
+                target = ((((target-360) * -1) + 90) * 10);
+
+                if(inverse == true)
+                {
+                    target += 1800;
+                }
+                target = fixTarget(target);
             }
 
             GyroDistances gyroVals;
@@ -1690,6 +1758,16 @@ void smallRed()
 
 void autonomous()
 {
+    //PositionTracking posObj;
+    resetAutonVals();
+    while(true)
+    {
+        posObj.updatePosition();
+        pros::lcd::print(2,"%f", posObj.xPosition);
+        pros::lcd::print(3,"%f", posObj.yPosition);
+        pros::lcd::print(4,"%d", fixTarget(gyro.get_value()));
+        pros::delay(1);
+    }
     switch(count)
     {
         case(SMALLRED):
