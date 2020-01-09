@@ -10,6 +10,7 @@
 #define brakeTimeDrive 50
 #define brakeSpeedTurn 120
 #define brakeSpeedDrive 120
+#define pi 3.1415926535897932384
 
 class Timer
 {
@@ -157,7 +158,7 @@ extern const double wheelDistance;
 extern const int driveBaseSpeed;
 extern const int gyroTurnBaseSpeed;
 extern const int encoderTurnBaseSpeed;
-extern pros::ADIGyro gyro;
+extern pros::Imu gyro;
 
 extern std::array<pros::Motor, 2> leftDrive;
 extern std::array<pros::Motor, 2> rightDrive;
@@ -172,7 +173,7 @@ extern Select count;
 
 extern pros::ADIEncoder leftEncoder;
 extern pros::ADIEncoder rightEncoder;
-extern pros::ADIGyro gyro;
+extern pros::ADIGyro Imu;
 extern Timer autonTimer;
 
 
@@ -185,8 +186,8 @@ struct GyroDistances
 extern int getMaxSpeed(pros::Motor &motor);
 extern void correctedMotorSpeed(int speed, pros::Motor &motor, bool forceRPM = false);
 
-extern int actualGyroPosition();
-extern int fixTarget(int oldTarget);
+extern double actualGyroPosition();
+extern double fixTarget(double oldTarget);
 extern void getDistances(GyroDistances &Val, int target);
 
 extern int getDriveEncoder();
@@ -194,8 +195,6 @@ extern float map(float value, float istart, float istop, float ostart, float ost
 extern double correctAtan(double y, double x);
 extern int cVal(pros::controller_digital_e_t button);
 extern int cVal(pros::controller_analog_e_t button);
-extern int actualGyroPosition();
-extern int fixTarget(int oldTarget);
 extern void resetAutonVals();
 template <typename Ts> void addCommands(Ts);
 

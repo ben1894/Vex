@@ -1,9 +1,9 @@
 #include "main.h"
 #include "forwardDeclairations.hpp"
 
-int actualGyroPosition()
+double actualGyroPosition()
 {
-	int fixingGyro = gyro.get_value(); //corrects for negative values
+	double fixingGyro = gyro.get_heading(); //corrects for negative values
 
 	if(gyroUpsidedown == true)
 	{
@@ -12,15 +12,15 @@ int actualGyroPosition()
 	return fixTarget(fixingGyro);
 }
 
-int fixTarget(int oldTarget)
+double fixTarget(double oldTarget)
 {
 	if(oldTarget < 0)
 	{
-		return ((oldTarget%3600) + 3600);
+		return (fmod(oldTarget, 360) + 360);
 	}
-	else if(oldTarget > 3600)
+	else if(oldTarget > 360)
 	{ 
-		return (oldTarget%3600);
+		return fmod(oldTarget, 360);
 	}
 	else
 	{
@@ -28,21 +28,21 @@ int fixTarget(int oldTarget)
 	}
 }
 
-void getDistances(GyroDistances &Val, int target)
+void getDistances(GyroDistances &Val, double target)
 {
 	fixTarget(target);
-	int current = actualGyroPosition();
-	int R;
-	int L;
+	double current = actualGyroPosition();
+	double R;
+	double L;
 	if(current > target)
 	{
 		L = (current - target);
-		R = (3600 - L);
+		R = (360 - L);
 	}
 	else if(current <= target)
 	{
 		R = (target - current);
-		L = (3600 - R);
+		L = (360 - R);
 	}
 	Val.Right = R;
 	Val.Left  = L;

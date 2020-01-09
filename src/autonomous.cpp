@@ -1,13 +1,13 @@
 ﻿/*
-536E Vex Team Code 2019-2020 
+536E Vex Team Code 2019-2020
 All code created by:
- ____                       ____                                 
-/\  _`\                    /\  _`\                               
-\ \ \L\ \     __    ___    \ \ \/\ \  _ __    __     __    ____  
- \ \  _ <   /'__`\/' _ `\   \ \ \ \ \/\`'__\/'__`\ /'__`\ /',__\ 
+ ____                       ____
+/\  _`\                    /\  _`\
+\ \ \L\ \     __    ___    \ \ \/\ \  _ __    __     __    ____
+ \ \  _ <   /'__`\/' _ `\   \ \ \ \ \/\`'__\/'__`\ /'__`\ /',__\
   \ \ \L\ \/\  __//\ \/\ \   \ \ \_\ \ \ \//\  __//\  __//\__, `\
    \ \____/\ \____\ \_\ \_\   \ \____/\ \_\\ \____\ \____\/\____/
-    \/___/  \/____/\/_/\/_/    \/___/  \/_/ \/____/\/____/\/___/ 
+    \/___/  \/____/\/_/\/_/    \/___/  \/_/ \/____/\/____/\/___/
 */
 
 #include "main.h"
@@ -113,28 +113,32 @@ class PositionTracking
     int prevLWheel = 0;
     int prevRWheel = 0;
     int prevAngle = 0;
-    int lastGyroPosition = actualGyroPosition();
+    int lastGyroPosition = gyro.get_heading();
 
     void updatePosition()
     {
-        double currentAngle = fmod((((double)(actualGyroPosition() * -1) / 10) + 360), 360);
+        double currentAngle = fmod((((gyro.get_heading()) - 90) * -1) + 360, (double)360);
         double currentAngleDifference = currentAngle - prevAngle;
         int ifAngleChange = actualGyroPosition() - lastGyroPosition;
         int currentLDifference = leftEncoder.get_value() - prevLWheel;
         int currentRDifference = rightEncoder.get_value() - prevRWheel;
         int combinedDistance = currentLDifference + currentRDifference;
+        pros::lcd::print(4,"%f", currentAngle);
 
         if(combinedDistance != 0)
         {
             double movement = combinedDistance/(double)2;
+            pros::lcd::print(5,"%f", movement);
+
             if(ifAngleChange == 0)
             {
-                xPosition += (double)movement*cos(currentAngle);
-                yPosition += (double)movement*sin(currentAngle);
+                xPosition += movement*cos(currentAngle);
+                yPosition += movement*sin(currentAngle);
             }
-            else 
+            else
             {   //fixes movement from arc to vector   Set formula for arc
-                movement = 2*(movement/((currentAngleDifference/360)*2*3.141592653589793238462643383))*sin(currentAngleDifference/2);
+                double radianAngle = currentAngleDifference*((double)pi/180);
+                movement = 2*(movement/radianAngle)*sin(radianAngle/2);
                 xPosition += movement*cos(currentAngle+currentAngleDifference/2);
                 yPosition += movement*sin(currentAngle+currentAngleDifference/2);
             }
@@ -201,14 +205,14 @@ class PidController
         {
             double error = target - currentSensorData;
             unsigned long changeInTime = pros::millis() - lastTime;
-            
+
             if((P*error) < maxOutput) //to prevent windup
             {
                 long currentIntegral = error * changeInTime; //calculation for the area under the curve for the latest movement. The faster this updates the more accurate
                 combinedIntegral += currentIntegral;         //adds latest to the total integral
             }
-            
-            double derivative = (error - lastError) / changeInTime; //formula to calculate the (almost) instantaneous rate of change.      
+
+            double derivative = (error - lastError) / changeInTime; //formula to calculate the (almost) instantaneous rate of change.
             lastTime = pros::millis(); //put here before the returns
             lastError = error;
 
@@ -265,7 +269,7 @@ public:
     void updateEndingState()
     {
         //if it was on its last run
-        if(numberOfCalls == 0) 
+        if(numberOfCalls == 0)
         {
             state = END;
         }
@@ -406,7 +410,7 @@ public:
         {
             switch(currentFlag)
             {
-                case(DRIVET): 
+                case(DRIVET):
                 case(TILTERT):
                 case(INTAKET):
                 case(LIFTT):
@@ -577,7 +581,7 @@ public:
                     {
                         resetObj(); //resets the object
                         parameters[i] = (int)NULLOPTION;
-                        AutonFlags currentFlag; 
+                        AutonFlags currentFlag;
                         int subFlag = 0;
 
                         do //loops through the data to give to the specific system
@@ -752,15 +756,15 @@ class Drive : public System
             if(output > pid.output(-distanceToTarget, 0))
             {
                 accelerationControl = NOACCEL;
-                return pid.output(-distanceToTarget, 0);  
+                return pid.output(-distanceToTarget, 0);
             }
         }
-        else 
+        else
         {
             if(output > pid.output(getDriveEncoder(), target))
             {
-                accelerationControl = NOACCEL;     
-                return pid.output(getDriveEncoder(), target);  
+                accelerationControl = NOACCEL;
+                return pid.output(getDriveEncoder(), target);
             }
         }
         return output;
@@ -973,7 +977,7 @@ void Drive::setMember(int &number, AutonFlags &currentFlag, int value)
                             past = true;
                             number = 4;
                         }
-                        else 
+                        else
                         {
                             number++;
                             xTarget = value;
@@ -996,7 +1000,7 @@ void Drive::setMember(int &number, AutonFlags &currentFlag, int value)
                         break;
                 }
                 break;
-            
+
         }
     }
 }
@@ -1131,7 +1135,7 @@ class Tilter : public System  //very quick acceleration
     }
 };
 
-class Intake : public System 
+class Intake : public System
 {
     private:
     int speed;
@@ -1195,7 +1199,7 @@ class Intake : public System
             speed *= -1;
         }
         motorGroupMove(speed, intakeM);
-        
+
         if(triggerE == NONETE) //timete
         {
             updateEndingState();
@@ -1375,7 +1379,7 @@ void Drive::move()
             brakeTime = brakeTimeTurn;
             brakeSpeed = brakeTimeTurn;
         }
-        else 
+        else
         {
             brakeTime = brakeTimeDrive;
             brakeSpeed = brakeTimeDrive;
@@ -1399,7 +1403,7 @@ void Drive::move()
                     {
                         leftDirection *= -1;
                     }
-                    else 
+                    else
                     {
                         rightDirection *= -1;
                     }
@@ -1419,9 +1423,9 @@ void Drive::move()
             updateEndingState();
         }
     }
-    else 
+    else
     {
-        /*      
+        /*
                   /|
                  / |
                 /  |
@@ -1429,7 +1433,7 @@ void Drive::move()
               /    |
              /     |
             /______|
-               x   
+               x
         */
         //use pythagorean theorem to find how close it is to the target
         //always be updating how far it is to the target
@@ -1446,7 +1450,7 @@ void Drive::move()
         //sqr(ans) //Distance to target
         //(opposite is sin)(adjacent is cos)
         //correctAtan((yPosition-yTarget)/(xPosition-xTarget)) //angle needed for movement / set to correct to and inbeginning turn
-        
+
         if(checkIfDone(breakVal) == false)
         {
             if((direction != TURN) && (direction != TURNC))
@@ -1473,13 +1477,13 @@ void Drive::move()
                             speed = pid.output(-distanceToTarget, 0);
                         }
                     }
-                    else 
+                    else
                     {
                         if(accelerationControl != NOACCEL)
                         {
                             speed = accelerationOutput();
                         }
-                        else 
+                        else
                         {
                             speed = pid.output(getDriveEncoder(), target);
                         }
@@ -1546,7 +1550,7 @@ void Drive::move()
 
                 //check to make sure the speed won't be under the movable rate
                 verifySpeedOutput(leftCorrection, rightCorrection);
-                
+
                 //Sets the drive motors at speed multiplied by the respective correction
                 //Corrections start at 1 by default
                 driveMotorsSpeed(speed*rightCorrection, rightDrive);
@@ -1613,7 +1617,7 @@ void addCommands(Ts... input)
     Tilter tilter{};
     Intake intake{};
     Lift lift{};
-    
+
     for(int i = 0; i < parameters.size()-1; i++)
     {
         drive.initialUpdate(i, parameters);
@@ -1630,7 +1634,7 @@ void addCommands(Ts... input)
     {
         tilter.underTarget = true;
     }
-   
+
     if(lift.getPosition() > lift.target)
     {
         lift.underTarget = false;
@@ -1641,7 +1645,7 @@ void addCommands(Ts... input)
     }
     //drive.pid.minOutput /= drive.outerInnerRatio;
 
-    while(((tilter.state != END) || (drive.state != END) || (intake.state != END) || (lift.state != END)) && (autonTimer.current() < 15000 )) 
+    while(((tilter.state != END) || (drive.state != END) || (intake.state != END) || (lift.state != END)) && (autonTimer.current() < 15000 ))
     {
         switch(drive.state)
         {
@@ -1658,7 +1662,7 @@ void addCommands(Ts... input)
                 {
                     drive.rightTurn = true;
                 }
-                else 
+                else
                 {
                     drive.rightTurn = false;
                 }
@@ -1765,8 +1769,8 @@ void autonomous()
         posObj.updatePosition();
         pros::lcd::print(2,"%f", posObj.xPosition);
         pros::lcd::print(3,"%f", posObj.yPosition);
-        pros::lcd::print(4,"%d", fixTarget(gyro.get_value()));
-        pros::delay(1);
+        //pros::lcd::print(4,"%d", fixTarget(gyro.get_heading()));
+        pros::delay(4);
     }
     switch(count)
     {
