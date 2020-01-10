@@ -7,7 +7,7 @@ double actualGyroPosition()
 
 	if(gyroUpsidedown == true)
 	{
-		fixingGyro = fixingGyro * -1;
+		fixingGyro *= -1;
 	}
 	return fixTarget(fixingGyro);
 }

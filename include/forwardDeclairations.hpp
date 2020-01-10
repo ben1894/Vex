@@ -179,8 +179,8 @@ extern Timer autonTimer;
 
 struct GyroDistances
 {
-	int Left;
-	int Right;
+	double Left;
+	double Right;
 };
 
 extern int getMaxSpeed(pros::Motor &motor);
@@ -192,6 +192,7 @@ extern void getDistances(GyroDistances &Val, int target);
 
 extern int getDriveEncoder();
 extern float map(float value, float istart, float istop, float ostart, float ostop);
+extern double degToRad(double degrees);
 extern double correctAtan(double y, double x);
 extern int cVal(pros::controller_digital_e_t button);
 extern int cVal(pros::controller_analog_e_t button);

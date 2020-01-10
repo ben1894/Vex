@@ -9,7 +9,8 @@ All code created by:
    \ \____/\ \____\ \_\ \_\   \ \____/\ \_\\ \____\ \____\/\____/
     \/___/  \/____/\/_/\/_/    \/___/  \/_/ \/____/\/____/\/___/
 */
-
+#define _USE_MATH_DEFINES
+#include <main.h>
 #include "main.h"
 #include "forwardDeclairations.hpp"
 #include "pidPacks.hpp"
@@ -137,8 +138,8 @@ class PositionTracking
             }
             else
             {   //fixes movement from arc to vector   Set formula for arc
-                double radianAngle = currentAngleDifference*((double)pi/180);
-                movement = 2*(movement/radianAngle)*sin(radianAngle/2);
+                double radAngleDif = currentAngleDifference*((double)pi/180);
+                movement = 2*(movement/radAngleDif)*sin(radAngleDif/2);
                 xPosition += movement*cos(currentAngle+currentAngleDifference/2);
                 yPosition += movement*sin(currentAngle+currentAngleDifference/2);
             }
@@ -250,11 +251,11 @@ public:
     SystemStates state = END;
     PidController pid; //eventualy initialized to defaults later in inherited classes
     int id;
-    int target;
+    double target;
     char numberOfCalls = 0;
     char totalNumberOfCalls = 0;
 
-    virtual bool checkIfDone(int breakValue) = 0;
+    virtual bool checkIfDone(double breakValue) = 0;
     virtual void setMember(int &number, AutonFlags &currentFlag, int value) = 0;
     virtual void resetObj() = 0;
     virtual void initializePid(AutonFlags pidPack) = 0;
@@ -615,7 +616,7 @@ class Drive : public System
     bool inverse = false;
     bool past = false;
     int accelerationMin;
-    int correctTo = -1;
+    double correctTo = -1;
     int xTarget;
     int yTarget;
     AutonFlags accelerationControl = NOACCEL;
@@ -672,7 +673,7 @@ class Drive : public System
         }
     }
 
-    bool checkIfDone(int breakVal)
+    bool checkIfDone(double breakVal)
     {
         if(triggerE == NONETE)
         {
@@ -686,7 +687,7 @@ class Drive : public System
                 }
                 return false;
             }
-            if(direction != TURN)
+            if((direction != TURN) && (direction != TURNC))
             {
                 if(getDriveEncoder() > breakVal)
                 {
@@ -694,20 +695,26 @@ class Drive : public System
                 }
                 return false;
             }
+
+            GyroDistances gyroVals;
+
             if(direction == TURNC)
             {
-                target = correctAtan(posObj.yPosition - yTarget, posObj.xPosition - xTarget);
-                target = ((((target-360) * -1) + 90) * 10);
+                double turncTarget = correctAtan(posObj.yPosition - yTarget, posObj.xPosition - xTarget);
+                turncTarget = ((((turncTarget - 360) * -1) + 90) * 10);
 
                 if(inverse == true)
                 {
-                    target += 1800;
+                    turncTarget += 180;
                 }
-                target = fixTarget(target);
+                turncTarget = fixTarget(turncTarget);
+                getDistances(gyroVals, turncTarget);
+            }
+            else 
+            {
+                getDistances(gyroVals, target / 10.0);
             }
 
-            GyroDistances gyroVals;
-            getDistances(gyroVals, target);
             if((gyroVals.Left < breakVal) || (gyroVals.Right < breakVal))
             {
                 return true;
@@ -727,16 +734,16 @@ class Drive : public System
 
         if(off.Right < off.Left)
         {
-            if(off.Right > 4)
+            if(off.Right > 0.4)
             {
-                rightCorrect *= ((float).98 - ((float)off.Right/(float)50));
+                rightCorrect *= (0.98 - (off.Right/5));
             }
         }
         else
         {
-            if(off.Left > 4)
+            if(off.Left > 0.4)
             {
-                leftCorrect *= ((float).98 - ((float)off.Left/(float)50)); //left decrease
+                leftCorrect *= (0.98 - (off.Left/5)); //left decrease
             }
         }
     }
@@ -807,7 +814,7 @@ class Drive : public System
     void wheelCorrections(float &leftCorrect, float &rightCorrect)
     {
         int difference;
-        if(direction == TURN || direction == FORWARDS || direction == FORWARDSE || direction ==BACKWARDS || direction == BACKWARDSE)
+        if(direction == TURN || direction == TURNC || direction == FORWARDS || direction == FORWARDSE || direction ==BACKWARDS || direction == BACKWARDSE)
         {
             difference = abs(rightEncoder.get_value()) - abs(leftEncoder.get_value());
         }
@@ -838,19 +845,6 @@ class Drive : public System
 
     void setMember(int &number, AutonFlags &currentFlag, int value);
     void move();
-    int getCurrentDistance()
-    {
-        if(direction == TURN)
-        {
-            getDistances(turnStats, target);
-            if(turnStats.Left <= turnStats.Right)
-            {
-                return turnStats.Left;
-            }
-            return turnStats.Right;
-        }
-        return getDriveEncoder();
-    }
 
     int getDriveEncoder()
     {
@@ -925,7 +919,7 @@ void Drive::setMember(int &number, AutonFlags &currentFlag, int value)
                         }
                         else
                         {
-                            correctTo = value;
+                            correctTo = value / 10.0;
                         }
                         number = 0;
                         break;
@@ -1031,7 +1025,7 @@ class Tilter : public System  //very quick acceleration
         return (int)fabs(tilter.get_position());
     }
 
-    bool checkIfDone(int breakVal)
+    bool checkIfDone(double breakVal)
     {
         if(triggerE == NONETE)
         {
@@ -1156,7 +1150,7 @@ class Intake : public System
             }
         }
 
-    bool checkIfDone(int breakVal)
+    bool checkIfDone(double breakVal)
     {
         return triggerCheckE(breakVal);
     }
@@ -1242,7 +1236,7 @@ class Lift : public System
         return (int)fabs(lift.get_position());
     }
 
-    bool checkIfDone(int breakVal)
+    bool checkIfDone(double breakVal)
     {
         if(triggerE == NONETE)
         {
@@ -1359,7 +1353,7 @@ void Drive::move()
     }
     else if((direction == TURN) || (direction == TURNC)) //how far away it is from the target, not on specific value.
     {
-        breakVal = 4;
+        breakVal = 0.4;
     }
     else if(direction == COORDINATES)
     {
@@ -1528,8 +1522,8 @@ void Drive::move()
                         //finds the angle that it should be facing
                         correctTo = correctAtan(posObj.yPosition - yTarget, posObj.xPosition - xTarget);
 
-                        //corrects this angle to represent gyrp values
-                        correctTo = ((((target-360) * -1) + 90) * 10);
+                        //corrects this angle to represent gyro values
+                        correctTo = (((target - 360) * -1) + 90);
                     }
                     gyroCorrections(leftCorrection, rightCorrection);
                 }
@@ -1561,11 +1555,11 @@ void Drive::move()
                 if(direction == TURNC)
                 {
                     target = correctAtan(posObj.yPosition - yTarget, posObj.xPosition - xTarget);
-                    target = ((((target-360) * -1) + 90) * 10);
+                    target = (((target-360) * -1) + 90);
 
                     if(inverse == true)
                     {
-                        target += 1800;
+                        target += 180;
                     }
                 }
                 target = fixTarget(target); //so you can put in negative values
