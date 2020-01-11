@@ -9,8 +9,6 @@ All code created by:
    \ \____/\ \____\ \_\ \_\   \ \____/\ \_\\ \____\ \____\/\____/
     \/___/  \/____/\/_/\/_/    \/___/  \/_/ \/____/\/____/\/___/
 */
-#define _USE_MATH_DEFINES
-#include <main.h>
 #include "main.h"
 #include "forwardDeclairations.hpp"
 #include "pidPacks.hpp"
@@ -111,16 +109,18 @@ class PositionTracking
     public:
     double xPosition = 0;
     double yPosition = 0;
+    double lastGyroPosition = actualGyroPosition();
     int prevLWheel = 0;
     int prevRWheel = 0;
     int prevAngle = 0;
-    int lastGyroPosition = gyro.get_heading();
 
     void updatePosition()
     {
-        double currentAngle = fmod((((gyro.get_heading()) - 90) * -1) + 360, (double)360);
+        double currentAngle = fmod((((actualGyroPosition()) - 90) * -1) + 360, (double)360);
         double currentAngleDifference = currentAngle - prevAngle;
+
         int ifAngleChange = actualGyroPosition() - lastGyroPosition;
+
         int currentLDifference = leftEncoder.get_value() - prevLWheel;
         int currentRDifference = rightEncoder.get_value() - prevRWheel;
         int combinedDistance = currentLDifference + currentRDifference;
@@ -133,15 +133,15 @@ class PositionTracking
 
             if(ifAngleChange == 0)
             {
-                xPosition += movement*cos(currentAngle);
-                yPosition += movement*sin(currentAngle);
+                xPosition += movement*cos(degToRad(currentAngle));
+                yPosition += movement*sin(degToRad(currentAngle));
             }
             else
             {   //fixes movement from arc to vector   Set formula for arc
-                double radAngleDif = currentAngleDifference*((double)pi/180);
+                double radAngleDif = degToRad(currentAngleDifference);
                 movement = 2*(movement/radAngleDif)*sin(radAngleDif/2);
-                xPosition += movement*cos(currentAngle+currentAngleDifference/2);
-                yPosition += movement*sin(currentAngle+currentAngleDifference/2);
+                xPosition += movement*cos(degToRad(currentAngle)+ (radAngleDif/2));
+                yPosition += movement*sin(degToRad(currentAngle)+ (radAngleDif/2));
             }
         }
 
@@ -217,7 +217,7 @@ class PidController
             lastTime = pros::millis(); //put here before the returns
             lastError = error;
 
-            double output = (P * (double)error) + (I * combinedIntegral) + (D * derivative);
+            double output = (P * error) + (I * combinedIntegral) + (D * derivative);
             if(output > maxOutput)
             {
                 return maxOutput;
@@ -712,13 +712,23 @@ class Drive : public System
             }
             else 
             {
-                getDistances(gyroVals, target / 10.0);
+                getDistances(gyroVals, target);
             }
-
+            
             if((gyroVals.Left < breakVal) || (gyroVals.Right < breakVal))
-            {
+            {   /*pros::lcd::print(1,"%f", gyroVals.Left);
+                pros::lcd::print(2,"%f", target);
+                pros::lcd::print(3,"%f", actualGyroPosition());
+                pros::lcd::print(4,"%f", gyroI.get_heading());
+                driveMotorsSpeed(0, leftDrive);
+                driveMotorsSpeed(0, rightDrive);
+                while(1)
+                {
+                    pros::delay(10);
+                }*/
                 return true;
             }
+            
             return false;
         }
         else
@@ -861,7 +871,7 @@ class Drive : public System
                 return getOutsideEncoder();
             default:
                 //return abs(leftEncoder.get_value()); //////////////////abs
-                return fabs(rightDrive[0].get_position());
+                return fabs(leftEncoder.get_value());
         }
     }
 };
@@ -909,7 +919,14 @@ void Drive::setMember(int &number, AutonFlags &currentFlag, int value)
                 {
                     case(1):
                         direction = currentFlag;
-                        target = value;
+                        if(direction == TURN)
+                        {
+                            target = (double)value / 10.0;
+                        }
+                        else
+                        {
+                            target = (double)value;
+                        }
                         number++;
                         break;
                     case(2):
@@ -1346,7 +1363,7 @@ void Drive::move()
     float leftCorrection = 1;
     float rightCorrection = 1;
 
-    int breakVal;
+    double breakVal;
     if(triggerE != NONETE)
     {
         breakVal = triggerBreakE;
@@ -1562,6 +1579,7 @@ void Drive::move()
                         target += 180;
                     }
                 }
+                
                 target = fixTarget(target); //so you can put in negative values
                 GyroDistances Dist;
                 getDistances(Dist, target);
@@ -1745,8 +1763,11 @@ void addCommands(Ts... input)
 void smallBlue()
 {
     resetAutonVals();
+    pros::delay(5000);
     addCommands(
-        DRIVE,TURN,900,NOSTRAIGHT,TURNPID);
+        DRIVE,TURN,2000,NOSTRAIGHT,TURNPID,
+        DRIVE,TURN,1000,NOSTRAIGHT,TURNPID,
+        DRIVE,TURN,2000,NOSTRAIGHT,TURNPID);
 }
 
 void smallRed()
@@ -1754,18 +1775,24 @@ void smallRed()
 
 }
 
-void autonomous()
+void posTest()
 {
-    //PositionTracking posObj;
-    resetAutonVals();
+    posObj.reset();
     while(true)
     {
         posObj.updatePosition();
         pros::lcd::print(2,"%f", posObj.xPosition);
         pros::lcd::print(3,"%f", posObj.yPosition);
+        driveMotorsSpeed(cVal(ANALOG_RIGHT_Y),rightDrive);
+		driveMotorsSpeed(cVal(ANALOG_LEFT_Y),leftDrive);
         //pros::lcd::print(4,"%d", fixTarget(gyro.get_heading()));
-        pros::delay(4);
+        pros::delay(1);
     }
+}
+
+void autonomous()
+{
+    resetAutonVals();
     switch(count)
     {
         case(SMALLRED):

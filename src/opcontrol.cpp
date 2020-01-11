@@ -14,9 +14,9 @@
  * task, not resume it from where it left off.
  */
 //pros::ADIGyro gyro(1);
-pros::Imu gyro(18);
-pros::ADIEncoder leftEncoder(3, 4, true);
-pros::ADIEncoder rightEncoder(5, 6, true);
+pros::Imu gyroI(18);
+pros::ADIEncoder leftEncoder(3, 4, false);
+pros::ADIEncoder rightEncoder(5, 6, false);
 
 void opcontrol() //0.0078740157480315 = quadradic value
 {
@@ -96,23 +96,28 @@ void opcontrol() //0.0078740157480315 = quadradic value
 		}
 		//pros::lcd::print(1,"%f", lift.get_position());
 		//pros::lcd::print(3,"%d", rightEncoder.get_value());
-		pros::lcd::print(4,"%d", fixTarget(gyro.get_heading()));
-		pros::lcd::print(2,"%f", gyro.get_heading()); //regular, no negative, no over anymore
-		pros::lcd::print(3,"%f", gyro.get_vex_degrees());
-		pros::lcd::print(5,"%f", gyro.get_vex_heading());
+		GyroDistances test;
+		getDistances(test, 90);
+		pros::lcd::print(4,"%f", actualGyroPosition());
+		pros::lcd::print(2,"%f", test.Left); //regular, no negative, no over anymore
+		pros::lcd::print(3,"%f", test.Right);
+		//pros::lcd::print(5,"%f", gyro.get_vex_heading());
 
 		//pros::lcd::print(2,"%d", leftEncoder.get_value());
 
-		if(cVal(DIGITAL_X))
-		{
-			rightDrive[0].tare_position();
-		}
-
 		if(autonTest == true)
 		{
+			if(cVal(DIGITAL_X))
+			{
+				resetAutonVals();
+				posTest();
+			}
+
 			if(cVal(DIGITAL_A))
 			{
 				autonomous();
+				//resetAutonVals();
+				//posTest();
 			}
 		}
 		oldButtonY = cVal(DIGITAL_Y);

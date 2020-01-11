@@ -158,7 +158,6 @@ extern const double wheelDistance;
 extern const int driveBaseSpeed;
 extern const int gyroTurnBaseSpeed;
 extern const int encoderTurnBaseSpeed;
-extern pros::Imu gyro;
 
 extern std::array<pros::Motor, 2> leftDrive;
 extern std::array<pros::Motor, 2> rightDrive;
@@ -173,7 +172,7 @@ extern Select count;
 
 extern pros::ADIEncoder leftEncoder;
 extern pros::ADIEncoder rightEncoder;
-extern pros::ADIGyro Imu;
+extern pros::Imu gyroI;
 extern Timer autonTimer;
 
 
@@ -188,10 +187,12 @@ extern void correctedMotorSpeed(int speed, pros::Motor &motor, bool forceRPM = f
 
 extern double actualGyroPosition();
 extern double fixTarget(double oldTarget);
-extern void getDistances(GyroDistances &Val, int target);
+extern void getDistances(GyroDistances &Val, double target);
 
+extern void posTest();
 extern int getDriveEncoder();
 extern float map(float value, float istart, float istop, float ostart, float ostop);
+extern double radToDeg(double radians);
 extern double degToRad(double degrees);
 extern double correctAtan(double y, double x);
 extern int cVal(pros::controller_digital_e_t button);

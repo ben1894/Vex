@@ -3,11 +3,11 @@
 
 double actualGyroPosition()
 {
-	double fixingGyro = gyro.get_heading(); //corrects for negative values
+	double fixingGyro = gyroI.get_heading(); //corrects for negative values
 
 	if(gyroUpsidedown == true)
 	{
-		fixingGyro *= -1;
+		fixingGyro *= -1.0;
 	}
 	return fixTarget(fixingGyro);
 }

@@ -43,11 +43,21 @@ int cVal( pros::controller_analog_e_t button)
 	return mainController.get_analog(button);
 }
 
+double degToRad(double degrees)
+{
+	return (degrees*pi) / 180;
+}
+
+double radToDeg(double radians)
+{
+	return (radians*180) / pi;
+}
+
 void resetAutonVals()
 {
 	tilter.tare_position();
 	lift.tare_position();
-	gyro.reset();
+	gyroI.reset();
 	autonTimer.clear();
 }
 
@@ -58,6 +68,7 @@ double correctAtan(double y, double x)
 	return radToDeg(atan2(y,x));
 }
 
+/*
 double sind(double x) {
   if (!isfinite(x)) {
     return sin(x);
@@ -80,20 +91,11 @@ double sind(double x) {
       return -cos(degToRad(x90));
   }
   return 0.0;
-}
-
+}*/
+/*
 double cosd(double x)
 {
 	return sind(90.0 - x);
-}
+}*/
 //sin (90° – x) = cos x	cos (90° – x) = sin x
 
-double degToRad(double degrees)
-{
-	return (degrees*pi) / 180;
-}
-
-double radToDeg(double radians)
-{
-	return (radians*180) / pi;
-}
