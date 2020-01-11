@@ -1763,7 +1763,6 @@ void addCommands(Ts... input)
 void smallBlue()
 {
     resetAutonVals();
-    pros::delay(5000);
     addCommands(
         DRIVE,TURN,2000,WHEELCORRECTION,TURNPID,
         DRIVE,TURN,1000,WHEELCORRECTION,TURNPID,
@@ -1772,7 +1771,13 @@ void smallBlue()
 
 void smallRed()
 {
-
+    resetAutonVals();
+    addCommands(
+        DRIVE,DOWNLEFTSWEEP,1000,500,WHEELCORRECTION,TURNPID,
+        DRIVE,DOWNRIGHTSWEEP,1000,500,WHEELCORRECTION,TURNPID,
+        DRIVE,UPLEFTSWEEP,1000,500,WHEELCORRECTION,TURNPID,
+        DRIVE,UPRIGHTSWEEP,1000,500,WHEELCORRECTION,TURNPID
+    );
 }
 
 void posTest()

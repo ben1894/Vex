@@ -56,6 +56,10 @@ void opcontrol() //0.0078740157480315 = quadradic value
 		{
 			motorGroupMove(127, intakeM);
 		}
+		else if(cVal(DIGITAL_RIGHT))
+		{
+			motorGroupMove(-69, intakeM);
+		}
 		else if(cVal(DIGITAL_R2))
 		{
 			motorGroupMove(-127, intakeM);

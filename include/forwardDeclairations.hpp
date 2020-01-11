@@ -186,6 +186,7 @@ extern int getMaxSpeed(pros::Motor &motor);
 extern void correctedMotorSpeed(int speed, pros::Motor &motor, bool forceRPM = false);
 
 extern double actualGyroPosition();
+extern void resetGyro();
 extern double fixTarget(double oldTarget);
 extern void getDistances(GyroDistances &Val, double target);
 
