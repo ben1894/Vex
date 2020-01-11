@@ -22,6 +22,9 @@ void opcontrol() //0.0078740157480315 = quadradic value
 {
 	int oldButtonY = 0;
 	int intakeHoldingPower = 0;
+	leftEncoder.reset();
+	rightEncoder.reset();
+	rightDrive[0].tare_position();
 	for(int i = 0; i < leftDrive.size(); i++)
 	{
 		leftDrive[i].set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
@@ -99,8 +102,9 @@ void opcontrol() //0.0078740157480315 = quadradic value
 		GyroDistances test;
 		getDistances(test, 90);
 		pros::lcd::print(4,"%f", actualGyroPosition());
-		pros::lcd::print(2,"%f", test.Left); //regular, no negative, no over anymore
-		pros::lcd::print(3,"%f", test.Right);
+		pros::lcd::print(2,"%d", leftEncoder.get_value()); //regular, no negative, no over anymore
+		pros::lcd::print(3,"%d", rightEncoder.get_value());
+		pros::lcd::print(1,"%f", rightDrive[0].get_position());
 		//pros::lcd::print(5,"%f", gyro.get_vex_heading());
 
 		//pros::lcd::print(2,"%d", leftEncoder.get_value());

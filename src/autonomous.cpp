@@ -871,7 +871,7 @@ class Drive : public System
                 return getOutsideEncoder();
             default:
                 //return abs(leftEncoder.get_value()); //////////////////abs
-                return fabs(leftEncoder.get_value());
+                return abs(leftEncoder.get_value());
         }
     }
 };
@@ -1425,7 +1425,7 @@ void Drive::move()
                     break;
             }
             driveMotorsSpeed(rightDirection*brakeSpeed,rightDrive);
-            driveMotorsSpeed(rightDirection*brakeSpeed,leftDrive);
+            driveMotorsSpeed(leftDirection*brakeSpeed,leftDrive);
         }
         else
         {
@@ -1657,7 +1657,7 @@ void addCommands(Ts... input)
     }
     //drive.pid.minOutput /= drive.outerInnerRatio;
 
-    while(((tilter.state != END) || (drive.state != END) || (intake.state != END) || (lift.state != END)) && (autonTimer.current() < 15000 ))
+    while(((tilter.state != END) || (drive.state != END) || (intake.state != END) || (lift.state != END)) && (autonTimer.current() < 20000 ))
     {
         switch(drive.state)
         {
@@ -1765,9 +1765,9 @@ void smallBlue()
     resetAutonVals();
     pros::delay(5000);
     addCommands(
-        DRIVE,TURN,2000,NOSTRAIGHT,TURNPID,
-        DRIVE,TURN,1000,NOSTRAIGHT,TURNPID,
-        DRIVE,TURN,2000,NOSTRAIGHT,TURNPID);
+        DRIVE,TURN,2000,WHEELCORRECTION,TURNPID,
+        DRIVE,TURN,1000,WHEELCORRECTION,TURNPID,
+        DRIVE,TURN,2000,WHEELCORRECTION,TURNPID);
 }
 
 void smallRed()
@@ -1793,6 +1793,7 @@ void posTest()
 void autonomous()
 {
     resetAutonVals();
+    pros::delay(5000);
     switch(count)
     {
         case(SMALLRED):
