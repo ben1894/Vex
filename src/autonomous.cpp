@@ -46,12 +46,7 @@ Lift *liftObj;
  * will be stopped. Re-enabling the robot will restart the task, not re-start it
  * from where it left off.
  */
-/*
-correctTo = correctAtan(posObj.yPosition - yTarget, posObj.xPosition - xTarget);
 
-                //corrects this angle to represent gyrp values
-                target = ((((target-360) * -1) + 90) * 10);
-*/
 /*
 class VelocityDrive
 {
@@ -104,6 +99,7 @@ static int previousRightDistance = 0;
 static unsigned long previousRightTime = pros::millis();
 static unsigned long previousLeftTime = pros::millis();
 */
+
 class PositionTracking
 {
     public:
@@ -1446,14 +1442,6 @@ void Drive::move()
             /______|
                x
         */
-        //use pythagorean theorem to find how close it is to the target
-        //always be updating how far it is to the target
-        //always to updating the change to value
-        //do a once time thing to find the turn and then automatically do that
-        //NO TURN NOT AUTOMATIC!!! Have a turn option that TURNS TOWARDS SPECIFIC POINTS
-        //CHECK IF THEY ARE EMPTY at the end or something
-        //Same thing as the previous turn
-        //have parameter PAST, that automatically uses the last coordinates used when going to a position
         //Maybe have a forward option that just takes the value needed instead of having to find the slope involved with going a straight line.
         //past coordinates, update with the total number of calls
 
