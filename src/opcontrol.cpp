@@ -13,14 +13,18 @@
  * operator control task will be stopped. Re-enabling the robot will restart the
  * task, not resume it from where it left off.
  */
-pros::ADIGyro gyro(1);
-pros::ADIEncoder leftEncoder(3, 4, true);
-pros::ADIEncoder rightEncoder(5, 6, true);
+//pros::ADIGyro gyro(1);
+pros::Imu gyroI(18);
+pros::ADIEncoder leftEncoder(3, 4, false);
+pros::ADIEncoder rightEncoder(5, 6, false);
 
 void opcontrol() //0.0078740157480315 = quadradic value
 {
 	int oldButtonY = 0;
 	int intakeHoldingPower = 0;
+	leftEncoder.reset();
+	rightEncoder.reset();
+	rightDrive[0].tare_position();
 	for(int i = 0; i < leftDrive.size(); i++)
 	{
 		leftDrive[i].set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
@@ -51,6 +55,10 @@ void opcontrol() //0.0078740157480315 = quadradic value
 		if(cVal(DIGITAL_R1))
 		{
 			motorGroupMove(127, intakeM);
+		}
+		else if(cVal(DIGITAL_RIGHT))
+		{
+			motorGroupMove(-69, intakeM);
 		}
 		else if(cVal(DIGITAL_R2))
 		{
@@ -93,21 +101,31 @@ void opcontrol() //0.0078740157480315 = quadradic value
 		{
 			tilter.move(0);
 		}
-		pros::lcd::print(1,"%f", lift.get_position());
-		pros::lcd::print(3,"%f", rightDrive[0].get_position());
-		pros::lcd::print(4,"%d", fixTarget(gyro.get_value()));
-		pros::lcd::print(2,"%d", leftEncoder.get_value());
+		//pros::lcd::print(1,"%f", lift.get_position());
+		//pros::lcd::print(3,"%d", rightEncoder.get_value());
+		GyroDistances test;
+		getDistances(test, 90);
+		pros::lcd::print(4,"%f", actualGyroPosition());
+		pros::lcd::print(2,"%d", leftEncoder.get_value()); //regular, no negative, no over anymore
+		pros::lcd::print(3,"%d", rightEncoder.get_value());
+		pros::lcd::print(1,"%f", rightDrive[0].get_position());
+		//pros::lcd::print(5,"%f", gyro.get_vex_heading());
 
-		if(cVal(DIGITAL_X))
-		{
-			rightDrive[0].tare_position();
-		}
+		//pros::lcd::print(2,"%d", leftEncoder.get_value());
 
 		if(autonTest == true)
 		{
+			if(cVal(DIGITAL_X))
+			{
+				resetAutonVals();
+				posTest();
+			}
+
 			if(cVal(DIGITAL_A))
 			{
 				autonomous();
+				//resetAutonVals();
+				//posTest();
 			}
 		}
 		oldButtonY = cVal(DIGITAL_Y);

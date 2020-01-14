@@ -15,18 +15,22 @@ Select count = UNDEFINED;
  */
 pros::Controller mainController(pros::E_CONTROLLER_MASTER);
 pros::Controller secondaryController(pros::E_CONTROLLER_PARTNER);
-
-std::array<pros::Motor, 2> rightDrive{pros::Motor(3),pros::Motor(4)};
-std::array<pros::Motor, 2>  leftDrive{pros::Motor(15),pros::Motor(2)};
-std::array<pros::Motor, 2>     intakeM{pros::Motor(5),pros::Motor(9)};
-pros::Motor tilter(7,pros::E_MOTOR_GEARSET_36,false,pros::E_MOTOR_ENCODER_COUNTS);
-pros::Motor lift(8,pros::E_MOTOR_GEARSET_36,false,pros::E_MOTOR_ENCODER_COUNTS);
+//front back
+//left right
+std::array<pros::Motor, 2> rightDrive{pros::Motor(2),pros::Motor(17)};
+std::array<pros::Motor, 2>  leftDrive{pros::Motor(14),pros::Motor(15)};
+std::array<pros::Motor, 2>     intakeM{pros::Motor(4),pros::Motor(7)};
+pros::Motor tilter(8,pros::E_MOTOR_GEARSET_36,false,pros::E_MOTOR_ENCODER_COUNTS);
+pros::Motor lift(3,pros::E_MOTOR_GEARSET_36,false,pros::E_MOTOR_ENCODER_COUNTS);
 
 void initialize() 
 {
 	pros::lcd::initialize();
-	pros::ADIGyro gyro(1);
-	pros::Task::delay(1000);
+	pros::Imu gyroI(18);
+	while(gyroI.is_calibrating())
+	{
+		pros::delay(5);
+	}
 	for(int i = 0; i < leftDrive.size(); i++)
 	{
 		leftDrive[i].set_brake_mode(pros::E_MOTOR_BRAKE_BRAKE);
@@ -47,6 +51,8 @@ void initialize()
 	}
 
 	intakeM[1].set_reversed(true);
+	intakeM[0].set_brake_mode(pros::E_MOTOR_BRAKE_BRAKE);
+	intakeM[1].set_brake_mode(pros::E_MOTOR_BRAKE_BRAKE);
 	tilter.set_brake_mode(pros::E_MOTOR_BRAKE_BRAKE);
 	tilter.set_reversed(false);
 	lift.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
@@ -174,7 +180,7 @@ void competition_initialize()
 		oldLCD = pros::lcd::read_buttons();
 		oldRight = cVal(DIGITAL_RIGHT);
 		oldLeft = cVal(DIGITAL_LEFT);
-		pros::lcd::print(4,"%d", fixTarget(gyro.get_value()));
+		pros::lcd::print(4,"%d", fixTarget(gyroI.get_heading()));
 		pros::delay(3);
 	}
 	pros::lcd::print(2,"Auton Selected");

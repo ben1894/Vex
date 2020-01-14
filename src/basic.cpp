@@ -43,10 +43,66 @@ int cVal( pros::controller_analog_e_t button)
 	return mainController.get_analog(button);
 }
 
+double degToRad(double degrees)
+{
+	return (degrees*pi) / 180;
+}
+
+double radToDeg(double radians)
+{
+	return (radians*180) / pi;
+}
+
 void resetAutonVals()
 {
 	tilter.tare_position();
 	lift.tare_position();
-	gyro.reset();
+	leftEncoder.reset();
+	rightEncoder.reset();
+	for(int motor = 0; motor < leftDrive.size(); motor++)
+	{
+		leftDrive[motor].tare_position();
+		rightDrive[motor].tare_position();
+	}
+	resetGyro();
 	autonTimer.clear();
 }
+
+double correctAtan(double y, double x)
+{
+	y = degToRad(y);
+	x = degToRad(x);
+	return radToDeg(atan2(y,x));
+}
+
+/*
+double sind(double x) {
+  if (!isfinite(x)) {
+    return sin(x);
+  }
+  if (x < 0.0) {
+    return -sind(-x);
+  }
+  
+  int quo;
+  double x90 = remquo(fabs(x), 90.0, &quo);
+  switch (quo % 4) {
+    case 0:
+      // Use * 1.0 to avoid -0.0
+      return sin(degToRad(x90) * 1.0);
+    case 1:
+      return cos(degToRad(x90));
+    case 2:
+      return sin(degToRad(-x90) * 1.0);
+    case 3:
+      return -cos(degToRad(x90));
+  }
+  return 0.0;
+}*/
+/*
+double cosd(double x)
+{
+	return sind(90.0 - x);
+}*/
+//sin (90° – x) = cos x	cos (90° – x) = sin x
+

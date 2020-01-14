@@ -1,4 +1,5 @@
 #pragma once
+#include "pidPacks.hpp"
 
 template <size_t N>
 void driveMotorsSpeed(int speed, std::array<pros::Motor, N> &motorArray, bool forceRPM = false)
