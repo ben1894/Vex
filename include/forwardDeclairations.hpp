@@ -152,6 +152,7 @@ enum Ids
 const int minEnumValue((int)NULLOPTION-2);
 
 extern bool autonTest;
+extern double gyroZero;
 extern const bool voltage;
 extern const bool gyroUpsidedown;
 extern const double wheelDistance;

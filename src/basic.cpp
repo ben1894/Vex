@@ -57,6 +57,13 @@ void resetAutonVals()
 {
 	tilter.tare_position();
 	lift.tare_position();
+	leftEncoder.reset();
+	rightEncoder.reset();
+	for(int motor = 0; motor < leftDrive.size(); motor++)
+	{
+		leftDrive[motor].tare_position();
+		rightDrive[motor].tare_position();
+	}
 	resetGyro();
 	autonTimer.clear();
 }

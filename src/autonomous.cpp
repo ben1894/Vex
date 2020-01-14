@@ -116,7 +116,7 @@ class PositionTracking
 
     void updatePosition()
     {
-        double currentAngle = fmod((((actualGyroPosition()) - 90) * -1) + 360, (double)360);
+        double currentAngle = fmod((((actualGyroPosition()) - 90) * -1) + 360, 360.0);
         double currentAngleDifference = currentAngle - prevAngle;
 
         int ifAngleChange = actualGyroPosition() - lastGyroPosition;
@@ -140,8 +140,8 @@ class PositionTracking
             {   //fixes movement from arc to vector   Set formula for arc
                 double radAngleDif = degToRad(currentAngleDifference);
                 movement = 2*(movement/radAngleDif)*sin(radAngleDif/2);
-                xPosition += movement*cos(degToRad(currentAngle)+ (radAngleDif/2));
-                yPosition += movement*sin(degToRad(currentAngle)+ (radAngleDif/2));
+                xPosition += movement*cos(degToRad(currentAngle) + (radAngleDif/2));
+                yPosition += movement*sin(degToRad(currentAngle) + (radAngleDif/2));
             }
         }
 
@@ -1370,7 +1370,7 @@ void Drive::move()
     }
     else if((direction == TURN) || (direction == TURNC)) //how far away it is from the target, not on specific value.
     {
-        breakVal = 0.4;
+        breakVal = 0.6;
     }
     else if(direction == COORDINATES)
     {
@@ -1536,11 +1536,8 @@ void Drive::move()
                 {
                     if(direction == COORDINATES)
                     {
-                        //finds the angle that it should be facing
                         correctTo = correctAtan(posObj.yPosition - yTarget, posObj.xPosition - xTarget);
-
-                        //corrects this angle to represent gyro values
-                        correctTo = (((target - 360) * -1) + 90);
+                        correctTo = fixTarget(((correctTo - 360) * -1) + 90);
                     }
                     gyroCorrections(leftCorrection, rightCorrection);
                 }
@@ -1636,6 +1633,7 @@ void addCommands(Ts... input)
         tilter.initialUpdate(i, parameters);
         intake.initialUpdate(i, parameters);
         lift.initialUpdate(i, parameters);
+        posObj.updatePosition(); //Might not be needed
     }
 
     if(tilter.getPosition() > tilter.target)
@@ -1659,6 +1657,7 @@ void addCommands(Ts... input)
 
     while(((tilter.state != END) || (drive.state != END) || (intake.state != END) || (lift.state != END)) && (autonTimer.current() < 20000 ))
     {
+        posObj.updatePosition();
         switch(drive.state)
         {
             case(WAITINGFORINSTRUCTIONS):
@@ -1748,7 +1747,6 @@ void addCommands(Ts... input)
             case(END):
                 break;
         }
-
         pros::delay(2);
     }
 
@@ -1773,10 +1771,8 @@ void smallRed()
 {
     resetAutonVals();
     addCommands(
-        DRIVE,DOWNLEFTSWEEP,1000,500,WHEELCORRECTION,TURNPID,
-        DRIVE,DOWNRIGHTSWEEP,1000,500,WHEELCORRECTION,TURNPID,
-        DRIVE,UPLEFTSWEEP,1000,500,WHEELCORRECTION,TURNPID,
-        DRIVE,UPRIGHTSWEEP,1000,500,WHEELCORRECTION,TURNPID
+        DRIVE,TURNC,100,1000,NOSTRAIGHT,TURNPID,
+        DRIVE,COORDINATES,PAST,100
     );
 }
 
@@ -1798,7 +1794,7 @@ void posTest()
 void autonomous()
 {
     resetAutonVals();
-    pros::delay(5000);
+    //posTest();
     switch(count)
     {
         case(SMALLRED):
