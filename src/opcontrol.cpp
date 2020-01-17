@@ -86,11 +86,11 @@ void opcontrol() //0.0078740157480315 = quadradic value
 		{
 			if(tilter.get_position() > 5000)
 			{
-				tilter.move(70);
+				tilter.move(45);
 			}
 			else
 			{
-				tilter.move(127);
+				tilter.move(100);
 			}
 		}
 		else if(cVal(DIGITAL_L2))
@@ -103,8 +103,8 @@ void opcontrol() //0.0078740157480315 = quadradic value
 		}
 		//pros::lcd::print(1,"%f", lift.get_position());
 		//pros::lcd::print(3,"%d", rightEncoder.get_value());
-		GyroDistances test;
-		getDistances(test, 90);
+		//GyroDistances test;
+		//getDistances(test, 90);
 		pros::lcd::print(4,"%f", actualGyroPosition());
 		pros::lcd::print(2,"%d", leftEncoder.get_value()); //regular, no negative, no over anymore
 		pros::lcd::print(3,"%d", rightEncoder.get_value());
@@ -120,12 +120,9 @@ void opcontrol() //0.0078740157480315 = quadradic value
 				resetAutonVals();
 				posTest();
 			}
-
 			if(cVal(DIGITAL_A))
 			{
 				autonomous();
-				//resetAutonVals();
-				//posTest();
 			}
 		}
 		oldButtonY = cVal(DIGITAL_Y);

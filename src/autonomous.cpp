@@ -251,7 +251,7 @@ public:
     char numberOfCalls = 0;
     char totalNumberOfCalls = 0;
 
-    virtual bool checkIfDone(double breakValue) = 0;
+    virtual bool checkIfDone(double breakVal) = 0;
     virtual void setMember(int &number, AutonFlags &currentFlag, int value) = 0;
     virtual void resetObj() = 0;
     virtual void initializePid(AutonFlags pidPack) = 0;
@@ -610,11 +610,10 @@ class Drive : public System
     bool brake = true;
     bool runBrake = false;
     bool inverse = false;
-    bool past = false;
     int accelerationMin;
     double correctTo = -1;
-    int xTarget;
-    int yTarget;
+    int xTarget = 0;
+    int yTarget = 0;
     AutonFlags accelerationControl = NOACCEL;
     GyroDistances turnStats;
     AutonFlags direction;
@@ -640,6 +639,7 @@ class Drive : public System
             {
                 xTarget = driveObj->xTarget;
                 yTarget = driveObj->yTarget;
+                correctTo = driveObj->correctTo;
                 totalNumberOfCalls = driveObj->totalNumberOfCalls; //passes on the totalNumberOfCalls after reset
             }
         };
@@ -691,20 +691,19 @@ class Drive : public System
                 }
                 return false;
             }
-
             GyroDistances gyroVals;
 
             if(direction == TURNC)
             {
                 double turncTarget = correctAtan(posObj.yPosition - yTarget, posObj.xPosition - xTarget);
-                turncTarget = ((((turncTarget - 360) * -1) + 90) * 10);
+                turncTarget = ((turncTarget - 360) * -1) + 90;
 
                 if(inverse == true)
                 {
                     turncTarget += 180;
                 }
-                turncTarget = fixTarget(turncTarget);
-                getDistances(gyroVals, turncTarget);
+                //correctTo = fixTarget(turncTarget);
+                getDistances(gyroVals, fixTarget(turncTarget));
             }
             else 
             {
@@ -738,18 +737,38 @@ class Drive : public System
         GyroDistances off;
         getDistances(off, correctTo);
 
-        if(off.Right < off.Left)
+        if(direction == FORWARDS || direction == FORWARDSE)
         {
-            if(off.Right > 0.4)
+            if(off.Right < off.Left)
             {
-                rightCorrect *= (0.98 - (off.Right/5));
+                if(off.Right > 0.4)
+                {
+                    rightCorrect *= ((float).98 - ((float)off.Right/(float)5));
+                }
+            }
+            else
+            {
+                if(off.Left > 0.4)
+                {
+                    leftCorrect *= ((float).98 - ((float)off.Left/(float)5)); //left decrease
+                }
             }
         }
-        else
+        else 
         {
-            if(off.Left > 0.4)
+            if(off.Right < off.Left)
             {
-                leftCorrect *= (0.98 - (off.Left/5)); //left decrease
+                if(off.Right > 0.4)
+                {
+                    leftCorrect *= ((float).98 - ((float)off.Right/(float)5));
+                }
+            }
+            else
+            {
+                if(off.Left > 0.4)
+                {
+                    rightCorrect *= ((float).98 - ((float)off.Left/(float)5)); //left decrease
+                }
             }
         }
     }
@@ -820,7 +839,7 @@ class Drive : public System
     void wheelCorrections(float &leftCorrect, float &rightCorrect)
     {
         int difference;
-        if(direction == TURN || direction == TURNC || direction == FORWARDS || direction == FORWARDSE || direction ==BACKWARDS || direction == BACKWARDSE)
+        if(direction == TURN || direction == COORDINATES || direction == TURNC || direction == FORWARDS || direction == FORWARDSE || direction == BACKWARDS || direction == BACKWARDSE)
         {
             difference = abs(rightEncoder.get_value()) - abs(leftEncoder.get_value());
         }
@@ -831,11 +850,25 @@ class Drive : public System
 
         if(difference > 4)
         {
-            rightCorrect *= ((float).98 - ((float)abs(difference)/(float)100));
+            if(direction == DOWNRIGHTSWEEP || direction == DOWNRIGHTSWEEPE || direction == DOWNLEFTSWEEP || direction == DOWNLEFTSWEEPE)
+            {
+                leftCorrect *= ((float).99 - ((float)abs(difference)/(float)100));
+            }
+            else 
+            {
+                rightCorrect *= ((float).99 - ((float)abs(difference)/(float)100));
+            }
         }
         else if(difference < -4)
         {
-            leftCorrect  *= ((float).98 - ((float)abs(difference)/(float)100));
+            if(direction == DOWNRIGHTSWEEP || direction == DOWNRIGHTSWEEPE || direction == DOWNLEFTSWEEP || direction == DOWNLEFTSWEEPE)
+            {
+                rightCorrect *= ((float).99 - ((float)abs(difference)/(float)100));
+            }
+            else 
+            {
+                leftCorrect *= ((float).99 - ((float)abs(difference)/(float)100));
+            }
         }
     }
 
@@ -930,6 +963,10 @@ void Drive::setMember(int &number, AutonFlags &currentFlag, int value)
                         {
                             correctTo = actualGyroPosition();
                         }
+                        else if(value == PAST)
+                        {
+                            //value already set so don't do anything
+                        }
                         else
                         {
                             correctTo = value / 10.0;
@@ -955,7 +992,7 @@ void Drive::setMember(int &number, AutonFlags &currentFlag, int value)
                         break;
                     case(2):
                         number++; //radius
-                        outerInnerRatio = (value - wheelDistance) / value;
+                        outerInnerRatio = (double)(value - wheelDistance) / value;
                         break;
                     case(3):
                         if(value == NOSTRAIGHT)
@@ -966,6 +1003,24 @@ void Drive::setMember(int &number, AutonFlags &currentFlag, int value)
                         {
                             correctTo = WHEELCORRECTION;
                         }
+                        number = 0;
+                        break;
+                }
+                break;
+            case(TURNC):
+                switch(number) //use same straight drive for turns and straight drive
+                {
+                    case(1):
+                        direction = currentFlag;
+                        xTarget = value;
+                        number++;
+                        break;
+                    case(2):
+                        yTarget = value;
+                        number++;
+                        break;
+                    case(3):
+                        correctTo = value; //posibility for wheelCorrect
                         number = 0;
                         break;
                 }
@@ -981,8 +1036,7 @@ void Drive::setMember(int &number, AutonFlags &currentFlag, int value)
                     case(2):
                         if(value == PAST)
                         {
-                            past = true;
-                            number = 4;
+                            number = 0;
                         }
                         else
                         {
@@ -992,9 +1046,11 @@ void Drive::setMember(int &number, AutonFlags &currentFlag, int value)
                         break;
                     case(3):
                         yTarget = value;
-                        number++;
+                        number = 0;
+                        //number++;
                         break;
-                    case(4):
+                        /*
+                    case(4): //Only would be used if the wheels could eventually be used for coordinate straight driving. Possible but gyro is better
                         if(value == NOSTRAIGHT)
                         {
                             correctTo = NOSTRAIGHT;
@@ -1004,7 +1060,7 @@ void Drive::setMember(int &number, AutonFlags &currentFlag, int value)
                             correctTo = WHEELCORRECTION;
                         }
                         number = 0;
-                        break;
+                        break;*/
                 }
                 break;
 
@@ -1641,7 +1697,7 @@ void addCommands(Ts... input)
     {
         lift.underTarget = true;
     }
-    //drive.pid.minOutput /= drive.outerInnerRatio;
+    drive.pid.minOutput /= drive.outerInnerRatio;//maybe comment out
 
     while(((tilter.state != END) || (drive.state != END) || (intake.state != END) || (lift.state != END)) && (autonTimer.current() < 20000 ))
     {
@@ -1654,7 +1710,7 @@ void addCommands(Ts... input)
                 break;
             case(WAITINGFORTRIGGER):
                 drive.updateTriggerState();
-                drive.target = fixTarget(drive.target); //so you can put in negative values
+                //drive.target = fixTarget(drive.target);
                 GyroDistances Dist;
                 getDistances(Dist, drive.target);
                 if(Dist.Right < Dist.Left)
@@ -1749,10 +1805,16 @@ void addCommands(Ts... input)
 void smallBlue()
 {
     resetAutonVals();
-    addCommands(
+    /*addCommands(
+        DRIVE,COORDINATES,500,500,
         DRIVE,TURN,2000,WHEELCORRECTION,TURNPID,
         DRIVE,TURN,1000,WHEELCORRECTION,TURNPID,
-        DRIVE,TURN,2000,WHEELCORRECTION,TURNPID);
+        DRIVE,TURN,2000,WHEELCORRECTION,TURNPID);*/
+    addCommands(
+        DRIVE,FORWARDS,10000,0,
+        DRIVE,BACKWARDS,10000,0,
+        DRIVE,FORWARDS,100,0
+    );
 }
 
 void smallRed()
@@ -1760,6 +1822,8 @@ void smallRed()
     resetAutonVals();
     addCommands(
         DRIVE,TURNC,100,1000,NOSTRAIGHT,TURNPID,
+        DRIVE,COORDINATES,PAST,100,
+        DRIVE,TURNC,500,500,NOSTRAIGHT,TURNPID,
         DRIVE,COORDINATES,PAST,100
     );
 }
@@ -1781,7 +1845,7 @@ void posTest()
 
 void autonomous()
 {
-    resetAutonVals();
+    //resetAutonVals();
     //posTest();
     switch(count)
     {

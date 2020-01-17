@@ -1,16 +1,15 @@
 #include "main.h"
 #include "forwardDeclairations.hpp"
 
-double gyroZero = 0;
-
 double actualGyroPosition()
 {
-	double fixingGyro = gyroI.get_heading() - gyroZero; //corrects for negative values
+	double fixingGyro = gyroI.get_heading(); //corrects for negative values
 
 	if(gyroUpsidedown == true)
 	{
 		fixingGyro *= -1.0;
 	}
+	
 	return fixTarget(fixingGyro);
 }
 

@@ -64,7 +64,7 @@ void resetAutonVals()
 		leftDrive[motor].tare_position();
 		rightDrive[motor].tare_position();
 	}
-	resetGyro();
+	gyroI.reset();
 	autonTimer.clear();
 }
 
