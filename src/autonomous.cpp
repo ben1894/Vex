@@ -100,6 +100,22 @@ static unsigned long previousRightTime = pros::millis();
 static unsigned long previousLeftTime = pros::millis();
 */
 
+void resetAutonVals()
+{
+	tilter.tare_position();
+	lift.tare_position();
+	leftEncoder.reset();
+	rightEncoder.reset();
+    posObj.reset();
+	for(int motor = 0; motor < leftDrive.size(); motor++)
+	{
+		leftDrive[motor].tare_position();
+		rightDrive[motor].tare_position();
+	}
+	gyroI.reset();
+	autonTimer.clear();
+}
+
 class PositionTracking
 {
     public:
@@ -145,6 +161,12 @@ class PositionTracking
         prevLWheel = currentLDifference + prevLWheel;
         prevRWheel = currentRDifference + prevRWheel; //middle of the change
         prevAngle = currentAngle;
+    }
+
+    void encoderReset()
+    {
+        prevLWheel = 0;
+        prevRWheel = 0;
     }
 
     double targetToAngle(double x, double y)
@@ -614,6 +636,7 @@ class Drive : public System
     double correctTo = -1;
     int xTarget = 0;
     int yTarget = 0;
+    PidController straightDrivePID = {straightDriveP, straightDriveI,straightDriveD,straightDriveMin,straightDriveMax};
     AutonFlags accelerationControl = NOACCEL;
     GyroDistances turnStats;
     AutonFlags direction;
@@ -646,8 +669,10 @@ class Drive : public System
 
     void clearEncoders()
     {
+        posObj.updatePosition();
         leftEncoder.reset();
         rightEncoder.reset();
+        posObj.encoderReset();
         for(int motor = 0; motor < leftDrive.size(); motor++)
         {
             leftDrive[motor].tare_position();
@@ -1838,7 +1863,6 @@ void posTest()
         pros::lcd::print(3,"%f", posObj.yPosition);
         driveMotorsSpeed(cVal(ANALOG_RIGHT_Y),rightDrive);
 		driveMotorsSpeed(cVal(ANALOG_LEFT_Y),leftDrive);
-        //pros::lcd::print(4,"%d", fixTarget(gyro.get_heading()));
         pros::delay(1);
     }
 }

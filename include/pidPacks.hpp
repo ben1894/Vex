@@ -42,8 +42,15 @@
 #define regTilterMin 0
 #define regTilterMax 0
 
-#define regLiftP 0
+#define regLiftP 0.5
 #define regLiftI 0
 #define regLiftD 0
 #define regLiftMin 0
-#define regLiftMax 0//
+#define regLiftMax 0
+
+#define straightDriveP .26
+#define straightDriveI 0.1
+#define straightDriveD 0.2
+#define straightDriveMin -1.0
+#define straightDriveMax 1.0
+//
