@@ -698,7 +698,7 @@ class Drive : public System
     {
         if(triggerE == NONETE)
         {
-            if(direction == COORDINATES)
+            if((direction == FORWARDSC) || (direction == BACKWARDSC))
             {
                 //simple distance formula based of the pythagorean theorum
                 int distanceToTarget = sqrt(pow(xTarget - posObj.xPosition, 2) + pow(yTarget - posObj.yPosition, 2));
@@ -762,7 +762,7 @@ class Drive : public System
         GyroDistances off;
         getDistances(off, correctTo);
 
-        if(direction == FORWARDS || direction == FORWARDSE)
+        if(direction == FORWARDS || direction == FORWARDSE || direction == FORWARDSC)
         {
             if(off.Right < off.Left)
             {
@@ -807,7 +807,7 @@ class Drive : public System
             return pid.maxOutput;
         }
 
-        if(direction == COORDINATES)
+        if((direction == FORWARDSC) || (direction == BACKWARDSC))
         {
             int distanceToTarget = sqrt(pow(xTarget - posObj.xPosition, 2) + pow(yTarget - posObj.yPosition, 2));
             if(output > pid.output(-distanceToTarget, 0))
@@ -864,7 +864,7 @@ class Drive : public System
     void wheelCorrections(float &leftCorrect, float &rightCorrect)
     {
         int difference;
-        if(direction == TURN || direction == COORDINATES || direction == TURNC || direction == FORWARDS || direction == FORWARDSE || direction == BACKWARDS || direction == BACKWARDSE)
+        if(direction == TURN || direction == FORWARDSC || direction == BACKWARDSC || direction == TURNC || direction == FORWARDS || direction == FORWARDSE || direction == BACKWARDS || direction == BACKWARDSE)
         {
             difference = abs(rightEncoder.get_value()) - abs(leftEncoder.get_value());
         }
@@ -1050,7 +1050,8 @@ void Drive::setMember(int &number, AutonFlags &currentFlag, int value)
                         break;
                 }
                 break;
-            case(COORDINATES):
+            case(FORWARDSC):
+            case(BACKWARDSC):
                 switch(number)
                 {
                     case(1):
@@ -1449,7 +1450,7 @@ void Drive::move()
     {
         breakVal = 0.6;
     }
-    else if(direction == COORDINATES)
+    else if((direction == FORWARDSC) || (direction == BACKWARDSC))
     {
         breakVal = 4;
     }
@@ -1545,7 +1546,7 @@ void Drive::move()
                 }
                 else
                 {
-                    if(direction == COORDINATES)
+                    if((direction == FORWARDSC) || (direction == BACKWARDSC))
                     {
                         if(accelerationControl != NOACCEL)
                         {
@@ -1603,7 +1604,7 @@ void Drive::move()
                 }
                 if(correctTo != NOSTRAIGHT)
                 {
-                    if(direction == COORDINATES)
+                    if((direction == FORWARDSC) || (direction == BACKWARDSC))
                     {
                         correctTo = correctAtan(posObj.yPosition - yTarget, posObj.xPosition - xTarget);
                         correctTo = fixTarget(((correctTo - 360) * -1) + 90);
@@ -1847,9 +1848,9 @@ void smallRed()
     resetAutonVals();
     addCommands(
         DRIVE,TURNC,100,1000,NOSTRAIGHT,TURNPID,
-        DRIVE,COORDINATES,PAST,100,
+        DRIVE,FORWARDSC,PAST,100,
         DRIVE,TURNC,500,500,NOSTRAIGHT,TURNPID,
-        DRIVE,COORDINATES,PAST,100
+        DRIVE,FORWARDSC,PAST,100
     );
 }
 
