@@ -1486,6 +1486,7 @@ void Drive::move()
                 case(DOWNLEFTSWEEPE):
                 case(DOWNRIGHTSWEEPE):
                 case(BACKWARDSE):
+                case(BACKWARDSC):
                     break;
                 case(TURN):
                     if(rightTurn == true)
@@ -1621,6 +1622,7 @@ void Drive::move()
                     case(DOWNLEFTSWEEPE):
                     case(DOWNRIGHTSWEEPE):
                     case(BACKWARDSE):
+                    case(BACKWARDSC):
                         leftCorrection *= -1;
                         rightCorrection *= -1;
                         break;
