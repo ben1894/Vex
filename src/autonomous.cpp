@@ -768,14 +768,14 @@ class Drive : public System
             {
                 if(off.Right > 0.4)
                 {
-                    rightCorrect *= ((float).98 - ((float)off.Right/(float)5));
+                    rightCorrect *= 1.0 - straightDrivePID.output(-off.Right+0.4, 0);
                 }
             }
             else
             {
                 if(off.Left > 0.4)
                 {
-                    leftCorrect *= ((float).98 - ((float)off.Left/(float)5)); //left decrease
+                    leftCorrect *= 1.0 - straightDrivePID.output(-off.Left+0.4, 0);
                 }
             }
         }
@@ -785,14 +785,14 @@ class Drive : public System
             {
                 if(off.Right > 0.4)
                 {
-                    leftCorrect *= ((float).98 - ((float)off.Right/(float)5));
+                    leftCorrect *= 1.0 - straightDrivePID.output(-off.Right+0.4, 0);
                 }
             }
             else
             {
                 if(off.Left > 0.4)
                 {
-                    rightCorrect *= ((float).98 - ((float)off.Left/(float)5)); //left decrease
+                    rightCorrect *= 1.0 - straightDrivePID.output(-off.Left+0.4, 0);
                 }
             }
         }
