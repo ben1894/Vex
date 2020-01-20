@@ -640,6 +640,7 @@ class Drive : public System
     AutonFlags accelerationControl = NOACCEL;
     GyroDistances turnStats;
     AutonFlags direction;
+    AutonFlags modifier = NM;
     Timer accelerationTimer;
     Timer brakeTimer;
 

@@ -52,6 +52,9 @@ class Button
 enum AutonFlags
 {
 	PAST = -100000,
+	CO = -6,
+	ET = -5,
+	NM = -4,
 	WHEELCORRECTION = -3,
 	NOSTRAIGHT = -2,
 	CURRENTVAL = -1,
@@ -101,19 +104,6 @@ enum AutonFlags
 	DOWNLEFTSWEEP,
 	UPRIGHTSWEEP,
 	DOWNRIGHTSWEEP,
-	COORDINATES,
-	TURNC,
-
-	BACKWARDSE,
-	FORWARDSE,
-	UPLEFTSWEEPE, //Different setup for when it has an ending trigger
-	DOWNLEFTSWEEPE,
-	UPRIGHTSWEEPE,
-	DOWNRIGHTSWEEPE,
-
-	FORWARDSC,
-	BACKWARDSC,
-
 
 	NOACCEL,
 	ACCEL,
