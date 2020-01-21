@@ -15,11 +15,13 @@
  */
 //pros::ADIGyro gyro(1);
 pros::Imu gyroI(18);
-pros::ADIEncoder leftEncoder(3, 4, false);
+pros::ADIEncoder leftEncoder(3, 4, true);
 pros::ADIEncoder rightEncoder(5, 6, false);
 
 void opcontrol() //0.0078740157480315 = quadradic value
 {
+	Timer controllerTimer;
+	controllerTimer.clear();
 	int oldButtonY = 0;
 	int intakeHoldingPower = 0;
 	leftEncoder.reset();
@@ -84,13 +86,13 @@ void opcontrol() //0.0078740157480315 = quadradic value
 
 		if(cVal(DIGITAL_L1))
 		{
-			if(tilter.get_position() > 5000)
+			if(tilter.get_position() > 6000)
 			{
-				tilter.move(45);
+				tilter.move(90);
 			}
 			else
 			{
-				tilter.move(100);
+				tilter.move(127);
 			}
 		}
 		else if(cVal(DIGITAL_L2))
@@ -108,10 +110,15 @@ void opcontrol() //0.0078740157480315 = quadradic value
 		pros::lcd::print(4,"%f", actualGyroPosition());
 		pros::lcd::print(2,"%d", leftEncoder.get_value()); //regular, no negative, no over anymore
 		pros::lcd::print(3,"%d", rightEncoder.get_value());
-		pros::lcd::print(1,"%f", rightDrive[0].get_position());
+		pros::lcd::print(1,"%f", lift.get_position());
 		//pros::lcd::print(5,"%f", gyro.get_vex_heading());
-
 		//pros::lcd::print(2,"%d", leftEncoder.get_value());
+
+		if(controllerTimer.current() > 110)
+		{
+			mainController.print(0,0,"%d",pros::battery::get_capacity());
+			controllerTimer.clear();
+		}
 
 		if(autonTest == true)
 		{

@@ -99,23 +99,6 @@ static int previousRightDistance = 0;
 static unsigned long previousRightTime = pros::millis();
 static unsigned long previousLeftTime = pros::millis();
 */
-
-void resetAutonVals()
-{
-	tilter.tare_position();
-	lift.tare_position();
-	leftEncoder.reset();
-	rightEncoder.reset();
-    posObj.reset();
-	for(int motor = 0; motor < leftDrive.size(); motor++)
-	{
-		leftDrive[motor].tare_position();
-		rightDrive[motor].tare_position();
-	}
-	gyroI.reset();
-	autonTimer.clear();
-}
-
 class PositionTracking
 {
     public:
@@ -188,6 +171,22 @@ class PositionTracking
 
 PositionTracking posObj;
 
+void resetAutonVals()
+{
+	tilter.tare_position();
+	lift.tare_position();
+	leftEncoder.reset();
+	rightEncoder.reset();
+    posObj.reset();
+	for(int motor = 0; motor < leftDrive.size(); motor++)
+	{
+		leftDrive[motor].tare_position();
+		rightDrive[motor].tare_position();
+	}
+	//gyroI.reset();
+	autonTimer.clear();
+}
+
 class PidController
 {
     private:
@@ -199,10 +198,10 @@ class PidController
         double P;
         double I;
         double D;
-        unsigned char minOutput;
-        unsigned char maxOutput;
+        double minOutput;
+        double maxOutput;
 
-        PidController(double P = 0, double I = 0, double D = 0, unsigned char minOutput = 0, unsigned char maxOutput = 0)
+        PidController(double P = 0, double I = 0, double D = 0, double minOutput = 0, double maxOutput = 0)
         { //Initializes the object with default values. Also allows values to be put in on creation
             this->P = P; //Differentiates between the member P and the parameter P. this->P is the member
             this->I = I;
@@ -506,6 +505,7 @@ public:
                     number = 0;
                     return false;
                 case(NOPID):
+                    initializePid(REGPID);////////////
                     pid.minOutput = value; //reuse these values as single speed holders
                     pid.maxOutput = value;
                     speedControl = currentFlag;
@@ -1603,7 +1603,7 @@ void Drive::move()
                 {
                     wheelCorrections(leftCorrection, rightCorrection); //break into two, trigger system, other other
                 }
-                if(correctTo != NOSTRAIGHT)
+                else if(correctTo != NOSTRAIGHT)
                 {
                     if((direction == FORWARDSC) || (direction == BACKWARDSC))
                     {
@@ -1729,7 +1729,8 @@ void addCommands(Ts... input)
 
     while(((tilter.state != END) || (drive.state != END) || (intake.state != END) || (lift.state != END)) && (autonTimer.current() < 20000 ))
     {
-        posObj.updatePosition();
+        pros::lcd::print(3,"%f", actualGyroPosition());
+        //posObj.updatePosition();
         switch(drive.state)
         {
             case(WAITINGFORINSTRUCTIONS):
@@ -1839,9 +1840,7 @@ void smallBlue()
         DRIVE,TURN,1000,WHEELCORRECTION,TURNPID,
         DRIVE,TURN,2000,WHEELCORRECTION,TURNPID);*/
     addCommands(
-        DRIVE,FORWARDS,10000,0,
-        DRIVE,BACKWARDS,10000,0,
-        DRIVE,FORWARDS,100,0
+        LIFT,POSITION,800,127
     );
 }
 
@@ -1872,7 +1871,7 @@ void posTest()
 
 void autonomous()
 {
-    //resetAutonVals();
+    resetAutonVals();
     //posTest();
     switch(count)
     {
