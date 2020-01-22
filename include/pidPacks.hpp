@@ -12,10 +12,10 @@
 #define regTurnMin 30
 #define regTurnMax 100
 
-#define regTurnP2 2.3
+#define regTurnP2 2.2
 #define regTurnI2 0
 #define regTurnD2 0
-#define regTurnMin2 40
+#define regTurnMin2 33
 #define regTurnMax2 90
 
 #define leftSideP 0.17
@@ -48,9 +48,9 @@
 #define regLiftMin 0
 #define regLiftMax 0
 
-#define straightDriveP 0.1
-#define straightDriveI 0.05
-#define straightDriveD 0.05
+#define straightDriveP 0.122//0.19
+#define straightDriveI 0.0000152
+#define straightDriveD 0.0000152
 #define straightDriveMin -1.0
 #define straightDriveMax 1.0
 //

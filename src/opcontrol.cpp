@@ -13,7 +13,7 @@
  * operator control task will be stopped. Re-enabling the robot will restart the
  * task, not resume it from where it left off.
  */
-//pros::ADIGyro gyro(1);
+
 pros::Imu gyroI(18);
 pros::ADIEncoder leftEncoder(3, 4, true);
 pros::ADIEncoder rightEncoder(5, 6, false);
@@ -21,6 +21,7 @@ pros::ADIEncoder rightEncoder(5, 6, false);
 void opcontrol() //0.0078740157480315 = quadradic value
 {
 	Timer controllerTimer;
+	mainController.clear();
 	controllerTimer.clear();
 	int oldButtonY = 0;
 	int intakeHoldingPower = 0;
@@ -116,7 +117,7 @@ void opcontrol() //0.0078740157480315 = quadradic value
 
 		if(controllerTimer.current() > 110)
 		{
-			mainController.print(0,0,"%d",pros::battery::get_capacity());
+			mainController.print(0,0,"%f",pros::battery::get_capacity());
 			controllerTimer.clear();
 		}
 
@@ -124,11 +125,13 @@ void opcontrol() //0.0078740157480315 = quadradic value
 		{
 			if(cVal(DIGITAL_X))
 			{
-				resetAutonVals();
-				posTest();
+				resetGyro();
+				//resetAutonVals();
+				//posTest();
 			}
 			if(cVal(DIGITAL_A))
 			{
+				resetGyro();
 				autonomous();
 			}
 		}
