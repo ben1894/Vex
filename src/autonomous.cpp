@@ -192,7 +192,7 @@ class PidController
     private:
         unsigned long lastTime;
         long combinedIntegral;
-        int lastError;
+        double lastError;
 
     public:
         double P;
@@ -224,7 +224,8 @@ class PidController
             double error = target - currentSensorData;
             unsigned long changeInTime = pros::millis() - lastTime;
 
-            if((P*error) < maxOutput) //to prevent windup
+            //if(((P*error) < maxOutput) || ((I*combinedIntegral) < maxOutput) || ((P*error) > minOutput) || ((I*combinedIntegral) > minOutput)) //to prevent windup
+            if((((P*error) + (I*combinedIntegral)) < maxOutput) || (((P*error) + (I*combinedIntegral)) > minOutput))
             {
                 long currentIntegral = error * changeInTime; //calculation for the area under the curve for the latest movement. The faster this updates the more accurate
                 combinedIntegral += currentIntegral;         //adds latest to the total integral
@@ -628,12 +629,12 @@ public:
 class Drive : public System
 {
     private:
+    double correctTo = -1;
     bool stopDeacceleration = false;
     bool brake = true;
     bool runBrake = false;
     bool inverse = false;
     int accelerationMin;
-    double correctTo = -1;
     int xTarget = 0;
     int yTarget = 0;
     PidController straightDrivePID = {straightDriveP, straightDriveI,straightDriveD,straightDriveMin,straightDriveMax};
@@ -766,16 +767,16 @@ class Drive : public System
         {
             if(off.Right < off.Left)
             {
-                if(off.Right > 0.4)
+                if(off.Right > 0.3)
                 {
-                    rightCorrect *= ((float).98 - ((float)off.Right/(float)5));
+                    rightCorrect *= 1.0 - straightDrivePID.output(-off.Right+0.3, 0);
                 }
             }
             else
             {
-                if(off.Left > 0.4)
+                if(off.Left > 0.3)
                 {
-                    leftCorrect *= ((float).98 - ((float)off.Left/(float)5)); //left decrease
+                    leftCorrect *= 1.0 - straightDrivePID.output(-off.Left+0.3, 0);
                 }
             }
         }
@@ -783,16 +784,16 @@ class Drive : public System
         {
             if(off.Right < off.Left)
             {
-                if(off.Right > 0.4)
+                if(off.Right > 0.3)
                 {
-                    leftCorrect *= ((float).98 - ((float)off.Right/(float)5));
+                    leftCorrect *= 1.0 - straightDrivePID.output(-off.Right+0.3, 0);
                 }
             }
             else
             {
-                if(off.Left > 0.4)
+                if(off.Left > 0.3)
                 {
-                    rightCorrect *= ((float).98 - ((float)off.Left/(float)5)); //left decrease
+                    rightCorrect *= 1.0 - straightDrivePID.output(-off.Left+0.3, 0);
                 }
             }
         }
@@ -991,6 +992,10 @@ void Drive::setMember(int &number, AutonFlags &currentFlag, int value)
                         else if(value == PAST)
                         {
                             //value already set so don't do anything
+                        }
+                        else if(value == NOSTRAIGHT)
+                        {
+                            correctTo = NOSTRAIGHT;
                         }
                         else
                         {
@@ -1726,8 +1731,7 @@ void addCommands(Ts... input)
         lift.underTarget = true;
     }
     drive.pid.minOutput /= drive.outerInnerRatio;//maybe comment out
-
-    while(((tilter.state != END) || (drive.state != END) || (intake.state != END) || (lift.state != END)) && (autonTimer.current() < 20000 ))
+    while(((tilter.state != END) || (drive.state != END) || (intake.state != END) || (lift.state != END)) && (autonTimer.current() < 15000))
     {
         pros::lcd::print(3,"%f", actualGyroPosition());
         //posObj.updatePosition();
@@ -1739,7 +1743,6 @@ void addCommands(Ts... input)
                 break;
             case(WAITINGFORTRIGGER):
                 drive.updateTriggerState();
-                //drive.target = fixTarget(drive.target);
                 GyroDistances Dist;
                 getDistances(Dist, drive.target);
                 if(Dist.Right < Dist.Left)
@@ -1840,7 +1843,7 @@ void smallBlue()
         DRIVE,TURN,1000,WHEELCORRECTION,TURNPID,
         DRIVE,TURN,2000,WHEELCORRECTION,TURNPID);*/
     addCommands(
-        LIFT,POSITION,800,127
+        DRIVE,FORWARDSE,60,NOSTRAIGHT,TIMETE,500
     );
 }
 
