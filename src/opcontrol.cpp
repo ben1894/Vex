@@ -21,8 +21,13 @@ pros::ADIEncoder rightEncoder(5, 6, false);
 void opcontrol() //0.0078740157480315 = quadradic value
 {
 	Timer controllerTimer;
+	Timer matchTimer;
+	Timer rumbleTimer;
+	rumbleTimer.clear();
+	matchTimer.clear();
 	mainController.clear();
 	controllerTimer.clear();
+	bool clear = false;
 	int oldButtonY = 0;
 	int intakeHoldingPower = 0;
 	leftEncoder.reset();
@@ -117,8 +122,23 @@ void opcontrol() //0.0078740157480315 = quadradic value
 
 		if(controllerTimer.current() > 110)
 		{
-			mainController.print(0,0,"%f",pros::battery::get_capacity());
+			if(clear == false)
+			{
+				mainController.print(0,0,"%d",(int)((105000-matchTimer.current())/1000));
+				clear = true;
+				//mainController.print(1,0,"%f",pros::battery::get_capacity());
+			}
+			else 
+			{
+				clear = false;
+				mainController.clear();
+			}
 			controllerTimer.clear();
+		}
+		if(rumbleTimer.current() > 30000)
+		{
+			mainController.rumble("-");
+			rumbleTimer.clear();
 		}
 
 		if(autonTest == true)
