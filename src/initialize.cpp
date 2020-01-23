@@ -180,7 +180,7 @@ void competition_initialize()
 		oldLCD = pros::lcd::read_buttons();
 		oldRight = cVal(DIGITAL_RIGHT);
 		oldLeft = cVal(DIGITAL_LEFT);
-		pros::lcd::print(4,"%d", fixTarget(gyroI.get_heading()));
+		pros::lcd::print(4,"%f", fixTarget(gyroI.get_heading()));
 		pros::delay(3);
 	}
 	pros::lcd::print(2,"Auton Selected");
