@@ -48,9 +48,9 @@
 #define regLiftMin 0
 #define regLiftMax 0
 
-#define straightDriveP .26
-#define straightDriveI 0.1
-#define straightDriveD 0.2
+#define straightDriveP 0.122
+#define straightDriveI 0.0000152
+#define straightDriveD 0.0000152
 #define straightDriveMin -1.0
 #define straightDriveMax 1.0
 //
