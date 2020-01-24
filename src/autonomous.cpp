@@ -14,7 +14,7 @@ All code created by:
 #include "pidPacks.hpp"
 
 Timer autonTimer;
-bool autonTest = true;
+bool autonTest = false;
 const bool voltage = true;
 const bool gyroTurns = true;
 const bool gyroUpsidedown = false;
@@ -776,7 +776,7 @@ class Drive : public System
             {
                 if(off.Left > 0.3)
                 {
-                    leftCorrect *= 1.0 - straightDrivePID.output(-off.Left+0.3, 0);
+                    leftCorrect *= 1.0 + straightDrivePID.output(off.Left+0.3, 0);
                 }
             }
         }
@@ -793,7 +793,7 @@ class Drive : public System
             {
                 if(off.Left > 0.3)
                 {
-                    rightCorrect *= 1.0 - straightDrivePID.output(-off.Left+0.3, 0);
+                    rightCorrect *= 1.0 + straightDrivePID.output(off.Left+0.3, 0);
                 }
             }
         }
@@ -1848,14 +1848,12 @@ addCommands(
     DRIVE,BACKWARDS,900,520,REGACCEL,
     DRIVE,TURN,0,NOSTRAIGHT,TURNPID,
     DRIVE,FORWARDS,150,0,MMREGPID,55,100,REGACCEL,NOBRAKE,
-    DRIVE,FORWARDS,1120,0,NOPID,44,
-    DRIVE,TURN,2170,NOSTRAIGHT,TURNPID2,
-    DRIVE,FORWARDS,1060,2090,REGACCEL,NOBRAKE,MMREGPID,50,127,
-    DRIVE,FORWARDSE,50,2090,TIMETE,500,
+    DRIVE,FORWARDS,970,0,NOPID,44,
+    DRIVE,TURN,2140,NOSTRAIGHT,TURNPID2,
+    DRIVE,FORWARDS,940,2060,REGACCEL,NOBRAKE,MMREGPID,50,127,
+    DRIVE,FORWARDSE,55,2060,TIMETE,450,
     INTAKE,OUT,127,LIFTT,1,800,
     INTAKE,IN,127,TIMET,1100,
-    //INTAKE,IN,127,DRIVET,8,10000,
-    //INTAKE,IN,0,DRIVET,
     INTAKE,IN,45,DRIVET,9,1180,
     TILTER,POSITION,1000,90,DRIVET,9,10
     );
@@ -1887,15 +1885,13 @@ addCommands(
     DRIVE,TURN,3120,NOSTRAIGHT,TURNPID,
     DRIVE,BACKWARDS,1080,3120,REGACCEL,
     DRIVE,TURN,0,NOSTRAIGHT,TURNPID,
-    DRIVE,FORWARDS,150,0,MMREGPID,55,100,REGACCEL,NOBRAKE,
-    DRIVE,FORWARDS,1180,0,NOPID,44,
-    DRIVE,TURN,1450,NOSTRAIGHT,TURNPID2,
-    DRIVE,FORWARDS,1040,1510,REGACCEL,NOBRAKE,MMREGPID,60,127,
-    DRIVE,FORWARDSE,60,1540,TIMETE,500,
+    DRIVE,FORWARDS,150,0,MMREGPID,50,100,REGACCEL,NOBRAKE,
+    DRIVE,FORWARDS,970,0,NOPID,40,
+    DRIVE,TURN,1470,NOSTRAIGHT,TURNPID2,
+    DRIVE,FORWARDS,920,1530,REGACCEL,NOBRAKE,MMREGPID,60,127,
+    DRIVE,FORWARDSE,60,1530,TIMETE,450,
     INTAKE,OUT,127,LIFTT,1,800,
     INTAKE,IN,127,TIMET,1100,
-    //INTAKE,IN,127,DRIVET,8,10000,
-    //INTAKE,IN,0,DRIVET,
     INTAKE,IN,45,DRIVET,9,1180,
     TILTER,POSITION,1000,90,DRIVET,9,10
     );
