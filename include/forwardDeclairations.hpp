@@ -117,7 +117,6 @@ enum AutonFlags
 	DOWNRIGHTSWEEPC,
 	TURNC,
 
-
 	NOACCEL,
 	ACCEL,
 	REGACCEL,
@@ -142,6 +141,7 @@ enum Select
 	SMALLBLUE,
 	THICCRED,
 	THICCBLUE,
+	MICROCUBE,
 	OVER
 };
 

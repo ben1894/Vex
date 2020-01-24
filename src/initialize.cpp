@@ -148,6 +148,10 @@ void competition_initialize()
 					pros::lcd::print(0, "Thicc Blue");
 					mainController.print(0,0,"Thicc Blue");
 					break;
+				case(MICROCUBE):
+					pros::lcd::print(0, "Micro Cube");
+					mainController.print(0,0,"Micro Cube");
+					break;
 				case(UNDER):
 					count = (Select)((int)OVER - 1);
 					onceAcception = true;

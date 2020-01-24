@@ -125,8 +125,8 @@ void opcontrol() //0.0078740157480315 = quadradic value
 			if(clear == false)
 			{
 				mainController.print(0,0,"%d",(int)((105000-matchTimer.current())/1000));
+				mainController.print(1,0,"%f",pros::battery::get_capacity());
 				clear = true;
-				//mainController.print(1,0,"%f",pros::battery::get_capacity());
 			}
 			else 
 			{
@@ -137,7 +137,7 @@ void opcontrol() //0.0078740157480315 = quadradic value
 		}
 		if(rumbleTimer.current() > 30000)
 		{
-			mainController.rumble("-");
+			//mainController.rumble("-");
 			rumbleTimer.clear();
 		}
 
