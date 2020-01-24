@@ -14,7 +14,7 @@ All code created by:
 #include "pidPacks.hpp"
 
 Timer autonTimer;
-bool autonTest = true;
+bool autonTest = false;
 const bool voltage = true;
 const bool gyroTurns = true;
 const bool gyroUpsidedown = false;
@@ -1710,7 +1710,6 @@ void addCommands(Ts... input)
         tilter.initialUpdate(i, parameters);
         intake.initialUpdate(i, parameters);
         lift.initialUpdate(i, parameters);
-        posObj.updatePosition(); //Might not be needed
     }
 
     if(tilter.getPosition() > tilter.target)
@@ -1730,7 +1729,7 @@ void addCommands(Ts... input)
     {
         lift.underTarget = true;
     }
-    drive.pid.minOutput /= drive.outerInnerRatio;//maybe comment out
+    drive.pid.minOutput /= drive.outerInnerRatio;/////
     while(((tilter.state != END) || (drive.state != END) || (intake.state != END) || (lift.state != END)) && (autonTimer.current() < 15000))
     {
         pros::lcd::print(3,"%f", actualGyroPosition());
@@ -1739,7 +1738,7 @@ void addCommands(Ts... input)
         {
             case(WAITINGFORINSTRUCTIONS):
                 drive.update(parameters);
-                drive.pid.minOutput /= drive.outerInnerRatio; //has to be put here so it doesn't get overwritten by the pid initializatio
+                drive.pid.minOutput /= drive.outerInnerRatio; //has to be put here so it doesn't get overwritten by the pid initialization
                 break;
             case(WAITINGFORTRIGGER):
                 drive.updateTriggerState();
@@ -1849,18 +1848,19 @@ addCommands(
     DRIVE,TURN,0,NOSTRAIGHT,TURNPID,
     DRIVE,FORWARDS,150,0,MMREGPID,55,100,REGACCEL,NOBRAKE,
     DRIVE,FORWARDS,970,0,NOPID,44,
-    DRIVE,TURN,2140,NOSTRAIGHT,TURNPID2,
-    DRIVE,FORWARDS,940,2060,REGACCEL,NOBRAKE,MMREGPID,50,127,
-    DRIVE,FORWARDSE,55,2060,TIMETE,450,
+    DRIVE,BACKWARDS,460,0,
+    DRIVE,TURN,2250,NOSTRAIGHT,TURNPID2,
+    DRIVE,FORWARDS,340,2250,REGACCEL,NOBRAKE,MMREGPID,50,127,
+    DRIVE,FORWARDSE,55,2250,TIMETE,450,
     INTAKE,OUT,127,LIFTT,1,800,
     INTAKE,IN,127,TIMET,1100,
-    INTAKE,IN,45,DRIVET,9,1180,
-    TILTER,POSITION,1000,90,DRIVET,9,10
+    INTAKE,IN,45,DRIVET,10,15,
+    TILTER,POSITION,1000,90,DRIVET,10,10
     );
 addCommands(
     INTAKE,OUT,0,
-    INTAKE,OUT,40,TILTERT,1,1500,
-    INTAKE,OUT,0,TILTERT,1,4500,
+    INTAKE,OUT,36,TILTERT,1,1400,
+    INTAKE,OUT,0,TILTERT,1,3800,
     TILTER,POSITION,6700,127,
     TILTER,POSITION,7100,90
     );
@@ -1887,25 +1887,26 @@ addCommands(
     DRIVE,TURN,0,NOSTRAIGHT,TURNPID,
     DRIVE,FORWARDS,150,0,MMREGPID,50,100,REGACCEL,NOBRAKE,
     DRIVE,FORWARDS,970,0,NOPID,40,
-    DRIVE,TURN,1470,NOSTRAIGHT,TURNPID2,
-    DRIVE,FORWARDS,920,1530,REGACCEL,NOBRAKE,MMREGPID,60,127,
-    DRIVE,FORWARDSE,60,1530,TIMETE,450,
+    DRIVE,BACKWARDS,550,0,
+    DRIVE,TURN,1300,NOSTRAIGHT,TURNPID2,
+    DRIVE,FORWARDS,340,1350,REGACCEL,NOBRAKE,MMREGPID,60,127,
+    DRIVE,FORWARDSE,60,1350,TIMETE,450,
     INTAKE,OUT,127,LIFTT,1,800,
     INTAKE,IN,127,TIMET,1100,
-    INTAKE,IN,45,DRIVET,9,1180,
-    TILTER,POSITION,1000,90,DRIVET,9,10
+    INTAKE,IN,45,DRIVET,10,15,
+    TILTER,POSITION,1000,90,DRIVET,10,10
     );
 addCommands(
     INTAKE,OUT,0,
-    INTAKE,OUT,40,TILTERT,1,1500,
-    INTAKE,OUT,0,TILTERT,1,4000,
+    INTAKE,OUT,36,TILTERT,1,1400,
+    INTAKE,OUT,0,TILTERT,1,3800,
     TILTER,POSITION,6700,127,
     TILTER,POSITION,7100,90
     );
 addCommands(
     INTAKE,OUT,127,
     INTAKE,IN,0,TIMET,1000,
-    DRIVE,BACKWARDS,1000,NOSTRAIGHT,TIMET,200,
+    DRIVE,BACKWARDS,1000,NOSTRAIGHT,TIMET,280,
     TILTER,POSITION,5000,127,TIMET,50
 );
 }
