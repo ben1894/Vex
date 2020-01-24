@@ -14,7 +14,7 @@ All code created by:
 #include "pidPacks.hpp"
 
 Timer autonTimer;
-bool autonTest = false;
+bool autonTest = true;
 const bool voltage = true;
 const bool gyroTurns = true;
 const bool gyroUpsidedown = false;
