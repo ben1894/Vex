@@ -47,86 +47,31 @@ Lift *liftObj;
  * from where it left off.
  */
 
-/*
-class VelocityDrive
-{
-public:
-static PidController leftDrivePID;
-static PidController rightDrivePID;
-static int previousLeftDistance;
-static int previousRightDistance;
-static unsigned long previousRightTime;
-static unsigned long previousLeftTime;
-
-
-static void leftSide(double targetVelocity)
-{
-    //Derivative
-    double velocity = (leftEncoder.get_value() - previousLeftDistance) / (pros::millis() - previousLeftTime);
-    double extraSpeed = rightDrivePID.output(velocity, targetVelocity);
-    double velocityToSpeed;
-    //driveMotorsSpeed(leftDrive, )
-    previousLeftTime = pros::millis();
-    //leftDrivePID.output //current then target
-}
-
-static void rightSide(double targetVelocity)
-{
-    double velocity = (rightEncoder.get_value() - previousRightDistance) / (pros::millis() - previousRightTime);
-    double extraSpeed = rightDrivePID.output(velocity, targetVelocity);
-    previousRightTime = pros::millis();
-}
-
-static void reset()
-{
-    leftDrivePID = {leftSideP,leftSideI,leftSideD,leftSideMin,leftSideMax};
-    rightDrivePID = {rightSideP,rightSideI,rightSideD,rightSideMin,rightSideMax};
-    previousLeftDistance = 0;
-    previousRightDistance = 0;
-    previousRightTime = pros::millis();
-    previousLeftTime = pros::millis();
-}
-
-private:
-// Disallow creating an instance of this object
-VelocityDrive() {}
-};
-
-PidController VelocityDrive::leftDrivePID{leftSideP,leftSideI,leftSideD,leftSideMin,leftSideMax};
-PidController VelocityDrive::rightDrivePID{rightSideP,rightSideI,rightSideD,rightSideMin,rightSideMax};
-static int previousLeftDistance = 0;
-static int previousRightDistance = 0;
-static unsigned long previousRightTime = pros::millis();
-static unsigned long previousLeftTime = pros::millis();
-*/
 class PositionTracking
 {
     public:
     double xPosition = 0;
     double yPosition = 0;
     double lastGyroPosition = actualGyroPosition();
+    double prevAngle = 0;
     int prevLWheel = 0;
     int prevRWheel = 0;
-    int prevAngle = 0;
 
     void updatePosition()
     {
         double currentAngle = fmod((((actualGyroPosition()) - 90) * -1) + 360, 360.0);
         double currentAngleDifference = currentAngle - prevAngle;
 
-        int ifAngleChange = actualGyroPosition() - lastGyroPosition;
-
         int currentLDifference = leftEncoder.get_value() - prevLWheel;
         int currentRDifference = rightEncoder.get_value() - prevRWheel;
         int combinedDistance = currentLDifference + currentRDifference;
-        pros::lcd::print(4,"%f", currentAngle);
 
         if(combinedDistance != 0)
         {
             double movement = combinedDistance/(double)2;
             pros::lcd::print(5,"%f", movement);
 
-            if(ifAngleChange == 0)
+            if(currentAngleDifference == 0)
             {
                 xPosition += movement*cos(degToRad(currentAngle));
                 yPosition += movement*sin(degToRad(currentAngle));
@@ -140,9 +85,8 @@ class PositionTracking
             }
         }
 
-        lastGyroPosition = ifAngleChange + lastGyroPosition;
         prevLWheel = currentLDifference + prevLWheel;
-        prevRWheel = currentRDifference + prevRWheel; //middle of the change
+        prevRWheel = currentRDifference + prevRWheel; 
         prevAngle = currentAngle;
     }
 
@@ -247,6 +191,55 @@ class PidController
             return output;
         }
 };
+
+class VelocityDrive
+{
+public:
+static PidController leftDrivePID;
+static PidController rightDrivePID;
+static int previousLeftDistance;
+static int previousRightDistance;
+static unsigned long previousRightTime;
+static unsigned long previousLeftTime;
+
+
+static void leftSide(double targetVelocity)
+{
+    //Derivative
+    double velocity = (leftEncoder.get_value() - previousLeftDistance) / (pros::millis() - previousLeftTime);
+    double extraSpeed = rightDrivePID.output(velocity, targetVelocity);
+    double velocityToSpeed;
+    previousLeftTime = pros::millis();
+}
+
+static void rightSide(double targetVelocity)
+{
+    double velocity = (rightEncoder.get_value() - previousRightDistance) / (pros::millis() - previousRightTime);
+    double extraSpeed = rightDrivePID.output(velocity, targetVelocity);
+    previousRightTime = pros::millis();
+}
+
+static void reset()
+{
+    leftDrivePID = {leftSideP,leftSideI,leftSideD,leftSideMin,leftSideMax};
+    rightDrivePID = {rightSideP,rightSideI,rightSideD,rightSideMin,rightSideMax};
+    previousLeftDistance = 0;
+    previousRightDistance = 0;
+    previousRightTime = pros::millis();
+    previousLeftTime = pros::millis();
+}
+
+private:
+// Disallow creating an instance of this object
+VelocityDrive() {}
+};
+
+PidController VelocityDrive::leftDrivePID{leftSideP,leftSideI,leftSideD,leftSideMin,leftSideMax};
+PidController VelocityDrive::rightDrivePID{rightSideP,rightSideI,rightSideD,rightSideMin,rightSideMax};
+static int previousLeftDistance = 0;
+static int previousRightDistance = 0;
+static unsigned long previousRightTime = pros::millis();
+static unsigned long previousLeftTime = pros::millis();
 
 class System
 {

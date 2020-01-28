@@ -92,9 +92,9 @@ void opcontrol() //0.0078740157480315 = quadradic value
 
 		if(cVal(DIGITAL_L1))
 		{
-			if(tilter.get_position() > 5500)
+			if(tilter.get_position() > 5300)
 			{
-				tilter.move(86);
+				tilter.move(81);
 			}
 			else
 			{
