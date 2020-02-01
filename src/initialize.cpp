@@ -26,10 +26,11 @@ pros::Motor lift(3,pros::E_MOTOR_GEARSET_36,false,pros::E_MOTOR_ENCODER_COUNTS);
 void initialize()
 {
 	pros::lcd::initialize();
-	pros::Imu gyroI(18);
+	pros::Imu gyroI(20);
 	while(gyroI.is_calibrating())
 	{
 		pros::delay(5);
+		break;
 	}
 	for(int i = 0; i < leftDrive.size(); i++)
 	{
