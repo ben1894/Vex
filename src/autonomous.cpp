@@ -56,6 +56,7 @@ class PositionTracking
     double prevAngle = 0;
     int prevLWheel = 0;
     int prevRWheel = 0;
+    int prevMWheel = 0;
 
     void updatePosition()
     {
@@ -64,12 +65,12 @@ class PositionTracking
 
         int currentLDifference = leftEncoder.get_value() - prevLWheel;
         int currentRDifference = rightEncoder.get_value() - prevRWheel;
+        int currentMDifference = middleEncoder.get_value() - prevMWheel;
         int combinedDistance = currentLDifference + currentRDifference;
 
         if(combinedDistance != 0)
         {
             double movement = combinedDistance/(double)2;
-            pros::lcd::print(5,"%f", movement);
 
             if(currentAngleDifference == 0)
             {
@@ -85,6 +86,22 @@ class PositionTracking
             }
         }
 
+        if(currentMDifference != 0)
+        {
+            if(currentAngleDifference == 0)
+            {
+                xPosition += currentMDifference*cos(degToRad(currentAngle - 90.0));
+                yPosition += currentMDifference*sin(degToRad(currentAngle - 90.0));
+            }
+            else
+            {   //fixes movement from arc to vector   Set formula for arc
+                double radAngleDif = degToRad(currentAngleDifference);
+                currentMDifference = 2*(currentMDifference/radAngleDif)*sin(radAngleDif/2);
+                xPosition += currentMDifference*cos(degToRad(currentAngle - 90.0) + (radAngleDif/2));
+                yPosition += currentMDifference*sin(degToRad(currentAngle - 90.0) + (radAngleDif/2));
+            }
+        }
+
         prevLWheel = currentLDifference + prevLWheel;
         prevRWheel = currentRDifference + prevRWheel; 
         prevAngle = currentAngle;
@@ -94,6 +111,7 @@ class PositionTracking
     {
         prevLWheel = 0;
         prevRWheel = 0;
+        prevMWheel = 0;
     }
 
     double targetToAngle(double x, double y)
@@ -121,6 +139,7 @@ void resetAutonVals()
 	lift.tare_position();
 	leftEncoder.reset();
 	rightEncoder.reset();
+    middleEncoder.reset();
     posObj.reset();
 	for(int motor = 0; motor < leftDrive.size(); motor++)
 	{
@@ -227,6 +246,12 @@ static void reset()
     previousRightDistance = 0;
     previousRightTime = pros::millis();
     previousLeftTime = pros::millis();
+}
+
+double velocityToSpeed(double velocity)
+{
+    //1.50833x
+    //return (1.90833*velocity)-4.6054;
 }
 
 private:
@@ -666,6 +691,7 @@ class Drive : public System
         posObj.updatePosition();
         leftEncoder.reset();
         rightEncoder.reset();
+        middleEncoder.reset();
         posObj.encoderReset();
         for(int motor = 0; motor < leftDrive.size(); motor++)
         {

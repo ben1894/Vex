@@ -180,6 +180,7 @@ extern Select count;
 
 extern pros::ADIEncoder leftEncoder;
 extern pros::ADIEncoder rightEncoder;
+extern pros::ADIEncoder middleEncoder;
 extern pros::Imu gyroI;
 extern Timer autonTimer;
 
