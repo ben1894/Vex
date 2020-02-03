@@ -56,7 +56,6 @@ class PositionTracking
     double prevAngle = 0;
     int prevLWheel = 0;
     int prevRWheel = 0;
-    int prevMWheel = 0;
 
     void updatePosition()
     {
@@ -65,7 +64,6 @@ class PositionTracking
 
         int currentLDifference = leftEncoder.get_value() - prevLWheel;
         int currentRDifference = rightEncoder.get_value() - prevRWheel;
-        int currentMDifference = middleEncoder.get_value() - prevMWheel;
         int combinedDistance = currentLDifference + currentRDifference;
 
         if(combinedDistance != 0)
@@ -86,22 +84,6 @@ class PositionTracking
             }
         }
 
-        if(currentMDifference != 0)
-        {
-            if(currentAngleDifference == 0)
-            {
-                xPosition += currentMDifference*cos(degToRad(currentAngle - 90.0));
-                yPosition += currentMDifference*sin(degToRad(currentAngle - 90.0));
-            }
-            else
-            {   //fixes movement from arc to vector   Set formula for arc
-                double radAngleDif = degToRad(currentAngleDifference);
-                currentMDifference = 2*(currentMDifference/radAngleDif)*sin(radAngleDif/2);
-                xPosition += currentMDifference*cos(degToRad(currentAngle - 90.0) + (radAngleDif/2));
-                yPosition += currentMDifference*sin(degToRad(currentAngle - 90.0) + (radAngleDif/2));
-            }
-        }
-
         prevLWheel = currentLDifference + prevLWheel;
         prevRWheel = currentRDifference + prevRWheel; 
         prevAngle = currentAngle;
@@ -111,7 +93,6 @@ class PositionTracking
     {
         prevLWheel = 0;
         prevRWheel = 0;
-        prevMWheel = 0;
     }
 
     double targetToAngle(double x, double y)
@@ -139,7 +120,6 @@ void resetAutonVals()
 	lift.tare_position();
 	leftEncoder.reset();
 	rightEncoder.reset();
-    middleEncoder.reset();
     posObj.reset();
 	for(int motor = 0; motor < leftDrive.size(); motor++)
 	{
@@ -222,19 +202,20 @@ static unsigned long previousRightTime;
 static unsigned long previousLeftTime;
 
 
-static void leftSide(double targetVelocity)
+static void leftSide(double targetSpeed)
 {
     //Derivative
     double velocity = (leftEncoder.get_value() - previousLeftDistance) / (pros::millis() - previousLeftTime);
-    double extraSpeed = rightDrivePID.output(velocity, targetVelocity);
-    double velocityToSpeed;
+    double extraSpeed = rightDrivePID.output(velocity, speedToVelocity(targetSpeed));
+    driveMotorsSpeed(targetSpeed + extraSpeed, leftDrive);
     previousLeftTime = pros::millis();
 }
 
-static void rightSide(double targetVelocity)
+static void rightSide(double targetSpeed)
 {
     double velocity = (rightEncoder.get_value() - previousRightDistance) / (pros::millis() - previousRightTime);
-    double extraSpeed = rightDrivePID.output(velocity, targetVelocity);
+    double extraSpeed = rightDrivePID.output(velocity, speedToVelocity(targetSpeed));
+    driveMotorsSpeed(targetSpeed + extraSpeed, rightDrive);
     previousRightTime = pros::millis();
 }
 
@@ -248,10 +229,22 @@ static void reset()
     previousLeftTime = pros::millis();
 }
 
-double velocityToSpeed(double velocity)
+static double velocityToSpeed(double velocity)
 {
-    //1.50833x
-    //return (1.90833*velocity)-4.6054;
+
+}
+
+//try making private after;
+static double speedToVelocity(double speed)
+{
+    if(fabs(speed) < 11.513)
+    {
+        return 1.50833 * speed;
+    }
+    else 
+    {
+        return (1.90833*speed)-4.6054;
+    }
 }
 
 private:
@@ -261,10 +254,10 @@ VelocityDrive() {}
 
 PidController VelocityDrive::leftDrivePID{leftSideP,leftSideI,leftSideD,leftSideMin,leftSideMax};
 PidController VelocityDrive::rightDrivePID{rightSideP,rightSideI,rightSideD,rightSideMin,rightSideMax};
-static int previousLeftDistance = 0;
-static int previousRightDistance = 0;
-static unsigned long previousRightTime = pros::millis();
-static unsigned long previousLeftTime = pros::millis();
+int VelocityDrive::previousLeftDistance = 0;
+int VelocityDrive::previousRightDistance = 0;
+unsigned long VelocityDrive::previousRightTime = pros::millis();
+unsigned long VelocityDrive::previousLeftTime = pros::millis();
 
 class System
 {
@@ -691,7 +684,6 @@ class Drive : public System
         posObj.updatePosition();
         leftEncoder.reset();
         rightEncoder.reset();
-        middleEncoder.reset();
         posObj.encoderReset();
         for(int motor = 0; motor < leftDrive.size(); motor++)
         {
@@ -1961,6 +1953,25 @@ void posTest()
 void autonomous()
 {
     resetAutonVals();
+    while(1)
+    {
+        VelocityDrive::reset();
+        VelocityDrive::rightSide(20);
+        VelocityDrive::leftSide(20);
+        pros::delay(2000);
+        VelocityDrive::reset();
+        VelocityDrive::rightSide(50);
+        VelocityDrive::leftSide(50);
+        pros::delay(2000);
+        VelocityDrive::reset();
+        VelocityDrive::rightSide(-50);
+        VelocityDrive::leftSide(-50);
+        pros::delay(2000);
+        VelocityDrive::reset();
+        VelocityDrive::rightSide(0);
+        VelocityDrive::leftSide(0);
+        pros::delay(2000);
+    }
     //posTest();
     switch(count)
     {

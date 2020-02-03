@@ -17,7 +17,6 @@
 pros::Imu gyroI(20);
 pros::ADIEncoder leftEncoder(3, 4, true);
 pros::ADIEncoder rightEncoder(5, 6, false);
-pros::ADIEncoder middleEncoder(7,8, false);
 
 void opcontrol() //0.0078740157480315 = quadradic value
 {

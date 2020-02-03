@@ -18,17 +18,17 @@
 #define regTurnMin2 37
 #define regTurnMax2 90
 
-#define leftSideP 0.17
-#define leftSideI 0
-#define leftSideD 0
-#define leftSideMin 20
-#define leftSideMax 60
+#define leftSideP 5
+#define leftSideI 0.2
+#define leftSideD 0.2
+#define leftSideMin -227
+#define leftSideMax 227
 
-#define rightSideP 0.17
-#define rightSideI 0
-#define rightSideD 0
-#define rightSideMin 20
-#define rightSideMax 60
+#define rightSideP 5
+#define rightSideI 0.2
+#define rightSideD 0.2
+#define rightSideMin -227
+#define rightSideMax 227
 
 #define regIntakeP 0
 #define regIntakeI 0
