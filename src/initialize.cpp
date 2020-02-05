@@ -30,7 +30,6 @@ void initialize()
 	while(gyroI.is_calibrating())
 	{
 		pros::delay(5);
-		break;
 	}
 	for(int i = 0; i < leftDrive.size(); i++)
 	{
