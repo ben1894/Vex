@@ -1,6 +1,6 @@
 #pragma once
 
-#define regDriveP .26
+#define regDriveP .28
 #define regDriveI 0
 #define regDriveD 0
 #define regDriveMin 40
@@ -54,7 +54,7 @@
 #define straightDriveMin -1.0
 #define straightDriveMax 1.0
 
-#define wheelDriveP 0.061//0.19
+#define wheelDriveP 0.111//0.19
 #define wheelDriveI 0.0000076
 #define wheelDriveD 0.0000076
 #define wheelDriveMin -1.0

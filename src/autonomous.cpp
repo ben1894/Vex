@@ -28,7 +28,7 @@ class Drive;
 class Tilter;
 class Intake;
 class Lift;
-class PidController;
+//class PidController;
 class PositionTracking;
 Drive *driveObj;
 Tilter *tilterObj;
@@ -151,8 +151,8 @@ class PidController
             this->D = D;
             this->minOutput = minOutput;
             this->maxOutput = maxOutput;
-            //reset();
-            //pros::delay(1); //Prevent divide by 0 error
+            reset();
+            pros::delay(1); //Prevent divide by 0 error
         }
 
         void reset()
@@ -190,7 +190,7 @@ class PidController
             return output;
         }
 };
-
+/*
 class VelocityDrive
 {
 public:
@@ -282,6 +282,7 @@ int VelocityDrive::previousLeftDistance = 0;
 int VelocityDrive::previousRightDistance = 0;
 unsigned long VelocityDrive::previousRightTime;
 unsigned long VelocityDrive::previousLeftTime;
+*/
 
 class System
 {
@@ -374,6 +375,7 @@ public:
 
     void updateTriggerState()
     {
+        triggerTimerE.clear();
         switch(trigger)  //have it set at something until everything ends or its set to end
         {
             case(NONET):
@@ -414,7 +416,6 @@ public:
                     break;
                 }
         }
-        triggerTimerE.clear();
     }
 
     //sets system variables scrolling through main parameter vectors, all systems can have these options
@@ -691,6 +692,7 @@ class Drive : public System
             clearEncoders();
             triggerTimer.clear();
             accelerationTimer.clear();
+            outerInnerRatio = 1;
             if(driveObj == nullptr)
             {
                 driveObj = this; //resets the global pointer to the reset object
@@ -904,7 +906,7 @@ class Drive : public System
         double difference;
         if(direction == TURN || direction == FORWARDSC || direction == BACKWARDSC || direction == TURNC || direction == FORWARDS || direction == FORWARDSE || direction == BACKWARDS || direction == BACKWARDSE)
         {
-            difference = abs(rightEncoder.get_value()) - abs(leftEncoder.get_value());
+            difference = abs(leftEncoder.get_value()) - abs(rightEncoder.get_value());
         }
         else
         {
@@ -915,38 +917,54 @@ class Drive : public System
         {
             if(direction == DOWNRIGHTSWEEP || direction == DOWNRIGHTSWEEPE)
             {
-                leftCorrect *= 1.0 + straightDrivePID.output(difference-0.4, 0); //double error = target - currentSensorData;
+                leftCorrect *= 1.0 + straightDrivePID.output(difference-4, 0); //double error = target - currentSensorData;
             }
-            if(direction == DOWNLEFTSWEEP || direction == DOWNLEFTSWEEPE)
+            else if(direction == DOWNLEFTSWEEP || direction == DOWNLEFTSWEEPE)
             {
-                rightCorrect *= 1.0 + straightDrivePID.output(difference-0.4, 0);
+                rightCorrect *= 1.0 + straightDrivePID.output(difference-4, 0);
             }
-            if(direction == UPLEFTSWEEP || direction == UPLEFTSWEEPE)
+            else if(direction == UPLEFTSWEEP || direction == UPLEFTSWEEPE)
             {
-                rightCorrect *= 1.0 + straightDrivePID.output(difference-0.4, 0);
+                rightCorrect *= 1.0 + straightDrivePID.output(difference-4, 0);
             }
-            if(direction == UPRIGHTSWEEP || direction == UPRIGHTSWEEPE)
+            else if(direction == UPRIGHTSWEEP || direction == UPRIGHTSWEEPE)
             {
-                leftCorrect *= 1.0 + straightDrivePID.output(difference-0.4, 0);
+                leftCorrect *= 1.0 + straightDrivePID.output(difference-4, 0);
+            }
+            else if(direction == FORWARDS || direction == FORWARDSE || direction == FORWARDSC)
+            {
+                leftCorrect *= 1.0 + straightDrivePID.output(difference-4, 0);
+            }
+            else 
+            {
+                rightCorrect *= 1.0 + straightDrivePID.output(difference-4, 0);
             }
         }
         else if(difference < -4)
         {
             if(direction == DOWNRIGHTSWEEP || direction == DOWNRIGHTSWEEPE)
             {
-                leftCorrect *= 1.0 - straightDrivePID.output(difference+0.4, 0);
+                leftCorrect *= 1.0 - straightDrivePID.output(difference+4, 0);
             }
-            if(direction == DOWNLEFTSWEEP || direction == DOWNLEFTSWEEPE)
+            else if(direction == DOWNLEFTSWEEP || direction == DOWNLEFTSWEEPE)
             {
-                rightCorrect *= 1.0 - straightDrivePID.output(difference+0.4, 0);
+                rightCorrect *= 1.0 - straightDrivePID.output(difference+4, 0);
             }
-            if(direction == UPLEFTSWEEP || direction == UPLEFTSWEEPE)
+            else if(direction == UPLEFTSWEEP || direction == UPLEFTSWEEPE)
             {
-                rightCorrect *= 1.0 - straightDrivePID.output(difference+0.4, 0);
+                rightCorrect *= 1.0 - straightDrivePID.output(difference+4, 0);
             }
-            if(direction == UPRIGHTSWEEP || direction == UPRIGHTSWEEPE)
+            else if(direction == UPRIGHTSWEEP || direction == UPRIGHTSWEEPE)
             {
-                leftCorrect *= 1.0 - straightDrivePID.output(difference+0.4, 0);
+                leftCorrect *= 1.0 - straightDrivePID.output(difference+4, 0);
+            }
+            else if(direction == FORWARDS || direction == FORWARDSE || direction == FORWARDSC)
+            {
+                rightCorrect *= 1.0 - straightDrivePID.output(difference+4, 0);
+            }
+            else 
+            {
+                leftCorrect *= 1.0 - straightDrivePID.output(difference+4, 0);
             }
         }
     }    
@@ -1049,6 +1067,10 @@ void Drive::setMember(int &number, AutonFlags &currentFlag, int value)
                         else if(value == NOSTRAIGHT)
                         {
                             correctTo = NOSTRAIGHT;
+                        }
+                        else if(value == WHEELCORRECTION)
+                        {
+                            correctTo = WHEELCORRECTION;
                         }
                         else
                         {
@@ -1786,6 +1808,8 @@ void addCommands(Ts... input)
     while(((tilter.state != END) || (drive.state != END) || (intake.state != END) || (lift.state != END)) && (autonTimer.current() < 15000))
     {
         pros::lcd::print(3,"%f", actualGyroPosition());
+        pros::lcd::print(1,"%f", leftEncoder.get_value());
+        pros::lcd::print(2,"%f", rightEncoder.get_value());
         //posObj.updatePosition();
         switch(drive.state)
         {
@@ -1892,10 +1916,10 @@ void smallBlue()
 addCommands(
     LIFT,POSITION,1700,127,
     LIFT,SPEED,-127,TIMETE,600,
-    DRIVE,FORWARDS,250,0,TIMET,600,
-    DRIVE,FORWARDS,-1,0,NOBRAKE,LIFTT,2,600,//TIMET,1300,
-    DRIVE,FORWARDS,180,0,MMREGPID,55,127,REGACCEL,NOBRAKE,TIMET,500,//TIMET,1300,
-    DRIVE,FORWARDS,550,0,NOPID,44,
+    DRIVE,FORWARDS,250,WHEELCORRECTION,TIMET,600,
+    DRIVE,FORWARDS,-1,WHEELCORRECTION,NOBRAKE,LIFTT,2,600,//TIMET,1300,
+    DRIVE,FORWARDS,180,WHEELCORRECTION,MMREGPID,55,127,REGACCEL,NOBRAKE,TIMET,500,//TIMET,1300,
+    DRIVE,FORWARDS,550,WHEELCORRECTION,NOPID,44,
     DRIVE,TURN,520,NOSTRAIGHT,TURNPID,
     DRIVE,BACKWARDS,900,520,REGACCEL,
     DRIVE,TURN,0,NOSTRAIGHT,TURNPID,
@@ -1965,26 +1989,59 @@ addCommands(
 }
 
 void microCube()
-{
+{ //distance radius
+    resetAutonVals();
 addCommands(
     LIFT,POSITION,1700,127,
     LIFT,SPEED,-127,TIMETE,600,
-    DRIVE,FORWARDS,250,0,TIMET,600,
-    DRIVE,FORWARDS,-1,0,NOBRAKE,LIFTT,2,600,//TIMET,1300,
-    DRIVE,FORWARDS,180,0,MMREGPID,55,127,REGACCEL,NOBRAKE,TIMET,500,//TIMET,1300,
-    DRIVE,BACKWARDS,500,0,
-    INTAKE,OUT,127,LIFTT,1,800,
-    INTAKE,OUT,127,TIMET,3000
+    INTAKE,OUT,127,LIFTT,2,1,
+    INTAKE,OUT,127,TIMET,600,
+    INTAKE,IN,127,
+    DRIVE,FORWARDS,-1,NOSTRAIGHT,LIFTT,3,0,NOBRAKE,
+    DRIVE,FORWARDS,700,NOSTRAIGHT,NOPID,50,TIMET,500,NOBRAKE,
+    DRIVE,UPLEFTSWEEP,380,200,WHEELCORRECTION,NOPID,75,NOBRAKE,
+    DRIVE,UPLEFTSWEEP,60,320,NOSTRAIGHT,NOPID,75,NOBRAKE,
+    DRIVE,UPLEFTSWEEP,310,180,WHEELCORRECTION,NOPID,75,NOBRAKE,
+    DRIVE,FORWARDS,350,NOSTRAIGHT,NOPID,50,NOBRAKE,
+    DRIVE,UPLEFTSWEEP,260,180,WHEELCORRECTION,NOPID,75,NOBRAKE,
+    DRIVE,FORWARDS,270,NOSTRAIGHT,REGACCEL,NOPID,50,NOBRAKE,MMREGPID,60,127,
+    DRIVE,UPRIGHTSWEEP,75,180,WHEELCORRECTION,TIMETE,450,
+    TILTER,POSITION,2000,90,DRIVET,9,10,
+    INTAKE,OUT,40,DRIVET,9,400
+);
+addCommands(
+    INTAKE,OUT,0,
+    INTAKE,OUT,40,TILTERT,1,1000,
+    INTAKE,OUT,0,TILTERT,1,3800,
+    TILTER,POSITION,6700,127,
+    TILTER,POSITION,7060,90
+    );
+addCommands(
+    INTAKE,OUT,127,
+    INTAKE,IN,0,TIMET,1000,
+    DRIVE,BACKWARDS,1000,NOSTRAIGHT,TIMET,280,
+    TILTER,POSITION,5000,127,TIMET,50
 );
 }
 
 void sweep()
 {
+    /*
 addCommands(
     DRIVE,UPLEFTSWEEP,500,500,WHEELCORRECTION,
     DRIVE,UPRIGHTSWEEP,500,300,WHEELCORRECTION,
     DRIVE,DOWNRIGHTSWEEP,500,200,WHEELCORRECTION,
     DRIVE,DOWNLEFTSWEEP,500,100,WHEELCORRECTION
+);*/
+addCommands(
+    DRIVE,FORWARDS,250,WHEELCORRECTION,TIMET,600,
+    DRIVE,FORWARDS,-1,WHEELCORRECTION,NOBRAKE,//TIMET,1300,
+    DRIVE,FORWARDS,180,WHEELCORRECTION,MMREGPID,55,127,REGACCEL,NOBRAKE,TIMET,500,//TIMET,1300,
+    DRIVE,FORWARDS,550,WHEELCORRECTION,NOPID,44,
+    DRIVE,FORWARDS,250,NOSTRAIGHT,TIMET,600,
+    DRIVE,FORWARDS,-1,NOSTRAIGHT,NOBRAKE,//TIMET,1300,
+    DRIVE,FORWARDS,180,NOSTRAIGHT,MMREGPID,55,127,REGACCEL,NOBRAKE,TIMET,500,//TIMET,1300,
+    DRIVE,FORWARDS,550,NOSTRAIGHT,NOPID,44
 );
 }
 

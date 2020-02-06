@@ -165,7 +165,7 @@ void opcontrol() //0.0078740157480315 = quadradic value
 			}
 			if(cVal(DIGITAL_A))
 			{
-				resetGyro();
+				//resetGyro();
 				autonomous();
 			}
 		}
