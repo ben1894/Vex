@@ -731,11 +731,11 @@ class Drive : public System
                 //correctTo = fixTarget(turncTarget);
                 getDistances(gyroVals, fixTarget(turncTarget));
             }
-            else
+            else 
             {
                 getDistances(gyroVals, target);
             }
-
+            
             if((gyroVals.Left < breakVal) || (gyroVals.Right < breakVal))
             {   /*pros::lcd::print(1,"%f", gyroVals.Left);
                 pros::lcd::print(2,"%f", target);
@@ -749,7 +749,7 @@ class Drive : public System
                 }*/
                 return true;
             }
-
+            
             return false;
         }
         else
@@ -780,7 +780,7 @@ class Drive : public System
                 }
             }
         }
-        else
+        else 
         {
             if(off.Right < off.Left)
             {
@@ -880,7 +880,7 @@ class Drive : public System
             {
                 leftCorrect *= ((float).99 - ((float)abs(difference)/(float)100));
             }
-            else
+            else 
             {
                 rightCorrect *= ((float).99 - ((float)abs(difference)/(float)100));
             }
@@ -891,7 +891,7 @@ class Drive : public System
             {
                 rightCorrect *= ((float).99 - ((float)abs(difference)/(float)100));
             }
-            else
+            else 
             {
                 leftCorrect *= ((float).99 - ((float)abs(difference)/(float)100));
             }
@@ -1653,7 +1653,7 @@ void Drive::move()
                         target += 180;
                     }
                 }
-
+                
                 target = fixTarget(target); //so you can put in negative values
                 GyroDistances Dist;
                 getDistances(Dist, target);

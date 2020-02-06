@@ -15,7 +15,8 @@ Select count = UNDEFINED;
  */
 pros::Controller mainController(pros::E_CONTROLLER_MASTER);
 pros::Controller secondaryController(pros::E_CONTROLLER_PARTNER);
-//front back//left right
+//front back
+//left right
 std::array<pros::Motor, 2> rightDrive{pros::Motor(16),pros::Motor(17)};
 std::array<pros::Motor, 2>  leftDrive{pros::Motor(14),pros::Motor(15)};
 std::array<pros::Motor, 2>     intakeM{pros::Motor(13),pros::Motor(18)};
@@ -25,7 +26,7 @@ pros::Motor lift(3,pros::E_MOTOR_GEARSET_36,false,pros::E_MOTOR_ENCODER_COUNTS);
 void initialize()
 {
 	pros::lcd::initialize();
-	pros::Imu gyroI(20);
+	pros::Imu gyroI(18);
 	while(gyroI.is_calibrating())
 	{
 		pros::delay(5);
