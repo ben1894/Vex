@@ -1,6 +1,6 @@
 #pragma once
 
-#define regDriveP .26
+#define regDriveP .28
 #define regDriveI 0
 #define regDriveD 0
 #define regDriveMin 40
@@ -18,17 +18,17 @@
 #define regTurnMin2 37
 #define regTurnMax2 90
 
-#define leftSideP 0.17
-#define leftSideI 0
-#define leftSideD 0
-#define leftSideMin 20
-#define leftSideMax 60
+#define leftSideP 2
+#define leftSideI 1
+#define leftSideD 1
+#define leftSideMin -227
+#define leftSideMax 227
 
-#define rightSideP 0.17
-#define rightSideI 0
-#define rightSideD 0
-#define rightSideMin 20
-#define rightSideMax 60
+#define rightSideP 2
+#define rightSideI 1
+#define rightSideD 1
+#define rightSideMin -227
+#define rightSideMax 227
 
 #define regIntakeP 0
 #define regIntakeI 0
@@ -53,4 +53,10 @@
 #define straightDriveD 0.0000152
 #define straightDriveMin -1.0
 #define straightDriveMax 1.0
+
+#define wheelDriveP 0.111//0.19
+#define wheelDriveI 0.0000076
+#define wheelDriveD 0.0000076
+#define wheelDriveMin -1.0
+#define wheelDriveMax 1.0
 //

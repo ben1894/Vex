@@ -28,7 +28,7 @@ class Drive;
 class Tilter;
 class Intake;
 class Lift;
-class PidController;
+//class PidController;
 class PositionTracking;
 Drive *driveObj;
 Tilter *tilterObj;
@@ -47,86 +47,30 @@ Lift *liftObj;
  * from where it left off.
  */
 
-/*
-class VelocityDrive
-{
-public:
-static PidController leftDrivePID;
-static PidController rightDrivePID;
-static int previousLeftDistance;
-static int previousRightDistance;
-static unsigned long previousRightTime;
-static unsigned long previousLeftTime;
-
-
-static void leftSide(double targetVelocity)
-{
-    //Derivative
-    double velocity = (leftEncoder.get_value() - previousLeftDistance) / (pros::millis() - previousLeftTime);
-    double extraSpeed = rightDrivePID.output(velocity, targetVelocity);
-    double velocityToSpeed;
-    //driveMotorsSpeed(leftDrive, )
-    previousLeftTime = pros::millis();
-    //leftDrivePID.output //current then target
-}
-
-static void rightSide(double targetVelocity)
-{
-    double velocity = (rightEncoder.get_value() - previousRightDistance) / (pros::millis() - previousRightTime);
-    double extraSpeed = rightDrivePID.output(velocity, targetVelocity);
-    previousRightTime = pros::millis();
-}
-
-static void reset()
-{
-    leftDrivePID = {leftSideP,leftSideI,leftSideD,leftSideMin,leftSideMax};
-    rightDrivePID = {rightSideP,rightSideI,rightSideD,rightSideMin,rightSideMax};
-    previousLeftDistance = 0;
-    previousRightDistance = 0;
-    previousRightTime = pros::millis();
-    previousLeftTime = pros::millis();
-}
-
-private:
-// Disallow creating an instance of this object
-VelocityDrive() {}
-};
-
-PidController VelocityDrive::leftDrivePID{leftSideP,leftSideI,leftSideD,leftSideMin,leftSideMax};
-PidController VelocityDrive::rightDrivePID{rightSideP,rightSideI,rightSideD,rightSideMin,rightSideMax};
-static int previousLeftDistance = 0;
-static int previousRightDistance = 0;
-static unsigned long previousRightTime = pros::millis();
-static unsigned long previousLeftTime = pros::millis();
-*/
 class PositionTracking
 {
     public:
     double xPosition = 0;
     double yPosition = 0;
     double lastGyroPosition = actualGyroPosition();
+    double prevAngle = 0;
     int prevLWheel = 0;
     int prevRWheel = 0;
-    int prevAngle = 0;
 
     void updatePosition()
     {
         double currentAngle = fmod((((actualGyroPosition()) - 90) * -1) + 360, 360.0);
         double currentAngleDifference = currentAngle - prevAngle;
 
-        int ifAngleChange = actualGyroPosition() - lastGyroPosition;
-
         int currentLDifference = leftEncoder.get_value() - prevLWheel;
         int currentRDifference = rightEncoder.get_value() - prevRWheel;
         int combinedDistance = currentLDifference + currentRDifference;
-        pros::lcd::print(4,"%f", currentAngle);
 
         if(combinedDistance != 0)
         {
             double movement = combinedDistance/(double)2;
-            pros::lcd::print(5,"%f", movement);
 
-            if(ifAngleChange == 0)
+            if(currentAngleDifference == 0)
             {
                 xPosition += movement*cos(degToRad(currentAngle));
                 yPosition += movement*sin(degToRad(currentAngle));
@@ -140,9 +84,8 @@ class PositionTracking
             }
         }
 
-        lastGyroPosition = ifAngleChange + lastGyroPosition;
         prevLWheel = currentLDifference + prevLWheel;
-        prevRWheel = currentRDifference + prevRWheel; //middle of the change
+        prevRWheel = currentRDifference + prevRWheel; 
         prevAngle = currentAngle;
     }
 
@@ -247,6 +190,99 @@ class PidController
             return output;
         }
 };
+/*
+class VelocityDrive
+{
+public:
+static PidController leftDrivePID;
+static PidController rightDrivePID;
+static int previousLeftDistance;
+static int previousRightDistance;
+static unsigned long previousRightTime;
+static unsigned long previousLeftTime;
+
+static double velocityToSpeed(double velocity)
+{
+
+}
+
+//try making private after;
+static double speedToVelocity(double speed)
+{
+    if(fabs(speed) < 11.513)
+    {
+        return 1.50833 * speed;
+    }
+    else 
+    {
+        //might be weird for negative values
+        return (1.90833*speed)-4.6054;
+    }
+}
+
+static void leftSide(double targetSpeed)
+{
+    //Derivative  target - current
+    double velocity = (leftEncoder.get_value() - previousLeftDistance) / (pros::millis() - previousLeftTime);
+    double extraSpeed = leftDrivePID.output(velocity, speedToVelocity(targetSpeed));
+    if((targetSpeed + extraSpeed) > 127)
+    {
+        driveMotorsSpeed(127,leftDrive);
+    }
+    else if((targetSpeed + extraSpeed) < -127)
+    {
+        driveMotorsSpeed(-127,leftDrive);
+    }
+    else 
+    {
+        driveMotorsSpeed(targetSpeed + extraSpeed, leftDrive);
+    }
+    previousLeftTime = pros::millis();
+    previousLeftDistance = leftEncoder.get_value();
+}
+
+static void rightSide(double targetSpeed)
+{
+    double velocity = (rightEncoder.get_value() - previousRightDistance) / (pros::millis() - previousRightTime);
+    double extraSpeed = rightDrivePID.output(velocity, speedToVelocity(targetSpeed));
+    if((targetSpeed + extraSpeed) > 127)
+    {
+        driveMotorsSpeed(127,rightDrive);
+    }
+    else if((targetSpeed + extraSpeed) < -127)
+    {
+        driveMotorsSpeed(-127,rightDrive);
+    }
+    else 
+    {
+        driveMotorsSpeed(targetSpeed + extraSpeed, rightDrive);
+    }
+    previousRightTime = pros::millis();
+    previousLeftDistance = rightEncoder.get_value();
+}
+
+static void reset()
+{
+    leftDrivePID.reset();
+    rightDrivePID.reset();
+    previousLeftDistance = leftEncoder.get_value();
+    previousRightDistance = rightEncoder.get_value();
+    previousRightTime = pros::millis();
+    previousLeftTime = pros::millis();
+}
+
+private:
+// Disallow creating an instance of this object
+VelocityDrive() {}
+};
+
+PidController VelocityDrive::leftDrivePID = {leftSideP,leftSideI,leftSideD,leftSideMin,leftSideMax};
+PidController VelocityDrive::rightDrivePID = {rightSideP,rightSideI,rightSideD,rightSideMin,rightSideMax};
+int VelocityDrive::previousLeftDistance = 0;
+int VelocityDrive::previousRightDistance = 0;
+unsigned long VelocityDrive::previousRightTime;
+unsigned long VelocityDrive::previousLeftTime;
+*/
 
 class System
 {
@@ -339,6 +375,7 @@ public:
 
     void updateTriggerState()
     {
+        triggerTimerE.clear();
         switch(trigger)  //have it set at something until everything ends or its set to end
         {
             case(NONET):
@@ -379,7 +416,6 @@ public:
                     break;
                 }
         }
-        triggerTimerE.clear();
     }
 
     //sets system variables scrolling through main parameter vectors, all systems can have these options
@@ -638,6 +674,7 @@ class Drive : public System
     int xTarget = 0;
     int yTarget = 0;
     PidController straightDrivePID = {straightDriveP, straightDriveI,straightDriveD,straightDriveMin,straightDriveMax};
+    PidController wheelDrivePID = {wheelDriveP, wheelDriveI,wheelDriveD,wheelDriveMin,wheelDriveMax};
     AutonFlags accelerationControl = NOACCEL;
     GyroDistances turnStats;
     AutonFlags direction;
@@ -655,6 +692,7 @@ class Drive : public System
             clearEncoders();
             triggerTimer.clear();
             accelerationTimer.clear();
+            outerInnerRatio = 1;
             if(driveObj == nullptr)
             {
                 driveObj = this; //resets the global pointer to the reset object
@@ -682,7 +720,8 @@ class Drive : public System
     }
 
     void verifySpeedOutput(float &leftCorrect, float &rightCorrect)
-    {
+    {   
+        /*
         if(abs(speed*rightCorrect) < pid.minOutput)
         {
             double constantToMinimum = pid.minOutput/abs(speed*rightCorrect);
@@ -692,7 +731,7 @@ class Drive : public System
         {
             double constantToMinimum = pid.minOutput/abs(speed*leftCorrect);
             leftCorrect *= constantToMinimum;
-        }
+        }*/
     }
 
     bool checkIfDone(double breakVal)
@@ -856,7 +895,7 @@ class Drive : public System
         }
     }
 
-    int getSweepDifference() //positive, outside is faster. negative, inside is faster
+    double getSweepDifference() //positive, outside is faster. negative, inside is faster
     {
         double offSet = (double)getOutsideEncoder()*outerInnerRatio;
         (double)getOutsideEncoder() - (double)(getInsideEncoder() + offSet);
@@ -864,39 +903,71 @@ class Drive : public System
 
     void wheelCorrections(float &leftCorrect, float &rightCorrect)
     {
-        int difference;
+        double difference;
         if(direction == TURN || direction == FORWARDSC || direction == BACKWARDSC || direction == TURNC || direction == FORWARDS || direction == FORWARDSE || direction == BACKWARDS || direction == BACKWARDSE)
         {
-            difference = abs(rightEncoder.get_value()) - abs(leftEncoder.get_value());
+            difference = abs(leftEncoder.get_value()) - abs(rightEncoder.get_value());
         }
         else
         {
-            difference = getSweepDifference(); //reduces call amount
+            difference = getSweepDifference(); //reduces call amount //outside - inside
         }
 
         if(difference > 4)
         {
-            if(direction == DOWNRIGHTSWEEP || direction == DOWNRIGHTSWEEPE || direction == DOWNLEFTSWEEP || direction == DOWNLEFTSWEEPE)
+            if(direction == DOWNRIGHTSWEEP || direction == DOWNRIGHTSWEEPE)
             {
-                leftCorrect *= ((float).99 - ((float)abs(difference)/(float)100));
+                leftCorrect *= 1.0 + straightDrivePID.output(difference-4, 0); //double error = target - currentSensorData;
+            }
+            else if(direction == DOWNLEFTSWEEP || direction == DOWNLEFTSWEEPE)
+            {
+                rightCorrect *= 1.0 + straightDrivePID.output(difference-4, 0);
+            }
+            else if(direction == UPLEFTSWEEP || direction == UPLEFTSWEEPE)
+            {
+                rightCorrect *= 1.0 + straightDrivePID.output(difference-4, 0);
+            }
+            else if(direction == UPRIGHTSWEEP || direction == UPRIGHTSWEEPE)
+            {
+                leftCorrect *= 1.0 + straightDrivePID.output(difference-4, 0);
+            }
+            else if(direction == FORWARDS || direction == FORWARDSE || direction == FORWARDSC)
+            {
+                leftCorrect *= 1.0 + straightDrivePID.output(difference-4, 0);
             }
             else 
             {
-                rightCorrect *= ((float).99 - ((float)abs(difference)/(float)100));
+                rightCorrect *= 1.0 + straightDrivePID.output(difference-4, 0);
             }
         }
         else if(difference < -4)
         {
-            if(direction == DOWNRIGHTSWEEP || direction == DOWNRIGHTSWEEPE || direction == DOWNLEFTSWEEP || direction == DOWNLEFTSWEEPE)
+            if(direction == DOWNRIGHTSWEEP || direction == DOWNRIGHTSWEEPE)
             {
-                rightCorrect *= ((float).99 - ((float)abs(difference)/(float)100));
+                leftCorrect *= 1.0 - straightDrivePID.output(difference+4, 0);
+            }
+            else if(direction == DOWNLEFTSWEEP || direction == DOWNLEFTSWEEPE)
+            {
+                rightCorrect *= 1.0 - straightDrivePID.output(difference+4, 0);
+            }
+            else if(direction == UPLEFTSWEEP || direction == UPLEFTSWEEPE)
+            {
+                rightCorrect *= 1.0 - straightDrivePID.output(difference+4, 0);
+            }
+            else if(direction == UPRIGHTSWEEP || direction == UPRIGHTSWEEPE)
+            {
+                leftCorrect *= 1.0 - straightDrivePID.output(difference+4, 0);
+            }
+            else if(direction == FORWARDS || direction == FORWARDSE || direction == FORWARDSC)
+            {
+                rightCorrect *= 1.0 - straightDrivePID.output(difference+4, 0);
             }
             else 
             {
-                leftCorrect *= ((float).99 - ((float)abs(difference)/(float)100));
+                leftCorrect *= 1.0 - straightDrivePID.output(difference+4, 0);
             }
         }
-    }
+    }    
 
     void resetObj()
     {
@@ -996,6 +1067,10 @@ void Drive::setMember(int &number, AutonFlags &currentFlag, int value)
                         else if(value == NOSTRAIGHT)
                         {
                             correctTo = NOSTRAIGHT;
+                        }
+                        else if(value == WHEELCORRECTION)
+                        {
+                            correctTo = WHEELCORRECTION;
                         }
                         else
                         {
@@ -1733,6 +1808,8 @@ void addCommands(Ts... input)
     while(((tilter.state != END) || (drive.state != END) || (intake.state != END) || (lift.state != END)) && (autonTimer.current() < 15000))
     {
         pros::lcd::print(3,"%f", actualGyroPosition());
+        pros::lcd::print(1,"%f", leftEncoder.get_value());
+        pros::lcd::print(2,"%f", rightEncoder.get_value());
         //posObj.updatePosition();
         switch(drive.state)
         {
@@ -1839,10 +1916,10 @@ void smallBlue()
 addCommands(
     LIFT,POSITION,1700,127,
     LIFT,SPEED,-127,TIMETE,600,
-    DRIVE,FORWARDS,250,0,TIMET,600,
-    DRIVE,FORWARDS,-1,0,NOBRAKE,LIFTT,2,600,//TIMET,1300,
-    DRIVE,FORWARDS,180,0,MMREGPID,55,127,REGACCEL,NOBRAKE,TIMET,500,//TIMET,1300,
-    DRIVE,FORWARDS,550,0,NOPID,44,
+    DRIVE,FORWARDS,250,WHEELCORRECTION,TIMET,600,
+    DRIVE,FORWARDS,-1,WHEELCORRECTION,NOBRAKE,LIFTT,2,600,//TIMET,1300,
+    DRIVE,FORWARDS,180,WHEELCORRECTION,MMREGPID,55,127,REGACCEL,NOBRAKE,TIMET,500,//TIMET,1300,
+    DRIVE,FORWARDS,550,WHEELCORRECTION,NOPID,44,
     DRIVE,TURN,520,NOSTRAIGHT,TURNPID,
     DRIVE,BACKWARDS,900,520,REGACCEL,
     DRIVE,TURN,0,NOSTRAIGHT,TURNPID,
@@ -1912,16 +1989,59 @@ addCommands(
 }
 
 void microCube()
-{
+{ //distance radius
+    resetAutonVals();
 addCommands(
     LIFT,POSITION,1700,127,
     LIFT,SPEED,-127,TIMETE,600,
-    DRIVE,FORWARDS,250,0,TIMET,600,
-    DRIVE,FORWARDS,-1,0,NOBRAKE,LIFTT,2,600,//TIMET,1300,
-    DRIVE,FORWARDS,180,0,MMREGPID,55,127,REGACCEL,NOBRAKE,TIMET,500,//TIMET,1300,
-    DRIVE,BACKWARDS,500,0,
-    INTAKE,OUT,127,LIFTT,1,800,
-    INTAKE,OUT,127,TIMET,3000
+    INTAKE,OUT,127,LIFTT,2,1,
+    INTAKE,OUT,127,TIMET,600,
+    INTAKE,IN,127,
+    DRIVE,FORWARDS,-1,NOSTRAIGHT,LIFTT,3,0,NOBRAKE,
+    DRIVE,FORWARDS,700,NOSTRAIGHT,NOPID,50,TIMET,500,NOBRAKE,
+    DRIVE,UPLEFTSWEEP,380,200,WHEELCORRECTION,NOPID,75,NOBRAKE,
+    DRIVE,UPLEFTSWEEP,60,320,NOSTRAIGHT,NOPID,75,NOBRAKE,
+    DRIVE,UPLEFTSWEEP,310,180,WHEELCORRECTION,NOPID,75,NOBRAKE,
+    DRIVE,FORWARDS,350,NOSTRAIGHT,NOPID,50,NOBRAKE,
+    DRIVE,UPLEFTSWEEP,260,180,WHEELCORRECTION,NOPID,75,NOBRAKE,
+    DRIVE,FORWARDS,270,NOSTRAIGHT,REGACCEL,NOPID,50,NOBRAKE,MMREGPID,60,127,
+    DRIVE,UPRIGHTSWEEP,75,180,WHEELCORRECTION,TIMETE,450,
+    TILTER,POSITION,2000,90,DRIVET,9,10,
+    INTAKE,OUT,40,DRIVET,9,400
+);
+addCommands(
+    INTAKE,OUT,0,
+    INTAKE,OUT,40,TILTERT,1,1000,
+    INTAKE,OUT,0,TILTERT,1,3800,
+    TILTER,POSITION,6700,127,
+    TILTER,POSITION,7060,90
+    );
+addCommands(
+    INTAKE,OUT,127,
+    INTAKE,IN,0,TIMET,1000,
+    DRIVE,BACKWARDS,1000,NOSTRAIGHT,TIMET,280,
+    TILTER,POSITION,5000,127,TIMET,50
+);
+}
+
+void sweep()
+{
+    /*
+addCommands(
+    DRIVE,UPLEFTSWEEP,500,500,WHEELCORRECTION,
+    DRIVE,UPRIGHTSWEEP,500,300,WHEELCORRECTION,
+    DRIVE,DOWNRIGHTSWEEP,500,200,WHEELCORRECTION,
+    DRIVE,DOWNLEFTSWEEP,500,100,WHEELCORRECTION
+);*/
+addCommands(
+    DRIVE,FORWARDS,250,WHEELCORRECTION,TIMET,600,
+    DRIVE,FORWARDS,-1,WHEELCORRECTION,NOBRAKE,//TIMET,1300,
+    DRIVE,FORWARDS,180,WHEELCORRECTION,MMREGPID,55,127,REGACCEL,NOBRAKE,TIMET,500,//TIMET,1300,
+    DRIVE,FORWARDS,550,WHEELCORRECTION,NOPID,44,
+    DRIVE,FORWARDS,250,NOSTRAIGHT,TIMET,600,
+    DRIVE,FORWARDS,-1,NOSTRAIGHT,NOBRAKE,//TIMET,1300,
+    DRIVE,FORWARDS,180,NOSTRAIGHT,MMREGPID,55,127,REGACCEL,NOBRAKE,TIMET,500,//TIMET,1300,
+    DRIVE,FORWARDS,550,NOSTRAIGHT,NOPID,44
 );
 }
 
@@ -1941,12 +2061,46 @@ void posTest()
 
 void autonomous()
 {
+    /*
     resetAutonVals();
-    //posTest();
+
+        Timer testing;
+        testing.clear();
+        VelocityDrive::reset();
+        while(testing.current() < 8000)
+        {
+            VelocityDrive::leftSide(20);
+            VelocityDrive::rightSide(0);
+            pros::lcd::print(2,"%d", VelocityDrive::previousLeftDistance);
+            pros::lcd::print(3,"%f", VelocityDrive::previousLeftTime);
+            pros::delay(3);
+        }
+        VelocityDrive::reset();
+        testing.clear();
+        while(testing.current() < 6000)
+        {
+            VelocityDrive::rightSide(50);
+            VelocityDrive::leftSide(0);
+            pros::delay(3);
+        }
+        VelocityDrive::rightSide(0);
+        VelocityDrive::reset();
+        testing.clear();
+        while(testing.current() < 6000)
+        {
+            VelocityDrive::rightSide(-20);
+            VelocityDrive::leftSide(-20);
+            pros::delay(3);
+        }
+        driveMotorsSpeed(0, leftDrive);
+        driveMotorsSpeed(0, rightDrive);
+    return;
+    //posTest();*/
     switch(count)
     {
         case(SMALLRED):
-            smallRed();
+            //smallRed();
+            sweep();
             break;
         case(SMALLBLUE):
             smallBlue();

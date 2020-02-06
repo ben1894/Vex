@@ -14,12 +14,13 @@
  * task, not resume it from where it left off.
  */
 
-pros::Imu gyroI(18);
-pros::ADIEncoder leftEncoder(3, 4, true);
-pros::ADIEncoder rightEncoder(5, 6, false);
+pros::Imu gyroI(20);
+pros::ADIEncoder leftEncoder(3, 4, false);
+pros::ADIEncoder rightEncoder(5, 6, true);
 
 void opcontrol() //0.0078740157480315 = quadradic value
 {
+	gyroI.reset();
 	Timer controllerTimer;
 	Timer matchTimer;
 	Timer rumbleTimer;
@@ -29,7 +30,7 @@ void opcontrol() //0.0078740157480315 = quadradic value
 	controllerTimer.clear();
 	bool clear = false;
 	int oldButtonY = 0;
-	int intakeHoldingPower = 0;
+	//int intakeHoldingPower = 0;
 	leftEncoder.reset();
 	rightEncoder.reset();
 	rightDrive[0].tare_position();
@@ -43,9 +44,18 @@ void opcontrol() //0.0078740157480315 = quadradic value
 	}
 	while (true)
 	{
-		driveMotorsSpeed(cVal(ANALOG_RIGHT_Y),rightDrive);
-		driveMotorsSpeed(cVal(ANALOG_LEFT_Y),leftDrive);
+		if(cVal(DIGITAL_Y))
+		{
+			driveMotorsSpeed(-35,rightDrive);
+			driveMotorsSpeed(-35,leftDrive);
+		}
+		else
+		{
+			driveMotorsSpeed(cVal(ANALOG_RIGHT_Y),rightDrive);
+			driveMotorsSpeed(cVal(ANALOG_LEFT_Y),leftDrive);
+		}
 
+		/*
 		if(cVal(DIGITAL_Y) != oldButtonY)
 		{
 			if(cVal(DIGITAL_Y) == 1)
@@ -59,10 +69,14 @@ void opcontrol() //0.0078740157480315 = quadradic value
 					intakeHoldingPower = 0;
 				}
 			}
-		}
+		}*/
 		if(cVal(DIGITAL_R1))
 		{
 			motorGroupMove(127, intakeM);
+		}
+		else if(cVal(DIGITAL_Y))
+		{
+			motorGroupMove(-60, intakeM);
 		}
 		else if(cVal(DIGITAL_RIGHT))
 		{
@@ -74,7 +88,7 @@ void opcontrol() //0.0078740157480315 = quadradic value
 		}
 		else
 		{
-			motorGroupMove(intakeHoldingPower, intakeM);
+			motorGroupMove(0, intakeM);
 		}
 
 		if(cVal(DIGITAL_DOWN))
@@ -92,9 +106,9 @@ void opcontrol() //0.0078740157480315 = quadradic value
 
 		if(cVal(DIGITAL_L1))
 		{
-			if(tilter.get_position() > 5500)
+			if(tilter.get_position() > 5300)
 			{
-				tilter.move(86);
+				tilter.move(81);
 			}
 			else
 			{
@@ -151,7 +165,7 @@ void opcontrol() //0.0078740157480315 = quadradic value
 			}
 			if(cVal(DIGITAL_A))
 			{
-				resetGyro();
+				//resetGyro();
 				autonomous();
 			}
 		}
