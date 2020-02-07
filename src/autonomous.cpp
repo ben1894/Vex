@@ -721,17 +721,28 @@ class Drive : public System
 
     void verifySpeedOutput(float &leftCorrect, float &rightCorrect)
     {
-        /*
-        if(abs(speed*rightCorrect) < pid.minOutput)
+        if(fabs(speed*rightCorrect) < 15)
         {
-            double constantToMinimum = pid.minOutput/abs(speed*rightCorrect);
-            rightCorrect *= constantToMinimum;
+            if(speed*rightCorrect < 5)
+            {
+                rightCorrect = 0;
+            }
+            else 
+            {
+                rightCorrect = 15/speed;
+            }
         }
-        if(abs(speed*leftCorrect) < pid.minOutput)
+        if(abs(speed*leftCorrect) < 15)
         {
-            double constantToMinimum = pid.minOutput/abs(speed*leftCorrect);
-            leftCorrect *= constantToMinimum;
-        }*/
+            if(speed*leftCorrect < 5)
+            {
+                leftCorrect = 0;
+            }
+            else 
+            {
+                leftCorrect = 15/speed;
+            }
+        } //make the inside wheel go faster because it is probably going to be 0
     }
 
     bool checkIfDone(double breakVal)
@@ -1615,6 +1626,8 @@ void Drive::move()
 
         if(checkIfDone(breakVal) == false)
         {
+            int leftDirection = 1;
+            int rightDirection = 1;
             if((direction != TURN) && (direction != TURNC))
             {
                 if(speedControl == NOPID)
@@ -1703,18 +1716,20 @@ void Drive::move()
                     case(DOWNRIGHTSWEEPE):
                     case(BACKWARDSE):
                     case(BACKWARDSC):
-                        leftCorrection *= -1;
-                        rightCorrection *= -1;
+                        leftDirection *= -1;
+                        rightDirection *= -1;
                         break;
                 }
 
+                rightCorrection = map(rightCorrection,0,1,-1,1);
+                leftCorrection = map(leftCorrection,0,1,-1,1);
                 //check to make sure the speed won't be under the movable rate
                 verifySpeedOutput(leftCorrection, rightCorrection);
 
-                //Sets the drive motors at speed multiplied by the respective correction
+                //Sets the drive motors at speed multiplied by the respective correction (0-1) 
                 //Corrections start at 1 by default
-                driveMotorsSpeed(speed*rightCorrection, rightDrive);
-                driveMotorsSpeed(speed*leftCorrection, leftDrive);
+                driveMotorsSpeed((double)speed*rightCorrection*rightDirection, rightDrive);
+                driveMotorsSpeed((double)speed*leftCorrection*leftDirection, leftDrive);
             }
             else
             {
@@ -1735,12 +1750,12 @@ void Drive::move()
 
                 if(Dist.Right < Dist.Left)
                 {
-                    rightCorrection *= -1;
+                    rightDirection *= -1;
                     speed = pid.output(-Dist.Right, 0);
                 }
                 else
                 {
-                    leftCorrection *= -1;
+                    leftDirection *= -1;
                     speed = pid.output(-Dist.Left, 0);
                 }
                 if(correctTo == WHEELCORRECTION)
@@ -1748,8 +1763,13 @@ void Drive::move()
                     wheelCorrections(leftCorrection, rightCorrection);
                 }
 
-                driveMotorsSpeed((float)speed*leftCorrection,leftDrive);
-                driveMotorsSpeed((float)speed*rightCorrection,rightDrive);
+                rightCorrection = map(rightCorrection,0,1,-1,1);
+                leftCorrection = map(leftCorrection,0,1,-1,1);
+
+                verifySpeedOutput(leftCorrection, rightCorrection);
+
+                driveMotorsSpeed((double)speed*rightCorrection*rightDirection, rightDrive);
+                driveMotorsSpeed((double)speed*leftCorrection*leftDirection, leftDrive);
             }
         }
         else
@@ -1767,7 +1787,7 @@ void Drive::move()
             }
         }
     }
-}
+};
 
 template <typename... Ts>
 void addCommands(Ts... input)
