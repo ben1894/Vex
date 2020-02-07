@@ -14,7 +14,7 @@ All code created by:
 #include "pidPacks.hpp"
 
 Timer autonTimer;
-bool autonTest = false;
+bool autonTest = true;
 const bool voltage = true;
 const bool gyroTurns = true;
 const bool gyroUpsidedown = false;
@@ -85,7 +85,7 @@ class PositionTracking
         }
 
         prevLWheel = currentLDifference + prevLWheel;
-        prevRWheel = currentRDifference + prevRWheel; 
+        prevRWheel = currentRDifference + prevRWheel;
         prevAngle = currentAngle;
     }
 
@@ -213,7 +213,7 @@ static double speedToVelocity(double speed)
     {
         return 1.50833 * speed;
     }
-    else 
+    else
     {
         //might be weird for negative values
         return (1.90833*speed)-4.6054;
@@ -233,7 +233,7 @@ static void leftSide(double targetSpeed)
     {
         driveMotorsSpeed(-127,leftDrive);
     }
-    else 
+    else
     {
         driveMotorsSpeed(targetSpeed + extraSpeed, leftDrive);
     }
@@ -253,7 +253,7 @@ static void rightSide(double targetSpeed)
     {
         driveMotorsSpeed(-127,rightDrive);
     }
-    else 
+    else
     {
         driveMotorsSpeed(targetSpeed + extraSpeed, rightDrive);
     }
@@ -720,7 +720,7 @@ class Drive : public System
     }
 
     void verifySpeedOutput(float &leftCorrect, float &rightCorrect)
-    {   
+    {
         /*
         if(abs(speed*rightCorrect) < pid.minOutput)
         {
@@ -770,11 +770,11 @@ class Drive : public System
                 //correctTo = fixTarget(turncTarget);
                 getDistances(gyroVals, fixTarget(turncTarget));
             }
-            else 
+            else
             {
                 getDistances(gyroVals, target);
             }
-            
+
             if((gyroVals.Left < breakVal) || (gyroVals.Right < breakVal))
             {   /*pros::lcd::print(1,"%f", gyroVals.Left);
                 pros::lcd::print(2,"%f", target);
@@ -788,7 +788,7 @@ class Drive : public System
                 }*/
                 return true;
             }
-            
+
             return false;
         }
         else
@@ -819,7 +819,7 @@ class Drive : public System
                 }
             }
         }
-        else 
+        else
         {
             if(off.Right < off.Left)
             {
@@ -935,7 +935,7 @@ class Drive : public System
             {
                 leftCorrect *= 1.0 + straightDrivePID.output(difference-4, 0);
             }
-            else 
+            else
             {
                 rightCorrect *= 1.0 + straightDrivePID.output(difference-4, 0);
             }
@@ -962,12 +962,12 @@ class Drive : public System
             {
                 rightCorrect *= 1.0 - straightDrivePID.output(difference+4, 0);
             }
-            else 
+            else
             {
                 leftCorrect *= 1.0 - straightDrivePID.output(difference+4, 0);
             }
         }
-    }    
+    }
 
     void resetObj()
     {
@@ -1728,7 +1728,7 @@ void Drive::move()
                         target += 180;
                     }
                 }
-                
+
                 target = fixTarget(target); //so you can put in negative values
                 GyroDistances Dist;
                 getDistances(Dist, target);
@@ -1998,28 +1998,25 @@ addCommands(
     INTAKE,OUT,127,TIMET,600,
     INTAKE,IN,127,
     DRIVE,FORWARDS,-1,NOSTRAIGHT,LIFTT,3,0,NOBRAKE,
-    DRIVE,FORWARDS,700,NOSTRAIGHT,NOPID,50,TIMET,500,NOBRAKE,
-    DRIVE,UPLEFTSWEEP,380,200,WHEELCORRECTION,NOPID,75,NOBRAKE,
-    DRIVE,UPLEFTSWEEP,60,320,NOSTRAIGHT,NOPID,75,NOBRAKE,
-    DRIVE,UPLEFTSWEEP,310,180,WHEELCORRECTION,NOPID,75,NOBRAKE,
-    DRIVE,FORWARDS,350,NOSTRAIGHT,NOPID,50,NOBRAKE,
-    DRIVE,UPLEFTSWEEP,260,180,WHEELCORRECTION,NOPID,75,NOBRAKE,
-    DRIVE,FORWARDS,270,NOSTRAIGHT,REGACCEL,NOPID,50,NOBRAKE,MMREGPID,60,127,
-    DRIVE,UPRIGHTSWEEP,75,180,WHEELCORRECTION,TIMETE,450,
-    TILTER,POSITION,2000,90,DRIVET,9,10,
-    INTAKE,OUT,40,DRIVET,9,400
+    DRIVE,FORWARDS,700,0,NOPID,50,TIMET,500,NOBRAKE,
+    DRIVE,TURN,1500,TURNPID,
+    DRIVE,FORWARDS,280,1500,REGACCEL,NOPID,50,NOBRAKE,MMREGPID,60,127,
+    DRIVE,FORWARDSE,60,1500,TIMETE,450,
+    TILTER,POSITION,2000,90,DRIVET,5,10,
+    INTAKE,OUT,40,DRIVET,5,400
+
 );
 addCommands(
     INTAKE,OUT,0,
-    INTAKE,OUT,40,TILTERT,1,1000,
-    INTAKE,OUT,0,TILTERT,1,3800,
+    INTAKE,OUT,40,TILTERT,1,700,
+    INTAKE,OUT,0,TILTERT,1,2400,
     TILTER,POSITION,6700,127,
     TILTER,POSITION,7060,90
     );
 addCommands(
     INTAKE,OUT,127,
     INTAKE,IN,0,TIMET,1000,
-    DRIVE,BACKWARDS,1000,NOSTRAIGHT,TIMET,280,
+    DRIVE,BACKWARDS,100,NOSTRAIGHT,TIMET,280,
     TILTER,POSITION,5000,127,TIMET,50
 );
 }
