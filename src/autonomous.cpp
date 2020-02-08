@@ -14,11 +14,11 @@ All code created by:
 #include "pidPacks.hpp"
 
 Timer autonTimer;
-bool autonTest = true;
+bool autonTest = false;
 const bool voltage = true;
 const bool gyroTurns = true;
 const bool gyroUpsidedown = false;
-const double wheelDistance = 200;
+const double wheelDistance = 361;
 
 const int driveBaseSpeed = 10;
 const int gyroTurnBaseSpeed = 10;
@@ -666,6 +666,9 @@ class Drive : public System
 {
     private:
     double correctTo = -1;
+    double targetAngle;
+    double deltaAngle;
+    double initialAngle;
     bool stopDeacceleration = false;
     bool brake = true;
     bool runBrake = false;
@@ -692,7 +695,6 @@ class Drive : public System
             clearEncoders();
             triggerTimer.clear();
             accelerationTimer.clear();
-            outerInnerRatio = 1;
             if(driveObj == nullptr)
             {
                 driveObj = this; //resets the global pointer to the reset object
@@ -799,10 +801,30 @@ class Drive : public System
 
     void gyroCorrections(float &leftCorrect, float &rightCorrect)
     {
+        if(direction == UPLEFTSWEEP || direction == UPRIGHTSWEEP || direction == DOWNLEFTSWEEP || direction == DOWNRIGHTSWEEP || direction == UPLEFTSWEEPE || direction == UPRIGHTSWEEPE || direction == DOWNLEFTSWEEPE || direction == DOWNRIGHTSWEEPE)
+        {
+            if(target - getOutsideEncoder() == 0)
+            {
+                correctTo = actualGyroPosition();
+            }
+            else
+            {            
+                if(rightTurn == true)
+                {                     //220       40         100  - 50                
+                    correctTo = initialAngle + deltaAngle/(target-getOutsideEncoder());
+                }
+                else 
+                {
+                    correctTo = initialAngle - deltaAngle/(target-getOutsideEncoder());
+                }
+            }
+            correctTo = fixTarget(correctTo);
+        }
+        
         GyroDistances off;
         getDistances(off, correctTo);
 
-        if(direction == FORWARDS || direction == FORWARDSE || direction == FORWARDSC)
+        if(direction == FORWARDS || direction == FORWARDSE || direction == FORWARDSC || direction == UPLEFTSWEEP || direction == UPLEFTSWEEPE || direction == UPRIGHTSWEEP || direction == UPRIGHTSWEEPE)
         {
             if(off.Right < off.Left)
             {
@@ -1096,10 +1118,35 @@ void Drive::setMember(int &number, AutonFlags &currentFlag, int value)
                         number++;
                         break;
                     case(2):
+                        {
                         number++; //radius
-                        outerInnerRatio = (double)(value - wheelDistance) / value;
-                        break;
-                    case(3):
+                        targetAngle = value / 10.0;
+                        GyroDistances toTarget;
+                        getDistances(toTarget, targetAngle);
+                        initialAngle = actualGyroPosition();
+                        switch(direction)
+                        {
+                            case(UPRIGHTSWEEP):
+                            case(DOWNLEFTSWEEPE):
+                            case(DOWNLEFTSWEEP):
+                            case(UPRIGHTSWEEPE):
+                                deltaAngle = toTarget.Right;
+                                rightTurn = true;
+                                break;
+                            case(UPLEFTSWEEP):
+                            case(DOWNRIGHTSWEEP):
+                            case(UPLEFTSWEEPE):
+                            case(DOWNRIGHTSWEEPE):
+                                deltaAngle = toTarget.Left;
+                                rightTurn = false;
+                                break;
+                        }
+                        double radius = target/degToRad(deltaAngle);
+                        double arc2 = (radius - wheelDistance)*degToRad(deltaAngle);
+                        outerInnerRatio = arc2 / (radius*degToRad(deltaAngle)); //arc = radius * angle  radius = arc/angle
+                        }
+                        break;                                                                           //(radius-wheelDistance)*angle = arc2
+                    case(3):                                                                             //arc2/arc1 = outerInnerRatio
                         if(value == NOSTRAIGHT)
                         {
                             correctTo = NOSTRAIGHT;
@@ -1804,7 +1851,7 @@ void addCommands(Ts... input)
     {
         lift.underTarget = true;
     }
-    drive.pid.minOutput /= drive.outerInnerRatio;/////
+    //drive.pid.minOutput /= drive.outerInnerRatio;/////
     while(((tilter.state != END) || (drive.state != END) || (intake.state != END) || (lift.state != END)) && (autonTimer.current() < 15000))
     {
         pros::lcd::print(3,"%f", actualGyroPosition());
@@ -1815,7 +1862,7 @@ void addCommands(Ts... input)
         {
             case(WAITINGFORINSTRUCTIONS):
                 drive.update(parameters);
-                drive.pid.minOutput /= drive.outerInnerRatio; //has to be put here so it doesn't get overwritten by the pid initialization
+                //drive.pid.minOutput /= drive.outerInnerRatio; //has to be put here so it doesn't get overwritten by the pid initialization
                 break;
             case(WAITINGFORTRIGGER):
                 drive.updateTriggerState();
@@ -1912,113 +1959,17 @@ void addCommands(Ts... input)
 
 void smallBlue()
 {
-    resetAutonVals();
-addCommands(
-    LIFT,POSITION,1700,127,
-    LIFT,SPEED,-127,TIMETE,600,
-    DRIVE,FORWARDS,250,WHEELCORRECTION,TIMET,600,
-    DRIVE,FORWARDS,-1,WHEELCORRECTION,NOBRAKE,LIFTT,2,600,//TIMET,1300,
-    DRIVE,FORWARDS,180,WHEELCORRECTION,MMREGPID,55,127,REGACCEL,NOBRAKE,TIMET,500,//TIMET,1300,
-    DRIVE,FORWARDS,550,WHEELCORRECTION,NOPID,44,
-    DRIVE,TURN,520,NOSTRAIGHT,TURNPID,
-    DRIVE,BACKWARDS,900,520,REGACCEL,
-    DRIVE,TURN,0,NOSTRAIGHT,TURNPID,
-    DRIVE,FORWARDS,150,0,MMREGPID,55,100,REGACCEL,NOBRAKE,
-    DRIVE,FORWARDS,970,0,NOPID,44,
-    DRIVE,BACKWARDS,460,0,
-    DRIVE,TURN,2250,NOSTRAIGHT,TURNPID2,
-    DRIVE,FORWARDS,340,2250,REGACCEL,NOBRAKE,MMREGPID,50,127,
-    DRIVE,FORWARDSE,55,2250,TIMETE,450,
-    INTAKE,OUT,127,LIFTT,1,800,
-    INTAKE,IN,127,TIMET,1100,
-    INTAKE,IN,45,DRIVET,10,15,
-    TILTER,POSITION,1000,90,DRIVET,10,10
-    );
-addCommands(
-    INTAKE,OUT,0,
-    INTAKE,OUT,36,TILTERT,1,1400,
-    INTAKE,OUT,0,TILTERT,1,3800,
-    TILTER,POSITION,6700,127,
-    TILTER,POSITION,7100,90
-    );
-addCommands(
-    INTAKE,OUT,127,
-    INTAKE,IN,0,TIMET,1000,
-    DRIVE,BACKWARDS,1000,NOSTRAIGHT,TIMET,200,
-    TILTER,POSITION,5000,127,TIMET,50
-);
+
 }
 
 void smallRed()
 {
-    resetAutonVals();
-addCommands(
-    LIFT,POSITION,1700,127,
-    LIFT,SPEED,-127,TIMETE,600,
-    DRIVE,FORWARDS,250,0,TIMET,600,
-    DRIVE,FORWARDS,-1,0,NOBRAKE,LIFTT,2,600,//TIMET,1300,
-    DRIVE,FORWARDS,180,0,MMREGPID,55,127,REGACCEL,NOBRAKE,TIMET,500,//TIMET,1300,
-    DRIVE,FORWARDS,550,0,NOPID,44,
-    DRIVE,TURN,3120,NOSTRAIGHT,TURNPID,
-    DRIVE,BACKWARDS,1080,3120,REGACCEL,
-    DRIVE,TURN,0,NOSTRAIGHT,TURNPID,
-    DRIVE,FORWARDS,150,0,MMREGPID,50,100,REGACCEL,NOBRAKE,
-    DRIVE,FORWARDS,970,0,NOPID,40,
-    DRIVE,BACKWARDS,550,0,
-    DRIVE,TURN,1300,NOSTRAIGHT,TURNPID2,
-    DRIVE,FORWARDS,340,1350,REGACCEL,NOBRAKE,MMREGPID,60,127,
-    DRIVE,FORWARDSE,60,1350,TIMETE,450,
-    INTAKE,OUT,127,LIFTT,1,800,
-    INTAKE,IN,127,TIMET,1100,
-    INTAKE,IN,45,DRIVET,10,15,
-    TILTER,POSITION,1000,90,DRIVET,10,10
-    );
-addCommands(
-    INTAKE,OUT,0,
-    INTAKE,OUT,36,TILTERT,1,1400,
-    INTAKE,OUT,0,TILTERT,1,3800,
-    TILTER,POSITION,6700,127,
-    TILTER,POSITION,7100,90
-    );
-addCommands(
-    INTAKE,OUT,127,
-    INTAKE,IN,0,TIMET,1000,
-    DRIVE,BACKWARDS,1000,NOSTRAIGHT,TIMET,280,
-    TILTER,POSITION,5000,127,TIMET,50
-);
+
 }
 
 void microCube()
 { //distance radius
-    resetAutonVals();
-addCommands(
-    LIFT,POSITION,1700,127,
-    LIFT,SPEED,-127,TIMETE,600,
-    INTAKE,OUT,127,LIFTT,2,1,
-    INTAKE,OUT,127,TIMET,600,
-    INTAKE,IN,127,
-    DRIVE,FORWARDS,-1,NOSTRAIGHT,LIFTT,3,0,NOBRAKE,
-    DRIVE,FORWARDS,700,0,NOPID,50,TIMET,500,NOBRAKE,
-    DRIVE,TURN,1500,TURNPID,
-    DRIVE,FORWARDS,280,1500,REGACCEL,NOPID,50,NOBRAKE,MMREGPID,60,127,
-    DRIVE,FORWARDSE,60,1500,TIMETE,450,
-    TILTER,POSITION,2000,90,DRIVET,5,10,
-    INTAKE,OUT,40,DRIVET,5,400
 
-);
-addCommands(
-    INTAKE,OUT,0,
-    INTAKE,OUT,40,TILTERT,1,700,
-    INTAKE,OUT,0,TILTERT,1,2400,
-    TILTER,POSITION,6700,127,
-    TILTER,POSITION,7060,90
-    );
-addCommands(
-    INTAKE,OUT,127,
-    INTAKE,IN,0,TIMET,1000,
-    DRIVE,BACKWARDS,100,NOSTRAIGHT,TIMET,280,
-    TILTER,POSITION,5000,127,TIMET,50
-);
 }
 
 void sweep()
@@ -2058,6 +2009,8 @@ void posTest()
 
 void autonomous()
 {
+    driveMotorsSpeed(0, leftDrive);
+    driveMotorsSpeed(0, rightDrive);
     /*
     resetAutonVals();
 
@@ -2096,8 +2049,8 @@ void autonomous()
     switch(count)
     {
         case(SMALLRED):
-            //smallRed();
-            sweep();
+            smallRed();
+            //sweep();
             break;
         case(SMALLBLUE):
             smallBlue();
@@ -2117,3 +2070,4 @@ void autonomous()
 //pros::lcd::print(2,"%d", drive->speed);
 //pros::lcd::print(3,"%d", drive->pid.maxOutput);
 //pros::lcd::print(4,"%f", gyro.get_value());
+ 
