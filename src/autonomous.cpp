@@ -1956,16 +1956,7 @@ void addCommands(Ts... input)
 }
 
 #include "bigAutons.hpp"
-
-void smallBlue()
-{
-
-}
-
-void smallRed()
-{
-
-}
+#include "smallAutons.hpp"
 
 void microCube()
 { //distance radius
