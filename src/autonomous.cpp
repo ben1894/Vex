@@ -121,12 +121,12 @@ void resetAutonVals()
 	leftEncoder.reset();
 	rightEncoder.reset();
     posObj.reset();
+    resetGyro();
 	for(int motor = 0; motor < leftDrive.size(); motor++)
 	{
 		leftDrive[motor].tare_position();
 		rightDrive[motor].tare_position();
 	}
-	//gyroI.reset();
 	autonTimer.clear();
 }
 
