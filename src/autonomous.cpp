@@ -823,21 +823,35 @@ class Drive : public System
         
         GyroDistances off;
         getDistances(off, correctTo);
-
+        
         if(direction == FORWARDS || direction == FORWARDSE || direction == FORWARDSC || direction == UPLEFTSWEEP || direction == UPLEFTSWEEPE || direction == UPRIGHTSWEEP || direction == UPRIGHTSWEEPE)
         {
             if(off.Right < off.Left)
             {
                 if(off.Right > 0.3)
                 {
-                    rightCorrect *= 1.0 - straightDrivePID.output(-off.Right+0.3, 0);
+                    if(direction == UPLEFTSWEEP || direction == UPLEFTSWEEPE)
+                    {
+                        leftCorrect *= 1.0 + straightDrivePID.output(-off.Right+0.3, 0);
+                    }
+                    else 
+                    {
+                        rightCorrect *= 1.0 - straightDrivePID.output(-off.Right+0.3, 0);
+                    }
                 }
             }
             else
             {
                 if(off.Left > 0.3)
                 {
-                    leftCorrect *= 1.0 + straightDrivePID.output(off.Left+0.3, 0);
+                    if(direction == UPRIGHTSWEEP || direction == UPRIGHTSWEEPE)
+                    {
+                        rightCorrect *= 1.0 - straightDrivePID.output(off.Left+0.3, 0);
+                    }
+                    else 
+                    {
+                        leftCorrect *= 1.0 + straightDrivePID.output(off.Left+0.3, 0);
+                    }
                 }
             }
         }
@@ -847,14 +861,28 @@ class Drive : public System
             {
                 if(off.Right > 0.3)
                 {
-                    leftCorrect *= 1.0 - straightDrivePID.output(-off.Right+0.3, 0);
+                    if(direction == DOWNRIGHTSWEEP || direction == DOWNRIGHTSWEEPE)
+                    {
+                        leftCorrect *= 1.0 + straightDrivePID.output(-off.Right+0.3, 0);
+                    }
+                    else 
+                    {
+                        leftCorrect *= 1.0 - straightDrivePID.output(-off.Right+0.3, 0);
+                    }
                 }
             }
             else
             {
                 if(off.Left > 0.3)
                 {
-                    rightCorrect *= 1.0 + straightDrivePID.output(off.Left+0.3, 0);
+                    if(direction == DOWNLEFTSWEEP || direction == DOWNLEFTSWEEPE)
+                    {
+                        rightCorrect *= 1.0 - straightDrivePID.output(off.Left+0.3, 0);
+                    }
+                    else 
+                    {
+                        rightCorrect *= 1.0 + straightDrivePID.output(off.Left+0.3, 0);
+                    }
                 }
             }
         }
@@ -1965,22 +1993,11 @@ void microCube()
 
 void sweep()
 {
-    /*
 addCommands(
-    DRIVE,UPLEFTSWEEP,500,500,WHEELCORRECTION,
-    DRIVE,UPRIGHTSWEEP,500,300,WHEELCORRECTION,
-    DRIVE,DOWNRIGHTSWEEP,500,200,WHEELCORRECTION,
-    DRIVE,DOWNLEFTSWEEP,500,100,WHEELCORRECTION
-);*/
-addCommands(
-    DRIVE,FORWARDS,250,WHEELCORRECTION,TIMET,600,
-    DRIVE,FORWARDS,-1,WHEELCORRECTION,NOBRAKE,//TIMET,1300,
-    DRIVE,FORWARDS,180,WHEELCORRECTION,MMREGPID,55,127,REGACCEL,NOBRAKE,TIMET,500,//TIMET,1300,
-    DRIVE,FORWARDS,550,WHEELCORRECTION,NOPID,44,
-    DRIVE,FORWARDS,250,NOSTRAIGHT,TIMET,600,
-    DRIVE,FORWARDS,-1,NOSTRAIGHT,NOBRAKE,//TIMET,1300,
-    DRIVE,FORWARDS,180,NOSTRAIGHT,MMREGPID,55,127,REGACCEL,NOBRAKE,TIMET,500,//TIMET,1300,
-    DRIVE,FORWARDS,550,NOSTRAIGHT,NOPID,44
+    DRIVE,UPRIGHTSWEEP,500,500,WHEELCORRECTION,
+    DRIVE,UPRIGHTSWEEP,1000,900,WHEELCORRECTION,
+    DRIVE,DOWNRIGHTSWEEP,500,500,WHEELCORRECTION,
+    DRIVE,DOWNLEFTSWEEP,500,900,WHEELCORRECTION
 );
 }
 
@@ -2040,8 +2057,8 @@ void autonomous()
     switch(count)
     {
         case(SMALLRED):
-            smallRed();
-            //sweep();
+            //smallRed();
+            sweep();
             break;
         case(SMALLBLUE):
             smallBlue();
