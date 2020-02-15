@@ -28,7 +28,7 @@ class Drive;
 class Tilter;
 class Intake;
 class Lift;
-//class PidController;
+class PidController;
 class PositionTracking;
 Drive *driveObj;
 Tilter *tilterObj;
@@ -117,7 +117,6 @@ PositionTracking posObj;
 void resetAutonVals()
 {
 	tilter.tare_position();
-	lift.tare_position();
 	leftEncoder.reset();
 	rightEncoder.reset();
     posObj.reset();
@@ -863,7 +862,7 @@ class Drive : public System
                 {
                     if(direction == DOWNRIGHTSWEEP || direction == DOWNRIGHTSWEEPE)
                     {
-                        leftCorrect *= 1.0 + straightDrivePID.output(-off.Right+0.3, 0);
+                        rightCorrect *= 1.0 + straightDrivePID.output(-off.Right+0.3, 0);
                     }
                     else 
                     {
@@ -877,7 +876,7 @@ class Drive : public System
                 {
                     if(direction == DOWNLEFTSWEEP || direction == DOWNLEFTSWEEPE)
                     {
-                        rightCorrect *= 1.0 - straightDrivePID.output(off.Left+0.3, 0);
+                        leftCorrect *= 1.0 - straightDrivePID.output(off.Left+0.3, 0);
                     }
                     else 
                     {
@@ -1483,7 +1482,7 @@ class Lift : public System
 
     int getPosition()
     {
-        return (int)fabs(lift.get_position());
+        return abs(pot.get_value());
     }
 
     bool checkIfDone(double breakVal)
@@ -1994,10 +1993,10 @@ void microCube()
 void sweep()
 {
 addCommands(
-    DRIVE,UPRIGHTSWEEP,500,500,WHEELCORRECTION,
-    DRIVE,UPRIGHTSWEEP,1000,900,WHEELCORRECTION,
-    DRIVE,DOWNRIGHTSWEEP,500,500,WHEELCORRECTION,
-    DRIVE,DOWNLEFTSWEEP,500,900,WHEELCORRECTION
+    DRIVE,UPRIGHTSWEEP,500,500,10,
+    DRIVE,UPRIGHTSWEEP,1000,900,10,
+    DRIVE,DOWNRIGHTSWEEP,500,500,10,
+    DRIVE,DOWNLEFTSWEEP,500,900,10
 );
 }
 

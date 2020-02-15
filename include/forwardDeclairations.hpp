@@ -181,8 +181,8 @@ extern Select count;
 extern pros::ADIEncoder leftEncoder;
 extern pros::ADIEncoder rightEncoder;
 extern pros::Imu gyroI;
+extern pros::ADIPotentiometer pot;
 extern Timer autonTimer;
-
 
 struct GyroDistances
 {
