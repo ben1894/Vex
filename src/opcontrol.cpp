@@ -21,15 +21,20 @@ pros::ADIEncoder rightEncoder(5, 6, true);
 
 void opcontrol() //0.0078740157480315 = quadradic value
 {
+	PidController liftPID = {regLiftP,regLiftI,regLiftD,regLiftMin,regLiftMax};
+	lift.set_brake_mode(MOTOR_BRAKE_BRAKE);
 	Timer controllerTimer;
 	Timer matchTimer;
 	Timer rumbleTimer;
+	Timer liftTimer;
+	liftTimer.clear();
 	rumbleTimer.clear();
 	matchTimer.clear();
 	mainController.clear();
 	controllerTimer.clear();
 	bool clear = false;
 	int oldButtonY = 0;
+	int liftTarget;
 	//int intakeHoldingPower = 0;
 	leftEncoder.reset();
 	rightEncoder.reset();
@@ -93,15 +98,30 @@ void opcontrol() //0.0078740157480315 = quadradic value
 
 		if(cVal(DIGITAL_DOWN))
 		{
+			liftTimer.clear();
 			lift.move(127);
 		}
 		else if(cVal(DIGITAL_B))
 		{
+			liftTimer.clear();
 			lift.move(-127);
+		}
+		else if(pot.get_value() < 300)
+		{
+			liftTimer.clear();
+			lift.move(0);
+		}
+		else if(liftTimer.current() < 300)
+		{
+			liftTarget = pot.get_value();
+			liftPID.reset();
+			lift.move(0);
 		}
 		else
 		{
-			lift.move(0);
+			int liftSpeed;
+			liftSpeed = liftPID.output(pot.get_value(), liftTarget);
+			lift.move(liftSpeed);
 		}
 
 		if(cVal(DIGITAL_L1))
@@ -129,6 +149,7 @@ void opcontrol() //0.0078740157480315 = quadradic value
 		//getDistances(test, 90);
 		pros::lcd::print(4,"%f", actualGyroPosition());
 		pros::lcd::print(2,"%d", pot.get_value()); //regular, no negative, no over anymore
+		//pros::lcd::print(2,"%d", leftEncoder.get_value()); //regular, no negative, no over anymore
 		pros::lcd::print(3,"%d", rightEncoder.get_value());
 		pros::lcd::print(1,"%f", lift.get_position());
 		//pros::lcd::print(5,"%f", gyro.get_vex_heading());

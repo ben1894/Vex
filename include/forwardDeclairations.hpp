@@ -209,4 +209,65 @@ extern int cVal(pros::controller_analog_e_t button);
 extern void resetAutonVals();
 template <typename Ts> void addCommands(Ts);
 
+class PidController
+{
+    private:
+        unsigned long lastTime;
+        long combinedIntegral;
+        double lastError;
+
+    public:
+        double P;
+        double I;
+        double D;
+        double minOutput;
+        double maxOutput;
+
+        PidController(double P = 0, double I = 0, double D = 0, double minOutput = 0, double maxOutput = 0)
+        { //Initializes the object with default values. Also allows values to be put in on creation
+            this->P = P; //Differentiates between the member P and the parameter P. this->P is the member
+            this->I = I;
+            this->D = D;
+            this->minOutput = minOutput;
+            this->maxOutput = maxOutput;
+            reset();
+            pros::delay(1); //Prevent divide by 0 error
+        }
+
+        void reset()
+        {
+            lastTime = pros::millis(); //clears the time
+            combinedIntegral = 0; //resets other variables
+            lastError = 0;
+        }
+
+        double output(double currentSensorData, double target)
+        {
+            double error = target - currentSensorData;
+            unsigned long changeInTime = pros::millis() - lastTime;
+
+            //if(((P*error) < maxOutput) || ((I*combinedIntegral) < maxOutput) || ((P*error) > minOutput) || ((I*combinedIntegral) > minOutput)) //to prevent windup
+            if((((P*error) + (I*combinedIntegral)) < maxOutput) || (((P*error) + (I*combinedIntegral)) > minOutput))
+            {
+                long currentIntegral = error * changeInTime; //calculation for the area under the curve for the latest movement. The faster this updates the more accurate
+                combinedIntegral += currentIntegral;         //adds latest to the total integral
+            }
+
+            double derivative = (error - lastError) / changeInTime; //formula to calculate the (almost) instantaneous rate of change.
+            lastTime = pros::millis(); //put here before the returns
+            lastError = error;
+
+            double output = (P * error) + (I * combinedIntegral) + (D * derivative);
+            if(output > maxOutput)
+            {
+                return maxOutput;
+            }
+            if(output < minOutput)
+            {
+                return minOutput;
+            }
+            return output;
+        }
+};
+
 #include "templateMotorFunctions.hpp"

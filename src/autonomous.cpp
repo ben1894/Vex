@@ -129,66 +129,6 @@ void resetAutonVals()
 	autonTimer.clear();
 }
 
-class PidController
-{
-    private:
-        unsigned long lastTime;
-        long combinedIntegral;
-        double lastError;
-
-    public:
-        double P;
-        double I;
-        double D;
-        double minOutput;
-        double maxOutput;
-
-        PidController(double P = 0, double I = 0, double D = 0, double minOutput = 0, double maxOutput = 0)
-        { //Initializes the object with default values. Also allows values to be put in on creation
-            this->P = P; //Differentiates between the member P and the parameter P. this->P is the member
-            this->I = I;
-            this->D = D;
-            this->minOutput = minOutput;
-            this->maxOutput = maxOutput;
-            reset();
-            pros::delay(1); //Prevent divide by 0 error
-        }
-
-        void reset()
-        {
-            lastTime = pros::millis(); //clears the time
-            combinedIntegral = 0; //resets other variables
-            lastError = 0;
-        }
-
-        double output(double currentSensorData, double target)
-        {
-            double error = target - currentSensorData;
-            unsigned long changeInTime = pros::millis() - lastTime;
-
-            //if(((P*error) < maxOutput) || ((I*combinedIntegral) < maxOutput) || ((P*error) > minOutput) || ((I*combinedIntegral) > minOutput)) //to prevent windup
-            if((((P*error) + (I*combinedIntegral)) < maxOutput) || (((P*error) + (I*combinedIntegral)) > minOutput))
-            {
-                long currentIntegral = error * changeInTime; //calculation for the area under the curve for the latest movement. The faster this updates the more accurate
-                combinedIntegral += currentIntegral;         //adds latest to the total integral
-            }
-
-            double derivative = (error - lastError) / changeInTime; //formula to calculate the (almost) instantaneous rate of change.
-            lastTime = pros::millis(); //put here before the returns
-            lastError = error;
-
-            double output = (P * error) + (I * combinedIntegral) + (D * derivative);
-            if(output > maxOutput)
-            {
-                return maxOutput;
-            }
-            if(output < minOutput)
-            {
-                return minOutput;
-            }
-            return output;
-        }
-};
 /*
 class VelocityDrive
 {
@@ -757,8 +697,8 @@ class Drive : public System
                 }
                 return false;
             }
-            GyroDistances gyroVals;
 
+            GyroDistances gyroVals;
             if(direction == TURNC)
             {
                 double turncTarget = correctAtan(posObj.yPosition - yTarget, posObj.xPosition - xTarget);
@@ -884,6 +824,17 @@ class Drive : public System
                     }
                 }
             }
+        }
+        
+        if(direction == UPLEFTSWEEP || direction == UPRIGHTSWEEP || direction == DOWNLEFTSWEEP || direction == DOWNRIGHTSWEEP || direction == UPLEFTSWEEPE || direction == UPRIGHTSWEEPE || direction == DOWNLEFTSWEEPE || direction == DOWNRIGHTSWEEPE)
+        {
+            pros::lcd::print(3,"Delta Angle = %f", deltaAngle);
+            pros::lcd::print(1,"Target Angle = %f", targetAngle);
+            pros::lcd::print(2,"Right Correct = %f", rightCorrect);
+            pros::lcd::print(4,"Left Correct = %f", leftCorrect);
+            pros::lcd::print(5,"Correct To = %f", correctTo);
+            pros::lcd::print(6,"Direction = %d", (int)direction);
+            pros::delay(10000);
         }
     }
 
@@ -1178,7 +1129,7 @@ void Drive::setMember(int &number, AutonFlags &currentFlag, int value)
                         {
                             correctTo = NOSTRAIGHT;
                         }
-                        else
+                        else if(value == WHEELCORRECTION)
                         {
                             correctTo = WHEELCORRECTION;
                         }
@@ -1602,7 +1553,7 @@ void Drive::move()
     }
     else if((direction == TURN) || (direction == TURNC)) //how far away it is from the target, not on specific value.
     {
-        breakVal = 0.6;
+        breakVal = 0.8;
     }
     else if((direction == FORWARDSC) || (direction == BACKWARDSC))
     {
