@@ -19,7 +19,7 @@ pros::Controller secondaryController(pros::E_CONTROLLER_PARTNER);
 //left right
 std::array<pros::Motor, 2> rightDrive{pros::Motor(16),pros::Motor(17)};
 std::array<pros::Motor, 2>  leftDrive{pros::Motor(14),pros::Motor(15)};
-std::array<pros::Motor, 2>     intakeM{pros::Motor(13),pros::Motor(19)};
+std::array<pros::Motor, 2>     intakeM{pros::Motor(13),pros::Motor(5)};
 pros::Motor tilter(8,pros::E_MOTOR_GEARSET_36,false,pros::E_MOTOR_ENCODER_COUNTS);
 pros::Motor lift(3,pros::E_MOTOR_GEARSET_36,false,pros::E_MOTOR_ENCODER_COUNTS);
 
