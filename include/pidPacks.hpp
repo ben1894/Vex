@@ -12,11 +12,11 @@
 #define regTurnMin 28
 #define regTurnMax 100
 
-#define regTurnP2 1.0
+#define regTurnP2 .93
 #define regTurnI2 0
 #define regTurnD2 0
 #define regTurnMin2 34
-#define regTurnMax2 85
+#define regTurnMax2 100
 
 #define leftSideP 2
 #define leftSideI 1
