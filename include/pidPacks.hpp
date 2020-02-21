@@ -1,6 +1,6 @@
 #pragma once
 
-#define regDriveP .28
+#define regDriveP .19
 #define regDriveI 0
 #define regDriveD 0
 #define regDriveMin 40

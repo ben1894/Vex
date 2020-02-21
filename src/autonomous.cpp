@@ -625,6 +625,7 @@ class Drive : public System
 
     public:
     int speed;
+    int baseSpeed;
     bool rightTurn;
     double outerInnerRatio = 1;
     Drive(int idVal = DRIVE)
@@ -1738,8 +1739,8 @@ void Drive::move()
 
                 //Sets the drive motors at speed multiplied by the respective correction
                 //Corrections start at 1 by default
-                driveMotorsSpeed(speed*rightCorrection, rightDrive);
-                driveMotorsSpeed(speed*leftCorrection, leftDrive);
+                driveMotorsSpeed((speed + baseSpeed)*rightCorrection, rightDrive);
+                driveMotorsSpeed((speed + baseSpeed)*leftCorrection, leftDrive);
             }
             else
             {
@@ -1773,8 +1774,8 @@ void Drive::move()
                     wheelCorrections(leftCorrection, rightCorrection);
                 }
 
-                driveMotorsSpeed((float)speed*leftCorrection,leftDrive);
-                driveMotorsSpeed((float)speed*rightCorrection,rightDrive);
+                driveMotorsSpeed((speed + baseSpeed)*leftCorrection,leftDrive);
+                driveMotorsSpeed((speed + baseSpeed)*rightCorrection,rightDrive);
             }
         }
         else
@@ -1840,6 +1841,8 @@ void addCommands(Ts... input)
         {
             case(WAITINGFORINSTRUCTIONS):
                 drive.update(parameters);
+                drive.baseSpeed = drive.pid.minOutput;
+                drive.pid.minOutput = 0;
                 //drive.pid.minOutput /= drive.outerInnerRatio; //has to be put here so it doesn't get overwritten by the pid initialization
                 break;
             case(WAITINGFORTRIGGER):
