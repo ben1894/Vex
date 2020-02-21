@@ -642,7 +642,6 @@ class Drive : public System
             {
                 xTarget = driveObj->xTarget;
                 yTarget = driveObj->yTarget;
-                correctTo = driveObj->correctTo;
                 totalNumberOfCalls = driveObj->totalNumberOfCalls; //passes on the totalNumberOfCalls after reset
             }
         };
@@ -824,17 +823,6 @@ class Drive : public System
                     }
                 }
             }
-        }
-        
-        if(direction == UPLEFTSWEEP || direction == UPRIGHTSWEEP || direction == DOWNLEFTSWEEP || direction == DOWNRIGHTSWEEP || direction == UPLEFTSWEEPE || direction == UPRIGHTSWEEPE || direction == DOWNLEFTSWEEPE || direction == DOWNRIGHTSWEEPE)
-        {
-            pros::lcd::print(3,"Delta Angle = %f", deltaAngle);
-            pros::lcd::print(1,"Target Angle = %f", targetAngle);
-            pros::lcd::print(2,"Right Correct = %f", rightCorrect);
-            pros::lcd::print(4,"Left Correct = %f", leftCorrect);
-            pros::lcd::print(5,"Correct To = %f", correctTo);
-            pros::lcd::print(6,"Direction = %d", (int)direction);
-            pros::delay(10000);
         }
     }
 
@@ -1938,7 +1926,12 @@ void addCommands(Ts... input)
 
 void microCube()
 { //distance radius
-
+    resetAutonVals();
+    addCommands(
+    DRIVE,UPRIGHTSWEEP,1000,700,NOSTRAIGHT,NOPID,60
+    //DRIVE,DOWNRIGHTSWEEP,500,500,10,
+    //DRIVE,DOWNLEFTSWEEP,500,900,10
+);
 }
 
 void sweep()
