@@ -867,6 +867,7 @@ class Drive : public System
             default:
                 return abs(leftEncoder.get_value());
         }
+        return abs(leftEncoder.get_value());
     }
 
     int getInsideEncoder()

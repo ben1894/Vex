@@ -17,7 +17,7 @@
 pros::Imu gyroI(20);
 pros::ADIPotentiometer pot(2);
 pros::ADIEncoder leftEncoder(3, 4, false);
-pros::ADIEncoder rightEncoder(5, 6, true);
+pros::ADIEncoder rightEncoder(7, 8, true);
 
 void opcontrol() //0.0078740157480315 = quadradic value
 {
@@ -148,7 +148,7 @@ void opcontrol() //0.0078740157480315 = quadradic value
 		//GyroDistances test;
 		//getDistances(test, 90);
 		pros::lcd::print(4,"%f", actualGyroPosition());
-		pros::lcd::print(2,"%d", pot.get_value()); //regular, no negative, no over anymore
+		pros::lcd::print(2,"%d", leftEncoder.get_value()); //regular, no negative, no over anymore
 		//pros::lcd::print(2,"%d", leftEncoder.get_value()); //regular, no negative, no over anymore
 		pros::lcd::print(3,"%d", rightEncoder.get_value());
 		pros::lcd::print(1,"%f", lift.get_position());
