@@ -1829,8 +1829,17 @@ void addCommands(Ts... input)
         {
             case(WAITINGFORINSTRUCTIONS):
                 drive.update(parameters);
-                drive.baseSpeed = drive.pid.minOutput;
-                drive.pid.minOutput = 0;
+                if(drive.speedControl != NOPID)
+                {
+                    drive.baseSpeed = drive.pid.minOutput;
+                    drive.pid.minOutput = 0;
+                }
+                else
+                {
+                    drive.baseSpeed = 0;
+                }
+                
+                
                 //drive.pid.minOutput /= drive.outerInnerRatio; //has to be put here so it doesn't get overwritten by the pid initialization
                 break;
             case(WAITINGFORTRIGGER):
