@@ -1100,7 +1100,7 @@ void Drive::setMember(int &number, AutonFlags &currentFlag, int value)
                                 deltaAngle = toTarget.Right;
                                 rightTurn = true;
                                 break;
-                            case(UPLEFTSWEEP):
+                            case(UPLEFTSWEEP): //upleft cc    //downright cc
                             case(DOWNRIGHTSWEEP):
                             case(UPLEFTSWEEPE):
                             case(DOWNRIGHTSWEEPE):
@@ -2012,8 +2012,8 @@ void autonomous()
     switch(count)
     {
         case(SMALLRED):
-            //smallRed();
-            sweep();
+            smallRed();
+            //sweep();
             break;
         case(SMALLBLUE):
             smallBlue();
