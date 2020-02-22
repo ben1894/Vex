@@ -74,6 +74,7 @@ enum AutonFlags
 
 	POSITION,
 	SPEED,
+	RESET,
 
 	LEFTTURN,
 	RIGHTTURN,

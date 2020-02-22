@@ -1192,6 +1192,7 @@ class Tilter : public System  //very quick acceleration
 {
     private:
     int speed;
+    bool resetCheck = false;
 
     public:
     bool underTarget;
@@ -1285,12 +1286,22 @@ class Tilter : public System  //very quick acceleration
                             break;
                     }
                     break;
+                case(RESET):
+                    tilter.tare_position();
+                    resetCheck = true;
+                    number = 0;
+                    break;
             }
         }
     }
 
     void move()
     {
+        if(resetCheck == true)
+        {
+            updateEndingState();
+            return;
+        }
         int breakVal = (triggerE == NONETE) ? target : triggerBreakE;
         if(checkIfDone(breakVal) == false)
         {

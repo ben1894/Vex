@@ -151,7 +151,7 @@ void opcontrol() //0.0078740157480315 = quadradic value
 		pros::lcd::print(2,"%d", leftEncoder.get_value()); //regular, no negative, no over anymore
 		//pros::lcd::print(2,"%d", leftEncoder.get_value()); //regular, no negative, no over anymore
 		pros::lcd::print(3,"%d", rightEncoder.get_value());
-		pros::lcd::print(1,"%f", lift.get_position());
+		pros::lcd::print(1,"%f", tilter.get_position());
 		//pros::lcd::print(5,"%f", gyro.get_vex_heading());
 		//pros::lcd::print(2,"%d", leftEncoder.get_value());
 
