@@ -60,6 +60,14 @@ double correctAtan(double y, double x)
 	return radToDeg(atan2(y,x));
 }
 
+void tilterMove(int speed)
+{
+	rightDrive[0].move(speed);
+	rightDrive[1].move(-speed);
+	leftDrive[0].move(speed);
+	leftDrive[1].move(-speed);
+}
+
 /*
 double sind(double x) {
   if (!isfinite(x)) {

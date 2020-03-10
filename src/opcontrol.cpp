@@ -49,16 +49,35 @@ void opcontrol() //0.0078740157480315 = quadradic value
 	}
 	while (true)
 	{
-		if(cVal(DIGITAL_Y))
+		if(cVal(DIGITAL_L1))
 		{
-			driveMotorsSpeed(-35,rightDrive);
-			driveMotorsSpeed(-35,leftDrive);
+			if(tilter.get_position() > 5300)
+			{
+				tilterMove(81);
+			}
+			else
+			{
+				tilterMove(127);
+			}
 		}
-		else
+		else if(cVal(DIGITAL_L2))
 		{
-			driveMotorsSpeed(cVal(ANALOG_RIGHT_Y),rightDrive);
-			driveMotorsSpeed(cVal(ANALOG_LEFT_Y),leftDrive);
+			tilterMove(-127);
 		}
+		else 
+		{
+			if(cVal(DIGITAL_Y))
+			{
+				driveMotorsSpeed(-35,rightDrive);
+				driveMotorsSpeed(-35,leftDrive);
+			}
+			else
+			{
+				driveMotorsSpeed(cVal(ANALOG_RIGHT_Y),rightDrive);
+				driveMotorsSpeed(cVal(ANALOG_LEFT_Y),leftDrive);
+			}
+		}
+
 
 		/*
 		if(cVal(DIGITAL_Y) != oldButtonY)
@@ -124,25 +143,6 @@ void opcontrol() //0.0078740157480315 = quadradic value
 			lift.move(liftSpeed);
 		}
 
-		if(cVal(DIGITAL_L1))
-		{
-			if(tilter.get_position() > 5300)
-			{
-				tilter.move(81);
-			}
-			else
-			{
-				tilter.move(127);
-			}
-		}
-		else if(cVal(DIGITAL_L2))
-		{
-			tilter.move(-127);
-		}
-		else
-		{
-			tilter.move(0);
-		}
 		//pros::lcd::print(1,"%f", lift.get_position());
 		//pros::lcd::print(3,"%d", rightEncoder.get_value());
 		//GyroDistances test;

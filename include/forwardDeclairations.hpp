@@ -200,6 +200,7 @@ extern double fixTarget(double oldTarget);
 extern void getDistances(GyroDistances &Val, double target);
 
 extern void posTest();
+extern void tilterMove(int speed);
 extern int getDriveEncoder();
 extern float map(float value, float istart, float istop, float ostart, float ostop);
 extern double radToDeg(double radians);
